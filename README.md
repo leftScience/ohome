@@ -86,11 +86,48 @@ docker compose -f docker-compose.release.yml pull
 docker compose -f docker-compose.release.yml up -d
 ```
 
+如果你不想额外维护 `compose` 文件，也可以直接用 `docker run`：
+
+```bash
+docker pull ghcr.io/leftscience/ohome:v0.0.3-rc4
+
+mkdir -p ./end/data ./end/log
+
+docker run -d \
+  --name ohome-server \
+  -e GIN_MODE=release \
+  -e PORT=8090 \
+  -p 8090:8090 \
+  -v "$(pwd)/end/conf/config.yaml:/app/conf/config.yaml:ro" \
+  -v "$(pwd)/end/data:/app/data" \
+  -v "$(pwd)/end/log:/app/log" \
+  --restart unless-stopped \
+  ghcr.io/leftscience/ohome:v0.0.3-rc4
+```
+
 更新到新版本：
 
 ```bash
 docker compose -f docker-compose.release.yml pull
 docker compose -f docker-compose.release.yml up -d
+```
+
+对应的 `docker run` 更新方式：
+
+```bash
+docker pull ghcr.io/leftscience/ohome:v0.0.3-rc4
+docker rm -f ohome-server
+
+docker run -d \
+  --name ohome-server \
+  -e GIN_MODE=release \
+  -e PORT=8090 \
+  -p 8090:8090 \
+  -v "$(pwd)/end/conf/config.yaml:/app/conf/config.yaml:ro" \
+  -v "$(pwd)/end/data:/app/data" \
+  -v "$(pwd)/end/log:/app/log" \
+  --restart unless-stopped \
+  ghcr.io/leftscience/ohome:v0.0.3-rc4
 ```
 
 查看状态：
@@ -100,16 +137,31 @@ docker compose -f docker-compose.release.yml ps
 docker compose -f docker-compose.release.yml logs -f server
 ```
 
+对应的 `docker run` 查看方式：
+
+```bash
+docker ps --filter "name=ohome-server"
+docker logs -f ohome-server
+```
+
 停止服务：
 
 ```bash
 docker compose -f docker-compose.release.yml down
 ```
 
+对应的 `docker run` 停止和删除方式：
+
+```bash
+docker stop ohome-server
+docker rm ohome-server
+```
+
 说明：
 
 - `ghcr.io/leftscience/ohome:v0.0.3-rc4` 只是示例，请替换成你要部署的 Release tag
 - 如果你已配置 Docker Hub，也可以改成 Docker Hub 地址拉取
+- 上面的 `docker run` 命令默认在仓库根目录执行；如果你在别的目录执行，请把 `$(pwd)/end/...` 改成实际绝对路径
 
 容器启动后，默认可访问：
 
