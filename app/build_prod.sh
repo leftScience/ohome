@@ -75,8 +75,24 @@ fi
 
 if [[ -n "$RELEASE_TAG" ]]; then
   NORMALIZED_TAG="${RELEASE_TAG#refs/tags/}"
-  if [[ "$NORMALIZED_TAG" != "$BUILD_NAME" && "$NORMALIZED_TAG" != "v$BUILD_NAME" ]]; then
-    echo "[ERROR] Release tag \"$NORMALIZED_TAG\" does not match pubspec version \"$BUILD_NAME\"."
+  EXPECTED_TAGS=(
+    "$BUILD_NAME"
+    "v$BUILD_NAME"
+    "$BUILD_NAME-build$BUILD_NUMBER"
+    "v$BUILD_NAME-build$BUILD_NUMBER"
+  )
+
+  TAG_MATCHED=0
+  for expected_tag in "${EXPECTED_TAGS[@]}"; do
+    if [[ "$NORMALIZED_TAG" == "$expected_tag" ]]; then
+      TAG_MATCHED=1
+      break
+    fi
+  done
+
+  if [[ "$TAG_MATCHED" -ne 1 ]]; then
+    echo "[ERROR] Release tag \"$NORMALIZED_TAG\" does not match pubspec version \"$BUILD_NAME+$BUILD_NUMBER\"."
+    echo "[ERROR] Allowed formats: ${EXPECTED_TAGS[*]}"
     exit 1
   fi
 fi

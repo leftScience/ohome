@@ -14,7 +14,8 @@ Flutter 客户端应用。
 - 打包：`flutter build apk --dart-define=APP_ENV=prod`
 - 一键打包：`bash build_prod.sh`
 - 发布版本号以 `pubspec.yaml` 的 `version: x.y.z+n` 为准
-- GitHub 发版建议使用与 `versionName` 对应的 tag，例如 `version: 0.0.3+1` 时发布 `v0.0.3`
+- GitHub 发版 tag 支持 `v0.0.3` 和 `v0.0.3-build2` 两种格式
+- 如果 `version: 0.0.3+2`，建议发布 `v0.0.3-build2`
 
 运行在浏览器 
 - 开发：`flutter run -d chrome`
