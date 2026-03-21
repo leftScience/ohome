@@ -2,7 +2,7 @@ name: ohome
 description: "A new Flutter project."
 publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
-version: 0.0.3+6
+version: 0.0.3+7
 
 environment:
   sdk: ^3.10.3
