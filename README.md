@@ -1,20 +1,20 @@
 # ohome
 
-`ohome` 是一个面向家庭场景的个人/家庭资源管理项目，仓库包含：
+`ohome` 是一个面向家庭场景的个人/家庭资源管理项目，分为两个部分：
 
-- `end/`：Go + Gin 后端服务
-- `app/`：Flutter 客户端
+- `end/`：Go + Gin 服务端，负责 API、数据存储、局域网发现和业务处理
+- `app/`：Flutter 客户端，负责家庭影音、网盘和家庭事务等功能入口
 
-## 主要功能
+## 功能概览
 
-### 1. 家庭影音资源中心
+### 家庭影音资源中心
 
 - 影视、短剧、音乐、有声书等资源入口
 - 媒体播放与播放历史记录
 - 最近观看记录回显
 - 基于夸克网盘文件流的在线播放
 
-### 2. 夸克网盘能力
+### 夸克网盘能力
 
 - 夸克登录配置
 - 夸克目录配置管理
@@ -23,7 +23,7 @@
 - 自动转存/同步任务
 - 转存任务列表管理
 
-### 3. 家庭事务管理
+### 家庭事务管理
 
 - 待办事项管理
 - “点滴”物资管理
@@ -31,11 +31,17 @@
 - 重要日期提醒
 - 站内消息与提醒中心
 
-### 4. 系统能力
+### 系统能力
 
 - 用户登录、JWT 鉴权、刷新 token
 - 用户管理、头像上传、密码修改/重置
 - 局域网发现能力（HTTP + mDNS）
+
+## 快速上手
+
+1. 先启动服务端
+2. 再安装 Android 客户端
+3. 在客户端登录页通过局域网发现或手动输入服务端地址完成连接
 
 ## 仓库结构
 
@@ -43,18 +49,102 @@
 .
 ├── .github/workflows/    # GitHub Actions
 ├── app/                  # Flutter 客户端
+│   ├── assets/env/       # dev/prod 环境配置
+│   └── build_prod.sh     # Android 一键打包脚本
 ├── end/                  # Go 后端
 │   ├── conf/             # 配置文件
 │   ├── data/             # SQLite 数据库、实例数据
 │   ├── log/              # 日志目录
+│   ├── release/          # Windows/macOS 便携包启动脚本
 │   ├── router/           # 路由定义
 │   ├── service/          # 业务逻辑
 │   ├── sql/              # 初始化 SQL
-│   ├── Dockerfile         # 后端镜像构建文件
+│   ├── Dockerfile        # 后端镜像构建文件
 │   └── docker-compose.yml # 本地构建用 compose
+└── scripts/              # 仓库辅助脚本
 ```
 
-## Docker 部署
+## 服务端
+
+### 服务端适合做什么
+
+服务端负责提供业务 API、Swagger 文档、局域网发现接口和数据库存储。默认端口是 `18090`，默认数据库是 SQLite。
+
+默认访问地址：
+
+- API：`http://<你的主机IP>:18090/api/v1`
+- 发现接口：`http://<你的主机IP>:18090/api/v1/public/discovery`
+- Swagger：`http://127.0.0.1:18090/swagger/index.html`
+
+### 服务端便携包下载
+
+后端 Server Release 工作流会把 Windows 和 macOS 便携包发布到 GitHub Releases。
+
+- Release 页面：[https://github.com/leftScience/ohome/releases](https://github.com/leftScience/ohome/releases)
+- Windows x64：[https://github.com/leftScience/ohome/releases/latest/download/ohome-server_windows_amd64.zip](https://github.com/leftScience/ohome/releases/latest/download/ohome-server_windows_amd64.zip)
+- macOS Intel：[https://github.com/leftScience/ohome/releases/latest/download/ohome-server_darwin_amd64.zip](https://github.com/leftScience/ohome/releases/latest/download/ohome-server_darwin_amd64.zip)
+- macOS Apple Silicon：[https://github.com/leftScience/ohome/releases/latest/download/ohome-server_darwin_arm64.zip](https://github.com/leftScience/ohome/releases/latest/download/ohome-server_darwin_arm64.zip)
+- SHA256 校验：[https://github.com/leftScience/ohome/releases/latest/download/checksums.txt](https://github.com/leftScience/ohome/releases/latest/download/checksums.txt)
+
+### 服务端本地一键运行
+
+如果你不想装 Docker，直接使用服务端便携包最简单。便携包解压后即可本地运行
+
+#### Windows
+
+1. 下载 `ohome-server_windows_amd64.zip`
+2. 解压到任意目录，例如 `D:\\ohome-server`
+3. 双击 `start.bat`
+
+#### macOS
+
+请根据你的机器芯片下载对应版本：
+
+- Intel Mac：`ohome-server_darwin_amd64.zip`
+- Apple Silicon（M1/M2/M3）：`ohome-server_darwin_arm64.zip`
+
+1. 下载对应 zip 包
+2. 解压到任意目录，例如 `/Applications/ohome-server` 或 `~/Applications/ohome-server`
+3. 双击 `start.command`
+
+如果 macOS 首次启动时拦截：
+
+1. 在 Finder 中右键 `start.command`
+2. 选择“打开”
+3. 再次确认打开
+
+如果下载后的文件被系统打上隔离标记，可在解压目录执行：
+
+```bash
+xattr -dr com.apple.quarantine .
+./start.command
+```
+
+#### 运行目录说明
+
+- 配置文件：`conf/config.yaml`
+- SQLite 数据库：`data/ohome.db`
+- 日志目录：`log/`
+
+如果你需要修改端口、默认密码或数据库类型，先编辑 `conf/config.yaml`，再执行 `start.bat` 或 `start.command`。
+
+### 服务端源码运行（开发）
+
+如果你是在本地开发服务端，建议进入 `end/` 目录直接运行。当前 `go.mod` 使用 Go `1.25`。
+
+```bash
+cd end
+go run .
+```
+
+常用校验命令：
+
+```bash
+cd end
+go test ./...
+```
+
+### 服务端 Docker 本地构建
 
 仓库内用于本地构建后端的 Compose 文件位于 `end/docker-compose.yml`。可以在仓库根目录执行：
 
@@ -68,7 +158,7 @@ docker compose -f end/docker-compose.yml up -d --build
 docker compose up -d --build
 ```
 
-### 推荐方式：直接拉取 Docker Hub 已发布镜像
+### 服务端 Docker Hub 镜像部署
 
 如果你部署的是正式环境，推荐不要使用仓库自带的 `build` 方式，而是直接拉取 Docker Hub 已发布镜像。
 
@@ -124,12 +214,7 @@ docker run -d \
 - `hanlinwang0606/ohome:latest` 只是示例；如果你已经推送了版本标签，建议替换成具体 tag，例如 `hanlinwang0606/ohome:v0.0.3-rc4`
 - 上面的 `docker run` 命令默认在仓库根目录执行；如果你在别的目录执行，请把 `$(pwd)/end/...` 改成实际绝对路径
 
-容器启动后，默认可访问：
-
-- 后端 API：`http://<你的主机IP>:18090/api/v1`
-- 发现接口：`http://<你的主机IP>:18090/api/v1/public/discovery`
-
-## 配置说明
+### 服务端配置说明
 
 主配置文件是 [`end/conf/config.yaml`](./end/conf/config.yaml)，默认关键配置如下：
 
@@ -150,7 +235,7 @@ docker run -d \
 - `DB_DSN`
 - `JWT_SIGNKEY`
 
-### 切换到 MySQL
+#### 切换到 MySQL
 
 代码层面已经支持 MySQL。如果你不想使用 SQLite，可以配置：
 
@@ -162,37 +247,158 @@ DB:
 
 然后在你的部署环境里自行补充 MySQL 服务。
 
-## 数据持久化
+### 服务端数据持久化
 
-Docker 部署时，下面几个目录最重要：
+服务端部署时，下面几个目录最重要：
 
 - [`end/conf/config.yaml`](./end/conf/config.yaml)：运行配置
 - [`end/data`](./end/data)：数据库和实例标识
 - [`end/log`](./end/log)：日志文件
 
-建议在生产环境中定期备份 `end/data/` 和 `end/conf/config.yaml`。
+建议定期备份 `end/data/` 和 `end/conf/config.yaml`。
 
-## Android 安装包下载
+## 客户端
+
+### 客户端适合做什么
+
+客户端是 Flutter 应用，当前主要面向 Android 使用，负责登录、资源浏览、播放、网盘管理、待办和提醒等交互能力。
+
+### 客户端界面预览
+
+#### 首页与资源能力
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="./.github/assets/首页.jpg" width="220" alt="首页" />
+      <br />
+      首页
+    </td>
+    <td align="center">
+      <img src="./.github/assets/资源管理.jpg" width="220" alt="资源管理" />
+      <br />
+      资源管理
+    </td>
+    <td align="center">
+      <img src="./.github/assets/夸克资源全网搜索.jpg" width="220" alt="夸克资源全网搜索" />
+      <br />
+      夸克资源全网搜索
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="./.github/assets/转存任务.jpg" width="220" alt="转存任务" />
+      <br />
+      转存任务
+    </td>
+    <td align="center">
+      <img src="./.github/assets/设置界面.jpg" width="220" alt="设置界面" />
+      <br />
+      设置界面
+    </td>
+    <td></td>
+  </tr>
+</table>
+
+#### 播放体验
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="./.github/assets/短剧播放.jpg" width="220" alt="短剧播放" />
+      <br />
+      短剧播放
+    </td>
+    <td align="center">
+      <img src="./.github/assets/影视播放可全屏.jpg" width="220" alt="影视播放可全屏" />
+      <br />
+      影视播放可全屏
+    </td>
+    <td align="center">
+      <img src="./.github/assets/音乐播放.jpg" width="220" alt="音乐播放" />
+      <br />
+      音乐播放
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="./.github/assets/有声书播放.jpg" width="220" alt="有声书播放" />
+      <br />
+      有声书播放
+    </td>
+    <td></td>
+    <td></td>
+  </tr>
+</table>
+
+#### 家庭事务与提醒
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="./.github/assets/物资管理.jpg" width="220" alt="物资管理" />
+      <br />
+      物资管理
+    </td>
+    <td align="center">
+      <img src="./.github/assets/重要日期提醒.jpg" width="220" alt="重要日期提醒" />
+      <br />
+      重要日期提醒
+    </td>
+    <td align="center">
+      <img src="./.github/assets/消息中心提醒.jpg" width="220" alt="消息中心提醒" />
+      <br />
+      消息中心提醒
+    </td>
+  </tr>
+</table>
+
+### Android 安装包下载
 
 Android Release 工作流会把安装包发布到 GitHub Releases。
-
-### 最新版下载地址
 
 - Release 页面：[https://github.com/leftScience/ohome/releases](https://github.com/leftScience/ohome/releases)
 - 最新 APK：[https://github.com/leftScience/ohome/releases/latest/download/ohome-release.apk](https://github.com/leftScience/ohome/releases/latest/download/ohome-release.apk)
 - 最新更新清单：[https://github.com/leftScience/ohome/releases/latest/download/android.json](https://github.com/leftScience/ohome/releases/latest/download/android.json)
 
-## 后端便携包下载
+### 客户端如何连接服务端
 
-后端 Server Release 工作流会把 Windows 和 macOS 便携包发布到 GitHub Releases。
+客户端和服务端配合使用，推荐连接顺序如下：
 
-### 最新版下载地址
+1. 先确认服务端已经启动
+2. 手机和服务端尽量处于同一局域网
+3. 在客户端登录页优先使用局域网发现
+4. 如果自动发现失败，手动输入服务端地址，例如 `http://192.168.1.10:18090`
 
-- Release 页面：[https://github.com/leftScience/ohome/releases](https://github.com/leftScience/ohome/releases)
-- Windows x64：[https://github.com/leftScience/ohome/releases/latest/download/ohome-server_windows_amd64.zip](https://github.com/leftScience/ohome/releases/latest/download/ohome-server_windows_amd64.zip)
-- macOS Intel：[https://github.com/leftScience/ohome/releases/latest/download/ohome-server_darwin_amd64.zip](https://github.com/leftScience/ohome/releases/latest/download/ohome-server_darwin_amd64.zip)
-- macOS Apple Silicon：[https://github.com/leftScience/ohome/releases/latest/download/ohome-server_darwin_arm64.zip](https://github.com/leftScience/ohome/releases/latest/download/ohome-server_darwin_arm64.zip)
-- SHA256 校验：[https://github.com/leftScience/ohome/releases/latest/download/checksums.txt](https://github.com/leftScience/ohome/releases/latest/download/checksums.txt)
+说明：
+
+- 客户端会把输入的服务端地址标准化为 `/api/v1`
+- 服务端内置了局域网发现能力，探测路径是 `/api/v1/public/discovery`
+
+### Flutter 开发与打包
+
+客户端环境文件：
+
+- `app/assets/env/dev.json`
+- `app/assets/env/prod.json`
+
+通常需要先根据你的服务端地址修改 `apiBaseUrl`。
+
+运行时通过 `APP_ENV` 选择环境：
+
+- 开发：`flutter run --dart-define=APP_ENV=dev`
+- 生产配置运行：`flutter run --dart-define=APP_ENV=prod`
+- 浏览器调试：`flutter run -d chrome --dart-define=APP_ENV=dev`
+- 打包 APK：`flutter build apk --dart-define=APP_ENV=prod`
+- 一键打包：`bash build_prod.sh`
+
+版本和发版约定：
+
+- 发布版本号以 `app/pubspec.yaml` 的 `version: x.y.z+n` 为准
+- GitHub 发版 tag 支持 `v0.0.3` 和 `v0.0.3-rc2` 格式
+- 如果 `version: 0.0.3+2`，建议发布 `v0.0.3-rc2`
+
+如果你只关心客户端本地开发，也可以继续看 [`app/README.md`](./app/README.md)。
 
 ## 参考项目
 
