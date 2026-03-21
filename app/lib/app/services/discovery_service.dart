@@ -13,7 +13,7 @@ class DiscoveryService {
   DiscoveryService({required DiscoveryStorage storage}) : _storage = storage;
 
   static const _networkChannel = MethodChannel('ohome/network_info');
-  static const _defaultPort = 8090;
+  static const _defaultPort = 18090;
   static const _mdnsServiceName = '_ohome._tcp.local';
   static const _probePath = '/api/v1/public/discovery';
 

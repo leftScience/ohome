@@ -50,32 +50,46 @@
 │   ├── router/           # 路由定义
 │   ├── service/          # 业务逻辑
 │   ├── sql/              # 初始化 SQL
-│   └── Dockerfile        # 后端镜像构建文件
-└── docker-compose.yml    # 本地构建用 compose
+│   ├── Dockerfile         # 后端镜像构建文件
+│   └── docker-compose.yml # 本地构建用 compose
 ```
 
 ## Docker 部署
 
-### 推荐方式：直接拉取已发布镜像
+仓库内用于本地构建后端的 Compose 文件位于 `end/docker-compose.yml`。可以在仓库根目录执行：
 
-如果你部署的是正式环境，推荐不要使用仓库自带的 `build` 方式，而是直接拉取 GHCR 已发布镜像。
+```bash
+docker compose -f end/docker-compose.yml up -d --build
+```
+
+或者进入 `end/` 目录后直接执行：
+
+```bash
+docker compose up -d --build
+```
+
+### 推荐方式：直接拉取 Docker Hub 已发布镜像
+
+如果你部署的是正式环境，推荐不要使用仓库自带的 `build` 方式，而是直接拉取 Docker Hub 已发布镜像。
+
+Docker Hub 仓库：`hanlinwang0606/ohome`
 
 可以新建一个 `docker-compose.release.yml`：
 
 ```yaml
 services:
   server:
-    image: ghcr.io/leftscience/ohome:v0.0.3-rc4
+    image: hanlinwang0606/ohome:latest
     container_name: ohome-server
     environment:
       GIN_MODE: release
-      PORT: 8090
+      PORT: 18090
     volumes:
       - ./end/conf/config.yaml:/app/conf/config.yaml:ro
       - ./end/data:/app/data
       - ./end/log:/app/log
     ports:
-      - "8090:8090"
+      - "18090:18090"
     restart: unless-stopped
 ```
 
@@ -89,91 +103,37 @@ docker compose -f docker-compose.release.yml up -d
 如果你不想额外维护 `compose` 文件，也可以直接用 `docker run`：
 
 ```bash
-docker pull ghcr.io/leftscience/ohome:v0.0.3-rc4
+docker pull hanlinwang0606/ohome:latest
 
 mkdir -p ./end/data ./end/log
 
 docker run -d \
   --name ohome-server \
   -e GIN_MODE=release \
-  -e PORT=8090 \
-  -p 8090:8090 \
+  -e PORT=18090 \
+  -p 18090:18090 \
   -v "$(pwd)/end/conf/config.yaml:/app/conf/config.yaml:ro" \
   -v "$(pwd)/end/data:/app/data" \
   -v "$(pwd)/end/log:/app/log" \
   --restart unless-stopped \
-  ghcr.io/leftscience/ohome:v0.0.3-rc4
-```
-
-更新到新版本：
-
-```bash
-docker compose -f docker-compose.release.yml pull
-docker compose -f docker-compose.release.yml up -d
-```
-
-对应的 `docker run` 更新方式：
-
-```bash
-docker pull ghcr.io/leftscience/ohome:v0.0.3-rc4
-docker rm -f ohome-server
-
-docker run -d \
-  --name ohome-server \
-  -e GIN_MODE=release \
-  -e PORT=8090 \
-  -p 8090:8090 \
-  -v "$(pwd)/end/conf/config.yaml:/app/conf/config.yaml:ro" \
-  -v "$(pwd)/end/data:/app/data" \
-  -v "$(pwd)/end/log:/app/log" \
-  --restart unless-stopped \
-  ghcr.io/leftscience/ohome:v0.0.3-rc4
-```
-
-查看状态：
-
-```bash
-docker compose -f docker-compose.release.yml ps
-docker compose -f docker-compose.release.yml logs -f server
-```
-
-对应的 `docker run` 查看方式：
-
-```bash
-docker ps --filter "name=ohome-server"
-docker logs -f ohome-server
-```
-
-停止服务：
-
-```bash
-docker compose -f docker-compose.release.yml down
-```
-
-对应的 `docker run` 停止和删除方式：
-
-```bash
-docker stop ohome-server
-docker rm ohome-server
+  hanlinwang0606/ohome:latest
 ```
 
 说明：
 
-- `ghcr.io/leftscience/ohome:v0.0.3-rc4` 只是示例，请替换成你要部署的 Release tag
-- 如果你已配置 Docker Hub，也可以改成 Docker Hub 地址拉取
+- `hanlinwang0606/ohome:latest` 只是示例；如果你已经推送了版本标签，建议替换成具体 tag，例如 `hanlinwang0606/ohome:v0.0.3-rc4`
 - 上面的 `docker run` 命令默认在仓库根目录执行；如果你在别的目录执行，请把 `$(pwd)/end/...` 改成实际绝对路径
 
 容器启动后，默认可访问：
 
-- 后端 API：`http://<你的主机IP>:8090/api/v1`
-- Swagger：`http://<你的主机IP>:8090/swagger/index.html`
-- 发现接口：`http://<你的主机IP>:8090/api/v1/public/discovery`
+- 后端 API：`http://<你的主机IP>:18090/api/v1`
+- 发现接口：`http://<你的主机IP>:18090/api/v1/public/discovery`
 
 ## 配置说明
 
 主配置文件是 [`end/conf/config.yaml`](./end/conf/config.yaml)，默认关键配置如下：
 
-- `server.port`：服务端口，默认 `8090`
+- `server.port`：服务端口，默认 `18090`
 - `DB.driver`：默认 `sqlite`
 - `DB.dsn`：默认 `./data/ohome.db`
 - `DB.AutoMigrate`：自动建表
@@ -221,35 +181,6 @@ Android Release 工作流会把安装包发布到 GitHub Releases。
 - Release 页面：[https://github.com/leftScience/ohome/releases](https://github.com/leftScience/ohome/releases)
 - 最新 APK：[https://github.com/leftScience/ohome/releases/latest/download/ohome-release.apk](https://github.com/leftScience/ohome/releases/latest/download/ohome-release.apk)
 - 最新更新清单：[https://github.com/leftScience/ohome/releases/latest/download/android.json](https://github.com/leftScience/ohome/releases/latest/download/android.json)
-
-### 指定版本下载地址
-
-把下面 URL 里的 tag 替换成你想下载的版本即可：
-
-```text
-https://github.com/leftScience/ohome/releases/download/<tag>/ohome-release.apk
-https://github.com/leftScience/ohome/releases/download/<tag>/android.json
-```
-
-例如：
-
-```text
-https://github.com/leftScience/ohome/releases/download/v0.0.3-rc4/ohome-release.apk
-```
-
-### 客户端在线更新说明
-
-生产环境配置文件 [`app/assets/env/prod.json`](./app/assets/env/prod.json) 已经指向：
-
-```text
-https://github.com/leftScience/ohome/releases/latest/download/android.json
-```
-
-这意味着：
-
-- 生产版 Android 客户端可以直接读取 GitHub Release 的更新清单
-- 当你发布新的 tag 并生成新的 Release 后，客户端可检测到更新
-- 手动下载安装时直接下载 `ohome-release.apk` 即可
 
 ## 参考项目
 

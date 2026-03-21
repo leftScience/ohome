@@ -14,7 +14,7 @@ import (
 
 const (
 	DefaultVersion      = "0.0.1"
-	DefaultPort         = 8090
+	DefaultPort         = 18090
 	ServiceType         = "_ohome._tcp"
 	ServiceDomain       = "local."
 	DefaultAPIBasePath  = "/api/v1"

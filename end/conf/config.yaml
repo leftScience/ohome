@@ -1,23 +1,23 @@
 mode:
-  develop: true    #是否是开发环境
+  develop: true #是否是开发环境
 
 DB:
   driver: sqlite
   dsn: ./data/ohome.db
-  MaxIdleConns: 10   #最多空闲连接数
-  MaxOpenConns: 100  #最多打开连接数
+  MaxIdleConns: 10 #最多空闲连接数
+  MaxOpenConns: 100 #最多打开连接数
   AutoMigrate: true
   InitData: true
   InitSQLPath: ./sql/init_data.sql
   ImportInitSQLOnFirstRun: true
 
 server:
-  port: 8090
+  port: 18090
 
 logger:
   MaxSize: 1
-  MaxBackups: 90  #切割日志文件的最大个数
-  MaxAge: 20      #切割文件保留的最长天数
+  MaxBackups: 90 #切割日志文件的最大个数
+  MaxAge: 20 #切割文件保留的最长天数
 
 jwt:
   accessTokenExpires: 1440
@@ -28,11 +28,11 @@ config:
   defaultPassword: 123
 
 drops:
-  itemReminderDays: "7,3,1,0"   # 物资到期提醒：提前 7/3/1 天和当天
-  eventReminderDays: "7,3,1,0"  # 重要日期提醒：提前 7/3/1 天和当天
+  itemReminderDays: "7,3,1,0" # 物资到期提醒：提前 7/3/1 天和当天
+  eventReminderDays: "7,3,1,0" # 重要日期提醒：提前 7/3/1 天和当天
 
 # quarkFs 文件流配置
 quarkFs:
-  concurrency: 3         # 并发下载连接数
-  partSizeMB: 10         # 每个分片大小（MB）
-  chunkMaxRetries: 3     # 每个分片最大重试次数
+  concurrency: 3 # 并发下载连接数
+  partSizeMB: 10 # 每个分片大小（MB）
+  chunkMaxRetries: 3 # 每个分片最大重试次数

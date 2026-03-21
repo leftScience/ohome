@@ -1,5 +1,5 @@
 {
-  "apiBaseUrl": "http://iosjk.xyz:8090/api/v1",
+  "apiBaseUrl": "http://iosjk.xyz:18090/api/v1",
   "appUpdateManifestUrl": "https://github.com/leftScience/ohome/releases/latest/download/android.json",
   "appUpdateUsePackageInstaller": false
 }

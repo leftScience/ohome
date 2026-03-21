@@ -371,7 +371,7 @@ class _ServerSettingsSheet extends GetView<LoginController> {
                   controller: controller.apiBaseUrlController,
                   keyboardType: TextInputType.url,
                   decoration: InputDecoration(
-                    hintText: 'http://iosjk.xyz:8090',
+                    hintText: 'http://iosjk.xyz:18090',
                     hintStyle: TextStyle(
                       color: Colors.grey[600],
                       fontSize: 16.sp,

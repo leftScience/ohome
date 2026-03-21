@@ -1,5 +1,5 @@
 {
-  "apiBaseUrl": "http://192.168.5.77:8090/api/v1",
+  "apiBaseUrl": "http://192.168.5.77:18090/api/v1",
   "appUpdateManifestUrl": "http://192.168.5.100:12315/android.json",
   "appUpdateUsePackageInstaller": true
 }

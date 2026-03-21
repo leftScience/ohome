@@ -1,16 +1,16 @@
 services:
   server:
     build:
-      context: ./end
+      context: .
       dockerfile: Dockerfile
     container_name: ohome-server
     environment:
       GIN_MODE: release
-      PORT: 8090
+      PORT: 18090
     volumes:
-      - ./end/conf/config.yaml:/app/conf/config.yaml:ro
-      - ./end/data:/app/data
-      - ./end/log:/app/log
+      - ./conf/config.yaml:/app/conf/config.yaml:ro
+      - ./data:/app/data
+      - ./log:/app/log
     ports:
-      - "8090:8090"
+      - "18090:18090"
     restart: unless-stopped
