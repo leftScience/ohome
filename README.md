@@ -172,18 +172,15 @@ Docker 部署时，下面几个目录最重要：
 
 建议在生产环境中定期备份 `end/data/` 和 `end/conf/config.yaml`。
 
-## 客户端下载
+## Android 安装包下载
 
-Tag 发布工作流会把客户端产物发布到 GitHub Releases。
+Android Release 工作流会把安装包发布到 GitHub Releases。
 
 ### 最新版下载地址
 
 - Release 页面：[https://github.com/leftScience/ohome/releases](https://github.com/leftScience/ohome/releases)
-- 最新 Android APK：[https://github.com/leftScience/ohome/releases/latest/download/ohome-release.apk](https://github.com/leftScience/ohome/releases/latest/download/ohome-release.apk)
-- 最新 Android 更新清单：[https://github.com/leftScience/ohome/releases/latest/download/android.json](https://github.com/leftScience/ohome/releases/latest/download/android.json)
-- 最新 Windows 便携包：[https://github.com/leftScience/ohome/releases/latest/download/ohome-windows-x64.zip](https://github.com/leftScience/ohome/releases/latest/download/ohome-windows-x64.zip)
-
-Windows 版本会以便携包形式发布到 Release。下载并解压 `ohome-windows-x64.zip` 后，运行其中的 `ohome.exe` 即可。
+- 最新 APK：[https://github.com/leftScience/ohome/releases/latest/download/ohome-release.apk](https://github.com/leftScience/ohome/releases/latest/download/ohome-release.apk)
+- 最新更新清单：[https://github.com/leftScience/ohome/releases/latest/download/android.json](https://github.com/leftScience/ohome/releases/latest/download/android.json)
 
 ## 参考项目
 
