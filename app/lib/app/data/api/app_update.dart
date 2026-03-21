@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import '../../utils/app_env.dart';
 import '../../utils/http_client.dart';
 import '../models/app_update_info.dart';
 
@@ -63,7 +64,7 @@ class AppUpdateApi {
     ]);
 
     return AppUpdateInfo(
-      apkUrl: apkUrl,
+      apkUrl: AppEnv.instance.resolveAppUpdateUrl(apkUrl),
       versionName: versionName,
       versionCode: versionCode,
       sha256checksum: sha256,

@@ -24,6 +24,7 @@ class AppEnv {
     required this.environment,
     required String apiBaseUrl,
     required this.rawAppUpdateManifestUrl,
+    this.appUpdateUrlProxyPrefix,
     this.appUpdateUsePackageInstaller = false,
     AppEnvStorage? storage,
   }) : _apiBaseUrl = apiBaseUrl,
@@ -31,6 +32,7 @@ class AppEnv {
 
   final String environment;
   final String? rawAppUpdateManifestUrl;
+  final String? appUpdateUrlProxyPrefix;
   final bool appUpdateUsePackageInstaller;
   final AppEnvStorage _storage;
 
@@ -60,10 +62,22 @@ class AppEnv {
   }
 
   String? get appUpdateManifestUrl {
-    final raw = rawAppUpdateManifestUrl?.trim();
-    if (raw == null || raw.isEmpty) return null;
-    if (!raw.startsWith('/')) return raw;
-    return '$apiBaseUrl${raw.substring(1)}';
+    final resolved = _resolveConfiguredUrl(rawAppUpdateManifestUrl);
+    if (resolved == null || resolved.isEmpty) return null;
+    return resolveAppUpdateUrl(resolved);
+  }
+
+  String resolveAppUpdateUrl(String value) {
+    final resolved = _resolveConfiguredUrl(value) ?? value.trim();
+    final proxyPrefix = _normalizedAppUpdateUrlProxyPrefix;
+    if (resolved.isEmpty || proxyPrefix == null) return resolved;
+
+    final uri = Uri.tryParse(resolved);
+    if (uri == null || !_isGitHubHost(uri.host)) {
+      return resolved;
+    }
+
+    return '$proxyPrefix$resolved';
   }
 
   static AppEnv? _instance;
@@ -115,6 +129,13 @@ class AppEnv {
       appUpdateManifestUrl = updateManifestValue.trim();
     }
 
+    String? appUpdateUrlProxyPrefix;
+    final updateUrlProxyValue = map['appUpdateUrlProxyPrefix'];
+    if (updateUrlProxyValue is String &&
+        updateUrlProxyValue.trim().isNotEmpty) {
+      appUpdateUrlProxyPrefix = updateUrlProxyValue.trim();
+    }
+
     var appUpdateUsePackageInstaller = false;
     final packageInstallerValue = map['appUpdateUsePackageInstaller'];
     if (packageInstallerValue is bool) {
@@ -128,6 +149,7 @@ class AppEnv {
       environment: environment.name,
       apiBaseUrl: effectiveApiBaseUrl,
       rawAppUpdateManifestUrl: appUpdateManifestUrl,
+      appUpdateUrlProxyPrefix: appUpdateUrlProxyPrefix,
       appUpdateUsePackageInstaller: appUpdateUsePackageInstaller,
       storage: storage,
     );
@@ -168,5 +190,26 @@ class AppEnv {
 
     final normalized = uri.replace(pathSegments: pathSegments).toString();
     return normalized.endsWith('/') ? normalized : '$normalized/';
+  }
+
+  String? _resolveConfiguredUrl(String? rawValue) {
+    final raw = rawValue?.trim();
+    if (raw == null || raw.isEmpty) return null;
+    if (!raw.startsWith('/')) return raw;
+    return '$apiBaseUrl${raw.substring(1)}';
+  }
+
+  String? get _normalizedAppUpdateUrlProxyPrefix {
+    final raw = appUpdateUrlProxyPrefix?.trim();
+    if (raw == null || raw.isEmpty) return null;
+    return raw.endsWith('/') ? raw : '$raw/';
+  }
+
+  bool _isGitHubHost(String host) {
+    final normalized = host.trim().toLowerCase();
+    return normalized == 'github.com' ||
+        normalized == 'www.github.com' ||
+        normalized == 'raw.githubusercontent.com' ||
+        normalized.endsWith('.githubusercontent.com');
   }
 }

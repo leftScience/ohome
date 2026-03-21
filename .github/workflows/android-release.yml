@@ -68,6 +68,7 @@ jobs:
       - name: Prepare release assets
         shell: bash
         run: |
+          GH_PROXY_PREFIX="https://gh-proxy.org/"
           APK_SOURCE="app/${APK_RELATIVE_PATH}"
           APK_ASSET="app/build/app/outputs/flutter-apk/ohome-release.apk"
           MANIFEST_ASSET="app/build/app/outputs/flutter-apk/android.json"
@@ -79,7 +80,7 @@ jobs:
           {
             "versionName": "${BUILD_NAME}",
             "versionCode": ${BUILD_NUMBER},
-            "apkUrl": "https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/ohome-release.apk",
+            "apkUrl": "${GH_PROXY_PREFIX}https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/ohome-release.apk",
             "sha256": "${APK_SHA256}",
             "releaseNotes": "GitHub Release ${GITHUB_REF_NAME}"
           }

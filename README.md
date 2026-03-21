@@ -324,8 +324,8 @@ DB:
 Android Release 工作流会把安装包发布到 GitHub Releases。
 
 - Release 页面：[https://github.com/leftScience/ohome/releases](https://github.com/leftScience/ohome/releases)
-- 最新 APK：[https://github.com/leftScience/ohome/releases/latest/download/ohome-release.apk](https://github.com/leftScience/ohome/releases/latest/download/ohome-release.apk)
-- 最新更新清单：[https://github.com/leftScience/ohome/releases/latest/download/android.json](https://github.com/leftScience/ohome/releases/latest/download/android.json)
+- 最新 APK（国内加速）：[https://gh-proxy.org/https://github.com/leftScience/ohome/releases/latest/download/ohome-release.apk](https://gh-proxy.org/https://github.com/leftScience/ohome/releases/latest/download/ohome-release.apk)
+- 最新更新清单（国内加速）：[https://gh-proxy.org/https://github.com/leftScience/ohome/releases/latest/download/android.json](https://gh-proxy.org/https://github.com/leftScience/ohome/releases/latest/download/android.json)
 
 ### 客户端如何连接服务端
 

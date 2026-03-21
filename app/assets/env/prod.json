@@ -1,5 +1,6 @@
 {
   "apiBaseUrl": "http://iosjk.xyz:18090/api/v1",
   "appUpdateManifestUrl": "https://github.com/leftScience/ohome/releases/latest/download/android.json",
+  "appUpdateUrlProxyPrefix": "https://gh-proxy.org/",
   "appUpdateUsePackageInstaller": false
 }
