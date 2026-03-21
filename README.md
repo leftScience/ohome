@@ -375,31 +375,6 @@ Android Release 工作流会把安装包发布到 GitHub Releases。
 - 客户端会把输入的服务端地址标准化为 `/api/v1`
 - 服务端内置了局域网发现能力，探测路径是 `/api/v1/public/discovery`
 
-### Flutter 开发与打包
-
-客户端环境文件：
-
-- `app/assets/env/dev.json`
-- `app/assets/env/prod.json`
-
-通常需要先根据你的服务端地址修改 `apiBaseUrl`。
-
-运行时通过 `APP_ENV` 选择环境：
-
-- 开发：`flutter run --dart-define=APP_ENV=dev`
-- 生产配置运行：`flutter run --dart-define=APP_ENV=prod`
-- 浏览器调试：`flutter run -d chrome --dart-define=APP_ENV=dev`
-- 打包 APK：`flutter build apk --dart-define=APP_ENV=prod`
-- 一键打包：`bash build_prod.sh`
-
-版本和发版约定：
-
-- 发布版本号以 `app/pubspec.yaml` 的 `version: x.y.z+n` 为准
-- GitHub 发版 tag 支持 `v0.0.3` 和 `v0.0.3-rc2` 格式
-- 如果 `version: 0.0.3+2`，建议发布 `v0.0.3-rc2`
-
-如果你只关心客户端本地开发，也可以继续看 [`app/README.md`](./app/README.md)。
-
 ## 参考项目
 
 本项目在设计和实现过程中参考了以下开源项目：
