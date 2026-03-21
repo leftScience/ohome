@@ -128,39 +128,7 @@ xattr -dr com.apple.quarantine .
 
 如果你需要修改端口、默认密码或数据库类型，先编辑 `conf/config.yaml`，再执行 `start.bat` 或 `start.command`。
 
-### 服务端源码运行（开发）
-
-如果你是在本地开发服务端，建议进入 `end/` 目录直接运行。当前 `go.mod` 使用 Go `1.25`。
-
-```bash
-cd end
-go run .
-```
-
-常用校验命令：
-
-```bash
-cd end
-go test ./...
-```
-
-### 服务端 Docker 本地构建
-
-仓库内用于本地构建后端的 Compose 文件位于 `end/docker-compose.yml`。可以在仓库根目录执行：
-
-```bash
-docker compose -f end/docker-compose.yml up -d --build
-```
-
-或者进入 `end/` 目录后直接执行：
-
-```bash
-docker compose up -d --build
-```
-
 ### 服务端 Docker Hub 镜像部署
-
-如果你部署的是正式环境，推荐不要使用仓库自带的 `build` 方式，而是直接拉取 Docker Hub 已发布镜像。
 
 Docker Hub 仓库：`hanlinwang0606/ohome`
 
@@ -175,9 +143,9 @@ services:
       GIN_MODE: release
       PORT: 18090
     volumes:
-      - ./end/conf/config.yaml:/app/conf/config.yaml:ro
-      - ./end/data:/app/data
-      - ./end/log:/app/log
+      - ./ohome/conf:/app/conf
+      - ./ohome/data:/app/data
+      - ./ohome/log:/app/log
     ports:
       - "18090:18090"
     restart: unless-stopped
@@ -185,7 +153,10 @@ services:
 
 启动命令：
 
+首次启动只需要准备目录即可。镜像会在 `./ohome/conf/config.yaml` 不存在时自动写入默认配置文件。
+
 ```bash
+mkdir -p ./ohome/conf ./ohome/data ./ohome/log
 docker compose -f docker-compose.release.yml pull
 docker compose -f docker-compose.release.yml up -d
 ```
@@ -195,24 +166,19 @@ docker compose -f docker-compose.release.yml up -d
 ```bash
 docker pull hanlinwang0606/ohome:latest
 
-mkdir -p ./end/data ./end/log
+mkdir -p ./ohome/conf ./ohome/data ./ohome/log
 
 docker run -d \
   --name ohome-server \
   -e GIN_MODE=release \
   -e PORT=18090 \
   -p 18090:18090 \
-  -v "$(pwd)/end/conf/config.yaml:/app/conf/config.yaml:ro" \
-  -v "$(pwd)/end/data:/app/data" \
-  -v "$(pwd)/end/log:/app/log" \
+  -v "$(pwd)/ohome/conf:/app/conf" \
+  -v "$(pwd)/ohome/data:/app/data" \
+  -v "$(pwd)/ohome/log:/app/log" \
   --restart unless-stopped \
   hanlinwang0606/ohome:latest
 ```
-
-说明：
-
-- `hanlinwang0606/ohome:latest` 只是示例；如果你已经推送了版本标签，建议替换成具体 tag，例如 `hanlinwang0606/ohome:v0.0.3-rc4`
-- 上面的 `docker run` 命令默认在仓库根目录执行；如果你在别的目录执行，请把 `$(pwd)/end/...` 改成实际绝对路径
 
 ### 服务端配置说明
 
@@ -369,11 +335,6 @@ Android Release 工作流会把安装包发布到 GitHub Releases。
 2. 手机和服务端尽量处于同一局域网
 3. 在客户端登录页优先使用局域网发现
 4. 如果自动发现失败，手动输入服务端地址，例如 `http://192.168.1.10:18090`
-
-说明：
-
-- 客户端会把输入的服务端地址标准化为 `/api/v1`
-- 服务端内置了局域网发现能力，探测路径是 `/api/v1/public/discovery`
 
 ## 参考项目
 

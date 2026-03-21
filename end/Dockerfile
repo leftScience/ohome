@@ -24,12 +24,16 @@ WORKDIR /app
 ENV GIN_MODE=release
 ENV PORT=18090
 
-# 创建配置/数据目录，config.yaml 运行时挂载，sql 初始化文件随镜像一起拷贝
-RUN apk add --no-cache ca-certificates tzdata && mkdir -p /app/conf /app/data /app/log /app/sql
+# 创建配置/数据目录，默认配置和 sql 初始化文件随镜像一起拷贝
+RUN apk add --no-cache ca-certificates tzdata && mkdir -p /app/conf /app/data /app/log /app/sql /app/defaults
 
 COPY --from=builder /app/bin/ohome /app/server
 COPY --from=builder /app/sql /app/sql
+COPY --from=builder /app/conf/config.yaml /app/defaults/config.yaml
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
+
+RUN chmod +x /app/docker-entrypoint.sh
 
 EXPOSE 18090
 
-CMD ["/app/server"]
+CMD ["/app/docker-entrypoint.sh"]
