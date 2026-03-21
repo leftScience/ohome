@@ -296,84 +296,157 @@ class HomeView extends GetView<HomeController> {
       onTap: entry.onTap,
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(15.r),
+          borderRadius: BorderRadius.circular(18.r),
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: entry.gradient,
           ),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.08),
+            width: 1,
+          ),
           boxShadow: [
             BoxShadow(
-              color: entry.gradient[0].withValues(alpha: 0.3),
-              blurRadius: 7,
-              offset: const Offset(0, 2),
+              color: entry.gradient[0].withValues(alpha: 0.24),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
         child: Stack(
           children: [
-            // 右上角装饰光晕
             Positioned(
-              top: -6.h,
-              right: -6.w,
+              left: -18.w,
+              bottom: -22.h,
               child: Container(
-                width: 32.w,
-                height: 32.w,
+                width: 92.w,
+                height: 92.w,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      entry.iconColor.withValues(alpha: 0.2),
+                      Colors.white.withValues(alpha: 0.16),
+                      Colors.white.withValues(alpha: 0.0),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            // 右上角装饰光晕
+            Positioned(
+              top: -8.h,
+              right: -8.w,
+              child: Container(
+                width: 46.w,
+                height: 46.w,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      entry.iconColor.withValues(alpha: 0.28),
                       Colors.transparent,
                     ],
                   ),
                 ),
               ),
             ),
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(18.r),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.white.withValues(alpha: 0.07),
+                      Colors.transparent,
+                    ],
+                    stops: const [0.0, 0.34],
+                  ),
+                ),
+              ),
+            ),
             // 内容
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 11.w, vertical: 8.h),
-              child: Row(
+              padding: EdgeInsets.fromLTRB(14.w, 12.h, 12.w, 12.h),
+              child: Stack(
                 children: [
-                  Container(
-                    width: 30.w,
-                    height: 30.w,
-                    decoration: BoxDecoration(
-                      color: entry.iconColor.withValues(alpha: 0.18),
-                      borderRadius: BorderRadius.circular(9.r),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Container(
+                      width: 28.w,
+                      height: 28.w,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.08),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.arrow_forward_rounded,
+                        color: Colors.white.withValues(alpha: 0.72),
+                        size: 15.w,
+                      ),
                     ),
-                    child: Icon(entry.icon, color: entry.iconColor, size: 17.w),
                   ),
-                  SizedBox(width: 8.w),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
+                  Positioned.fill(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Text(
-                          entry.label,
-                          style: TextStyle(
-                            fontSize: 13.sp,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            letterSpacing: 0.3,
+                        Container(
+                          width: 42.w,
+                          height: 42.w,
+                          decoration: BoxDecoration(
+                            color: entry.iconColor.withValues(alpha: 0.16),
+                            borderRadius: BorderRadius.circular(14.r),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.08),
+                              width: 1,
+                            ),
+                          ),
+                          child: Icon(
+                            entry.icon,
+                            color: Colors.white.withValues(alpha: 0.95),
+                            size: 22.w,
                           ),
                         ),
-                        SizedBox(height: 1.h),
-                        Text(
-                          entry.subtitle,
-                          style: TextStyle(
-                            fontSize: 9.sp,
-                            color: entry.iconColor.withValues(alpha: 0.7),
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          child: Padding(
+                            padding: EdgeInsets.only(right: 20.w),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  entry.label,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 15.sp,
+                                    height: 1.0,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                    letterSpacing: 0.2,
+                                  ),
+                                ),
+                                SizedBox(height: 4.h),
+                                Text(
+                                  entry.subtitle,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 9.sp,
+                                    height: 1.1,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.white.withValues(alpha: 0.72),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    color: entry.iconColor.withValues(alpha: 0.4),
-                    size: 10.w,
                   ),
                 ],
               ),
