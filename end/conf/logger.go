@@ -29,12 +29,11 @@ func getEncoder() zapcore.Encoder {
 	return zapcore.NewJSONEncoder(encoderConfig)
 }
 func getWriteSync() zapcore.WriteSyncer {
-	//获取分割符
-	separator := string(filepath.Separator)
-	//获取项目根目录
-	stRootDir, _ := os.Getwd()
-	// 生成log的目录
-	logPath := stRootDir + separator + "log" + separator + time.Now().Format(time.DateOnly) + ".log"
+	logPath := ResolveAppPath(filepath.Join("log", time.Now().Format(time.DateOnly)+".log"))
+	_ = os.MkdirAll(filepath.Dir(logPath), 0o755)
+	if file, err := os.OpenFile(logPath, os.O_CREATE|os.O_APPEND, 0o644); err == nil {
+		_ = file.Close()
+	}
 
 	lumberjackSyncer := &lumberjack.Logger{
 		Filename:   logPath,

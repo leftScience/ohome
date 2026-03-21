@@ -1,0 +1,222 @@
+name: Server Release Packages
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-packages:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: end/go.mod
+          cache-dependency-path: end/go.sum
+
+      - name: Build server release packages
+        run: bash scripts/build-server-release-packages.sh
+
+      - name: Upload packages artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-release-packages
+          path: |
+            dist/server-release/ohome-server_windows_amd64.zip
+            dist/server-release/ohome-server_darwin_amd64.zip
+            dist/server-release/ohome-server_darwin_arm64.zip
+            dist/server-release/checksums.txt
+
+  smoke-test:
+    needs: build-packages
+    runs-on: ${{ matrix.runs_on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - package_name: ohome-server_windows_amd64.zip
+            runs_on: windows-latest
+            package_dir: ohome-server_windows_amd64
+            binary_name: ohome.exe
+            start_script: start.bat
+            shell_name: pwsh
+            script_port: 28191
+            binary_port: 28192
+          - package_name: ohome-server_darwin_amd64.zip
+            runs_on: macos-15-intel
+            package_dir: ohome-server_darwin_amd64
+            binary_name: ohome
+            start_script: start.command
+            shell_name: bash
+            script_port: 28291
+            binary_port: 28292
+          - package_name: ohome-server_darwin_arm64.zip
+            runs_on: macos-15
+            package_dir: ohome-server_darwin_arm64
+            binary_name: ohome
+            start_script: start.command
+            shell_name: bash
+            script_port: 28391
+            binary_port: 28392
+
+    steps:
+      - name: Download packages artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: server-release-packages
+          path: dist/server-release
+
+      - name: Smoke test Windows package
+        if: matrix.shell_name == 'pwsh'
+        shell: pwsh
+        run: |
+          $archivePath = Join-Path $PWD "dist/server-release/${{ matrix.package_name }}"
+          $extractRoot = Join-Path $env:RUNNER_TEMP "${{ matrix.package_dir }}"
+          Expand-Archive -Path $archivePath -DestinationPath $extractRoot -Force
+
+          $packageDir = $extractRoot
+          $scriptPath = Join-Path $packageDir "${{ matrix.start_script }}"
+          $binaryPath = Join-Path $packageDir "${{ matrix.binary_name }}"
+
+          $startServer = {
+            param([string]$filePath, [string]$workingDir, [int]$port)
+
+            if ($filePath.EndsWith(".bat")) {
+              Start-Process -FilePath "cmd.exe" -ArgumentList "/c", "set SERVER_PORT=$port && call `"$filePath`"" -WorkingDirectory $workingDir | Out-Null
+              return
+            }
+
+            Start-Process -FilePath "cmd.exe" -ArgumentList "/c", "set SERVER_PORT=$port && `"$filePath`"" -WorkingDirectory $workingDir | Out-Null
+          }
+
+          $waitForServer = {
+            param([int]$port)
+
+            for ($i = 0; $i -lt 30; $i++) {
+              try {
+                Invoke-WebRequest -Uri "http://127.0.0.1:$port/swagger/index.html" -UseBasicParsing | Out-Null
+                return
+              } catch {
+                Start-Sleep -Seconds 1
+              }
+            }
+            throw "Server did not become ready"
+          }
+
+          try {
+            & $startServer $scriptPath $packageDir ${{ matrix.script_port }}
+            & $waitForServer ${{ matrix.script_port }}
+
+            if (-not (Test-Path (Join-Path $packageDir "data/ohome.db"))) {
+              throw "SQLite database file was not created"
+            }
+            if (-not (Get-ChildItem (Join-Path $packageDir "log/*.log") -ErrorAction SilentlyContinue)) {
+              throw "Log file was not created"
+            }
+
+            Get-Process ohome -ErrorAction SilentlyContinue | Stop-Process -Force
+            Start-Sleep -Seconds 2
+
+            $outsideDir = Join-Path $env:RUNNER_TEMP "outside"
+            New-Item -ItemType Directory -Path $outsideDir -Force | Out-Null
+            & $startServer $binaryPath $outsideDir ${{ matrix.binary_port }}
+            & $waitForServer ${{ matrix.binary_port }}
+
+            if (-not (Test-Path (Join-Path $packageDir "data/ohome.db"))) {
+              throw "SQLite database file was not preserved after binary launch"
+            }
+          } finally {
+            Get-Process ohome -ErrorAction SilentlyContinue | Stop-Process -Force
+          }
+
+      - name: Smoke test macOS package
+        if: matrix.shell_name == 'bash'
+        shell: bash
+        run: |
+          archive_path="$PWD/dist/server-release/${{ matrix.package_name }}"
+          package_dir="$RUNNER_TEMP/${{ matrix.package_dir }}"
+          mkdir -p "$package_dir"
+          unzip -q "$archive_path" -d "$package_dir"
+
+          chmod +x "$package_dir/${{ matrix.binary_name }}" "$package_dir/${{ matrix.start_script }}"
+
+          start_and_wait() {
+            local launch_dir="$1"
+            local command_path="$2"
+            local pid_file="$3"
+            local port="$4"
+
+            (
+              cd "$launch_dir"
+              SERVER_PORT="$port" "$command_path" >"$RUNNER_TEMP/server.log" 2>&1 &
+              echo $! >"$pid_file"
+            )
+
+            for _ in $(seq 1 30); do
+              if curl -fsS "http://127.0.0.1:$port/swagger/index.html" >/dev/null; then
+                return 0
+              fi
+              sleep 1
+            done
+
+            return 1
+          }
+
+          cleanup() {
+            if [[ -f "$1" ]]; then
+              kill "$(cat "$1")" >/dev/null 2>&1 || true
+            fi
+            pkill -f "$package_dir/${{ matrix.binary_name }}" >/dev/null 2>&1 || true
+          }
+
+          pid_script="$RUNNER_TEMP/${{ matrix.package_dir }}-script.pid"
+          pid_binary="$RUNNER_TEMP/${{ matrix.package_dir }}-binary.pid"
+
+          trap 'cleanup "$pid_script"; cleanup "$pid_binary"' EXIT
+
+          start_and_wait "$package_dir" "$package_dir/${{ matrix.start_script }}" "$pid_script" "${{ matrix.script_port }}"
+          test -f "$package_dir/data/ohome.db"
+          ls "$package_dir"/log/*.log >/dev/null
+          cleanup "$pid_script"
+          sleep 2
+
+          outside_dir="$RUNNER_TEMP/outside-${{ matrix.package_dir }}"
+          mkdir -p "$outside_dir"
+          start_and_wait "$outside_dir" "$package_dir/${{ matrix.binary_name }}" "$pid_binary" "${{ matrix.binary_port }}"
+          test -f "$package_dir/data/ohome.db"
+
+  publish-release:
+    if: github.ref_type == 'tag'
+    needs:
+      - build-packages
+      - smoke-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download packages artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: server-release-packages
+          path: dist/server-release
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          generate_release_notes: true
+          overwrite_files: true
+          fail_on_unmatched_files: true
+          files: |
+            dist/server-release/ohome-server_windows_amd64.zip
+            dist/server-release/ohome-server_darwin_amd64.zip
+            dist/server-release/ohome-server_darwin_arm64.zip
+            dist/server-release/checksums.txt

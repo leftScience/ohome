@@ -182,6 +182,18 @@ Android Release 工作流会把安装包发布到 GitHub Releases。
 - 最新 APK：[https://github.com/leftScience/ohome/releases/latest/download/ohome-release.apk](https://github.com/leftScience/ohome/releases/latest/download/ohome-release.apk)
 - 最新更新清单：[https://github.com/leftScience/ohome/releases/latest/download/android.json](https://github.com/leftScience/ohome/releases/latest/download/android.json)
 
+## 后端便携包下载
+
+后端 Server Release 工作流会把 Windows 和 macOS 便携包发布到 GitHub Releases。
+
+### 最新版下载地址
+
+- Release 页面：[https://github.com/leftScience/ohome/releases](https://github.com/leftScience/ohome/releases)
+- Windows x64：[https://github.com/leftScience/ohome/releases/latest/download/ohome-server_windows_amd64.zip](https://github.com/leftScience/ohome/releases/latest/download/ohome-server_windows_amd64.zip)
+- macOS Intel：[https://github.com/leftScience/ohome/releases/latest/download/ohome-server_darwin_amd64.zip](https://github.com/leftScience/ohome/releases/latest/download/ohome-server_darwin_amd64.zip)
+- macOS Apple Silicon：[https://github.com/leftScience/ohome/releases/latest/download/ohome-server_darwin_arm64.zip](https://github.com/leftScience/ohome/releases/latest/download/ohome-server_darwin_arm64.zip)
+- SHA256 校验：[https://github.com/leftScience/ohome/releases/latest/download/checksums.txt](https://github.com/leftScience/ohome/releases/latest/download/checksums.txt)
+
 ## 参考项目
 
 本项目在设计和实现过程中参考了以下开源项目：

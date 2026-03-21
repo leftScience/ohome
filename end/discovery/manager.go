@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"ohome/conf"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -274,11 +275,11 @@ func defaultInstanceIDPath() string {
 
 	if driver == "sqlite" {
 		if dbPath, ok := resolveSQLitePath(dsn); ok {
-			return filepath.Join(filepath.Dir(dbPath), DefaultInstanceFile)
+			return conf.ResolveAppPath(filepath.Join(filepath.Dir(dbPath), DefaultInstanceFile))
 		}
 	}
 
-	return filepath.Join("data", DefaultInstanceFile)
+	return conf.ResolveAppPath(filepath.Join("data", DefaultInstanceFile))
 }
 
 func detectDriverFromDSN(dsn string) string {

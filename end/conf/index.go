@@ -2,7 +2,6 @@ package conf
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -22,13 +21,15 @@ func InitConfig() {
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
 
-	viper.SetConfigName("config")
-	viper.SetConfigType("yaml")
-	dir, _ := os.Getwd()
-	viper.AddConfigPath(dir + "/conf")
-
-	err := viper.ReadInConfig()
+	configPath, err := configuredConfigPath()
 	if err != nil {
 		panic(fmt.Sprintf("读取配置文件异常,错误信息是 ：%v", err.Error()))
 	}
+
+	viper.SetConfigFile(configPath)
+	if err := viper.ReadInConfig(); err != nil {
+		panic(fmt.Sprintf("读取配置文件异常,错误信息是 ：%v", err.Error()))
+	}
+
+	normalizeRuntimeConfigPaths()
 }
