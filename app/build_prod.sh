@@ -11,6 +11,7 @@ DRY_RUN=""
 REQUESTED_BUILD_NUMBER=""
 BUILD_METADATA_FILE="${BUILD_METADATA_FILE:-}"
 RELEASE_TAG="${RELEASE_TAG:-}"
+CI_BUILD_NUMBER="${CI_BUILD_NUMBER:-}"
 
 # ── Parse arguments ──────────────────────────────────────────────
 if [[ "${1:-}" == "--dry-run" ]]; then
@@ -23,6 +24,23 @@ fi
 # ── Helper ───────────────────────────────────────────────────────
 is_number() {
   [[ "$1" =~ ^[0-9]+$ ]]
+}
+
+TAG_BUILD_NAME=""
+TAG_BUILD_NUMBER=""
+
+parse_release_tag() {
+  local normalized_tag="$1"
+
+  if [[ "$normalized_tag" =~ ^v?([0-9]+\.[0-9]+\.[0-9]+)(-rc([0-9]+))?$ ]]; then
+    TAG_BUILD_NAME="${BASH_REMATCH[1]}"
+    TAG_BUILD_NUMBER="${BASH_REMATCH[3]:-}"
+    return 0
+  fi
+
+  TAG_BUILD_NAME=""
+  TAG_BUILD_NUMBER=""
+  return 1
 }
 
 # ── Read version from pubspec.yaml ───────────────────────────────
@@ -51,6 +69,21 @@ if [[ "$PUBSPEC_BUILD_NUMBER" == "$VERSION_LINE" ]]; then
   PUBSPEC_BUILD_NUMBER=1
 fi
 
+TAG_VERSION_SOURCE=""
+if [[ -n "$RELEASE_TAG" ]]; then
+  NORMALIZED_TAG="${RELEASE_TAG#refs/tags/}"
+  if parse_release_tag "$NORMALIZED_TAG"; then
+    TAG_VERSION_SOURCE="release tag"
+  fi
+fi
+
+if [[ -n "$TAG_BUILD_NAME" ]]; then
+  BUILD_NAME="$TAG_BUILD_NAME"
+  BUILD_NAME_SOURCE="$TAG_VERSION_SOURCE"
+else
+  BUILD_NAME_SOURCE="pubspec version"
+fi
+
 # ── Determine build number ───────────────────────────────────────
 if [[ -n "$REQUESTED_BUILD_NUMBER" ]]; then
   if ! is_number "$REQUESTED_BUILD_NUMBER"; then
@@ -59,6 +92,20 @@ if [[ -n "$REQUESTED_BUILD_NUMBER" ]]; then
   fi
   BUILD_NUMBER="$REQUESTED_BUILD_NUMBER"
   BUILD_NUMBER_SOURCE="argument"
+elif [[ -n "$TAG_BUILD_NUMBER" ]]; then
+  if ! is_number "$TAG_BUILD_NUMBER"; then
+    echo "[ERROR] Invalid build number \"$TAG_BUILD_NUMBER\" parsed from release tag."
+    exit 1
+  fi
+  BUILD_NUMBER="$TAG_BUILD_NUMBER"
+  BUILD_NUMBER_SOURCE="release tag"
+elif [[ -n "$CI_BUILD_NUMBER" ]]; then
+  if ! is_number "$CI_BUILD_NUMBER"; then
+    echo "[ERROR] Invalid CI build number \"$CI_BUILD_NUMBER\"."
+    exit 1
+  fi
+  BUILD_NUMBER="$CI_BUILD_NUMBER"
+  BUILD_NUMBER_SOURCE="ci run number"
 else
   if ! is_number "$PUBSPEC_BUILD_NUMBER"; then
     echo "[ERROR] Invalid pubspec build number \"$PUBSPEC_BUILD_NUMBER\"."
@@ -74,25 +121,17 @@ if [[ "$BUILD_NUMBER" -le 0 ]]; then
 fi
 
 if [[ -n "$RELEASE_TAG" ]]; then
-  NORMALIZED_TAG="${RELEASE_TAG#refs/tags/}"
-  EXPECTED_TAGS=(
-    "$BUILD_NAME"
-    "v$BUILD_NAME"
-    "$BUILD_NAME-rc$BUILD_NUMBER"
-    "v$BUILD_NAME-rc$BUILD_NUMBER"
-  )
-
-  TAG_MATCHED=0
-  for expected_tag in "${EXPECTED_TAGS[@]}"; do
-    if [[ "$NORMALIZED_TAG" == "$expected_tag" ]]; then
-      TAG_MATCHED=1
-      break
-    fi
-  done
-
-  if [[ "$TAG_MATCHED" -ne 1 ]]; then
-    echo "[ERROR] Release tag \"$NORMALIZED_TAG\" does not match pubspec version \"$BUILD_NAME+$BUILD_NUMBER\"."
-    echo "[ERROR] Allowed formats: ${EXPECTED_TAGS[*]}"
+  if [[ -n "$TAG_VERSION_SOURCE" ]]; then
+    :
+  else
+    EXPECTED_FORMATS=(
+      "<version>"
+      "v<version>"
+      "<version>-rc<number>"
+      "v<version>-rc<number>"
+    )
+    echo "[ERROR] Unsupported release tag \"$NORMALIZED_TAG\"."
+    echo "[ERROR] Allowed formats: ${EXPECTED_FORMATS[*]}"
     exit 1
   fi
 fi
@@ -100,7 +139,7 @@ fi
 APK_RELATIVE_PATH="$OUTPUT_DIR/$APK_FILENAME"
 
 echo ""
-echo "Build name   : $BUILD_NAME"
+echo "Build name   : $BUILD_NAME ($BUILD_NAME_SOURCE)"
 echo "Build number : $BUILD_NUMBER ($BUILD_NUMBER_SOURCE)"
 echo "Release tag  : ${RELEASE_TAG:-<none>}"
 echo "APK file     : $APK_RELATIVE_PATH"

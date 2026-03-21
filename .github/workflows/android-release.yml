@@ -60,6 +60,7 @@ jobs:
         shell: bash
         run: |
           BUILD_METADATA_FILE="$RUNNER_TEMP/ohome-release.env" \
+          CI_BUILD_NUMBER="${GITHUB_RUN_NUMBER}" \
           RELEASE_TAG="${GITHUB_REF_NAME}" \
           bash build_prod.sh
 
