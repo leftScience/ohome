@@ -23,7 +23,7 @@ Widget _buildApp() {
     designSize: const Size(375, 876),
     minTextAdapt: true,
     builder: (context, child) => GetMaterialApp(
-      title: '我家',
+      title: '王盘',
       locale: const Locale('zh', 'CN'),
       fallbackLocale: const Locale('zh', 'CN'),
       supportedLocales: const <Locale>[Locale('zh', 'CN')],
