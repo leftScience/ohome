@@ -1065,127 +1065,122 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                 ? math.min(preferredVideoHeight, maxHeight)
                 : preferredVideoHeight;
 
-            return SingleChildScrollView(
-              child: Column(
-                children: [
-                  SizedBox(
-                    width: maxWidth,
-                    height: videoHeight,
-                    child: Obx(() {
-                      if (controller.isLoadingPlaylist.value) {
-                        return Container(
-                          color: const Color(0xFF111111),
-                          child: const PlaylistLoadingView(
-                            message: '正在加载播放列表...',
-                            accentColor: Color(0xFF2563FF),
-                          ),
-                        );
-                      }
-                      if (controller.episodes.isEmpty) {
-                        return Container(
-                          color: const Color(0xFF111111),
-                          child: const Center(
-                            child: Text(
-                              '播放列表为空',
-                              style: TextStyle(color: Colors.white70),
-                            ),
-                          ),
-                        );
-                      }
-                      final useFullscreenFitMode =
-                          controller.isFullscreen.value || isCompactHeight;
-                      final fit = useFullscreenFitMode
-                          ? (controller.isFullscreenCover
-                                ? BoxFit.cover
-                                : BoxFit.contain)
-                          : BoxFit.contain;
-                      return Video(
-                        controller: controller.videoController,
-                        fit: fit,
-                        fill: const Color(0xFF111111),
-                        controls: (state) {
-                          return Listener(
-                            behavior: HitTestBehavior.translucent,
-                            onPointerDown: (event) {
-                              _onSpeedBoostPointerDown(state, event);
-                            },
-                            onPointerMove: (event) =>
-                                _onSpeedBoostPointerMove(state, event),
-                            onPointerUp: _onSpeedBoostPointerUp,
-                            onPointerCancel: _onSpeedBoostPointerCancel,
-                            child: Stack(
-                              fit: StackFit.expand,
-                              children: [
-                                Obx(() {
-                                  if (controller.isSpeedBoosting.value) {
-                                    return const SizedBox.shrink();
-                                  }
-                                  final normalTheme =
-                                      kDefaultMaterialVideoControlsThemeData
-                                          .copyWith(
-                                            bottomButtonBar: [
-                                              _buildNextEpisodeControlsButton(),
-                                              SizedBox(width: 6.w),
-                                              const MaterialPositionIndicator(),
-                                              const Spacer(),
-                                              const MaterialFullscreenButton(),
-                                            ],
-                                          );
-
-                                  final fullscreenTheme =
-                                      kDefaultMaterialVideoControlsThemeDataFullscreen
-                                          .copyWith(
-                                            topButtonBar:
-                                                _buildFullscreenTopButtonBar(
-                                                  state,
-                                                ),
-                                            bottomButtonBar: [
-                                              _buildNextEpisodeControlsButton(),
-                                              SizedBox(width: 6.w),
-                                              const MaterialPositionIndicator(),
-                                              const Spacer(),
-                                              const MaterialFullscreenButton(),
-                                            ],
-                                          );
-                                  return MaterialVideoControlsTheme(
-                                    normal: normalTheme,
-                                    fullscreen: fullscreenTheme,
-                                    child: AdaptiveVideoControls(state),
-                                  );
-                                }),
-                                const SizedBox.shrink(),
-                              ],
-                            ),
-                          );
-                        },
-                        onEnterFullscreen: () async {
-                          controller.isFullscreen.value = true;
-                          await defaultEnterNativeFullscreen();
-                        },
-                        onExitFullscreen: () async {
-                          controller.isFullscreen.value = false;
-                          await defaultExitNativeFullscreen();
-                          await SystemChrome.setPreferredOrientations(const [
-                            DeviceOrientation.portraitUp,
-                          ]);
-                        },
+            return Column(
+              children: [
+                SizedBox(
+                  width: maxWidth,
+                  height: videoHeight,
+                  child: Obx(() {
+                    if (controller.isLoadingPlaylist.value) {
+                      return Container(
+                        color: const Color(0xFF111111),
+                        child: const PlaylistLoadingView(
+                          message: '正在加载播放列表...',
+                          accentColor: Color(0xFF2563FF),
+                        ),
                       );
-                    }),
-                  ),
-                  if (!isCompactHeight) SizedBox(height: 10.h),
-                  if (!isCompactHeight)
-                    Obx(() {
+                    }
+                    if (controller.episodes.isEmpty) {
+                      return Container(
+                        color: const Color(0xFF111111),
+                        child: const Center(
+                          child: Text(
+                            '播放列表为空',
+                            style: TextStyle(color: Colors.white70),
+                          ),
+                        ),
+                      );
+                    }
+                    final useFullscreenFitMode =
+                        controller.isFullscreen.value || isCompactHeight;
+                    final fit = useFullscreenFitMode
+                        ? (controller.isFullscreenCover
+                              ? BoxFit.cover
+                              : BoxFit.contain)
+                        : BoxFit.contain;
+                    return Video(
+                      controller: controller.videoController,
+                      fit: fit,
+                      fill: const Color(0xFF111111),
+                      controls: (state) {
+                        return Listener(
+                          behavior: HitTestBehavior.translucent,
+                          onPointerDown: (event) {
+                            _onSpeedBoostPointerDown(state, event);
+                          },
+                          onPointerMove: (event) =>
+                              _onSpeedBoostPointerMove(state, event),
+                          onPointerUp: _onSpeedBoostPointerUp,
+                          onPointerCancel: _onSpeedBoostPointerCancel,
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              Obx(() {
+                                if (controller.isSpeedBoosting.value) {
+                                  return const SizedBox.shrink();
+                                }
+                                final normalTheme =
+                                    kDefaultMaterialVideoControlsThemeData
+                                        .copyWith(
+                                          bottomButtonBar: [
+                                            _buildNextEpisodeControlsButton(),
+                                            SizedBox(width: 6.w),
+                                            const MaterialPositionIndicator(),
+                                            const Spacer(),
+                                            const MaterialFullscreenButton(),
+                                          ],
+                                        );
+
+                                final fullscreenTheme =
+                                    kDefaultMaterialVideoControlsThemeDataFullscreen
+                                        .copyWith(
+                                          topButtonBar:
+                                              _buildFullscreenTopButtonBar(
+                                                state,
+                                              ),
+                                          bottomButtonBar: [
+                                            _buildNextEpisodeControlsButton(),
+                                            SizedBox(width: 6.w),
+                                            const MaterialPositionIndicator(),
+                                            const Spacer(),
+                                            const MaterialFullscreenButton(),
+                                          ],
+                                        );
+                                return MaterialVideoControlsTheme(
+                                  normal: normalTheme,
+                                  fullscreen: fullscreenTheme,
+                                  child: AdaptiveVideoControls(state),
+                                );
+                              }),
+                              const SizedBox.shrink(),
+                            ],
+                          ),
+                        );
+                      },
+                      onEnterFullscreen: () async {
+                        controller.isFullscreen.value = true;
+                        await defaultEnterNativeFullscreen();
+                      },
+                      onExitFullscreen: () async {
+                        controller.isFullscreen.value = false;
+                        await defaultExitNativeFullscreen();
+                        await SystemChrome.setPreferredOrientations(const [
+                          DeviceOrientation.portraitUp,
+                        ]);
+                      },
+                    );
+                  }),
+                ),
+                if (!isCompactHeight) SizedBox(height: 10.h),
+                if (!isCompactHeight)
+                  Expanded(
+                    child: Obx(() {
                       if (controller.isFullscreen.value) {
                         return const SizedBox.shrink();
                       }
                       final currentRate = _formatRate(
                         controller.playbackRate.value,
                       );
-                      final maxListHeight = maxHeight.isFinite && maxHeight > 0
-                          ? (maxHeight - videoHeight - 210.h)
-                                .clamp(220.h, 420.h)
-                                .toDouble()
-                          : 320.h;
                       return Padding(
                         padding: EdgeInsets.fromLTRB(16.w, 14.h, 16.w, 12.h),
                         child: Column(
@@ -1295,20 +1290,13 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                                 ),
                               )
                             else
-                              Obx(() {
-                                final indices =
-                                    controller.visibleEpisodeIndices;
-                                final selected = controller.currentIndex.value;
-                                final contentHeight =
-                                    indices.length * _episodeListItemExtent.h +
-                                    math.max(0, indices.length - 1) * 10.h;
-                                final viewportHeight = math.min(
-                                  maxListHeight,
-                                  contentHeight,
-                                );
-                                return SizedBox(
-                                  height: viewportHeight,
-                                  child: ListView.separated(
+                              Expanded(
+                                child: Obx(() {
+                                  final indices =
+                                      controller.visibleEpisodeIndices;
+                                  final selected =
+                                      controller.currentIndex.value;
+                                  return ListView.separated(
                                     controller: _episodeScrollController,
                                     padding: EdgeInsets.zero,
                                     itemCount: indices.length,
@@ -1324,15 +1312,15 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                                         ),
                                       );
                                     },
-                                  ),
-                                );
-                              }),
+                                  );
+                                }),
+                              ),
                           ],
                         ),
                       );
                     }),
-                ],
-              ),
+                  ),
+              ],
             );
           },
         ),
