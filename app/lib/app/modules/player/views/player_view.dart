@@ -312,6 +312,11 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
     return intro.isNotEmpty ? intro : '更新中';
   }
 
+  double _compactEpisodePanelWidth(MediaQueryData mediaQuery) {
+    final screenWidth = mediaQuery.size.width;
+    return math.min(420.0, math.max(280.0, screenWidth * 0.4));
+  }
+
   Widget _buildInfoPill({
     required IconData icon,
     required String label,
@@ -575,48 +580,89 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                             Navigator.of(panelContext).pop();
                           }
                         },
-                        child: SizedBox(
-                          height: _episodeDrawerItemExtent.h,
-                          child: Stack(
-                            children: [
-                              Positioned.fill(
+                        child: sidePanel
+                            ? ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  minHeight: _episodeDrawerItemExtent.h,
+                                ),
                                 child: Padding(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 40.w,
+                                  padding: EdgeInsetsDirectional.only(
+                                    start: 14.r,
+                                    end: 12.r,
+                                    top: 10.h,
+                                    bottom: 10.h,
                                   ),
-                                  child: Center(
-                                    child: Text(
-                                      _episodeLabel(episodeIndex),
-                                      textAlign: TextAlign.center,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: selected
-                                            ? FontWeight.w600
-                                            : FontWeight.w500,
-                                        fontSize: fontSize,
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          _episodeLabel(episodeIndex),
+                                          textAlign: TextAlign.start,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: selected
+                                                ? FontWeight.w600
+                                                : FontWeight.w500,
+                                            fontSize: fontSize,
+                                          ),
+                                        ),
+                                      ),
+                                      if (selected) ...[
+                                        SizedBox(width: 8.w),
+                                        const Icon(
+                                          Icons.check,
+                                          color: Colors.white,
+                                          size: 18,
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                              )
+                            : SizedBox(
+                                height: _episodeDrawerItemExtent.h,
+                                child: Stack(
+                                  children: [
+                                    Positioned.fill(
+                                      child: Padding(
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 40.w,
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            _episodeLabel(episodeIndex),
+                                            textAlign: TextAlign.center,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: selected
+                                                  ? FontWeight.w600
+                                                  : FontWeight.w500,
+                                              fontSize: fontSize,
+                                            ),
+                                          ),
+                                        ),
                                       ),
                                     ),
-                                  ),
+                                    if (selected)
+                                      Positioned(
+                                        right: 12.w,
+                                        top: 0,
+                                        bottom: 0,
+                                        child: const Center(
+                                          child: Icon(
+                                            Icons.check,
+                                            color: Colors.white,
+                                            size: 18,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
                                 ),
                               ),
-                              if (selected)
-                                Positioned(
-                                  right: 12.w,
-                                  top: 0,
-                                  bottom: 0,
-                                  child: const Center(
-                                    child: Icon(
-                                      Icons.check,
-                                      color: Colors.white,
-                                      size: 18,
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
                       ),
                     ),
                   );
@@ -663,7 +709,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
               final data = mediaQuery.copyWith(
                 textScaler: const TextScaler.linear(0.9),
               );
-              final panelWidth = mediaQuery.size.width / 3;
+              final panelWidth = _compactEpisodePanelWidth(mediaQuery);
               return MediaQuery(
                 data: data,
                 child: SafeArea(
