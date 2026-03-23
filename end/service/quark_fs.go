@@ -66,12 +66,22 @@ func (s *QuarkFsService) ListFiles(pathDTO *dto.QuarkPathDTO) ([]dto.QuarkFsInfo
 	logQuarkWarnf("[quarkFs:list] listing application=%s clientPath=%s targetFid=%s targetName=%s", strings.TrimSpace(pathDTO.Application), clientPath, strings.TrimSpace(targetEntry.Fid), targetEntry.Name())
 	page := pathDTO.Page
 	size := pathDTO.Size
+	sortExpr := quarkListSortByName
+	if clientPath == "/" {
+		sortExpr = quarkListSortByUpdated
+	}
 
 	var entries []quarkDriveFile
 	if size > 0 {
-		entries, _, err = client.listPage(ctx, targetEntry.Fid, page, size)
+		entries, _, err = client.listPageWithSort(
+			ctx,
+			targetEntry.Fid,
+			page,
+			size,
+			sortExpr,
+		)
 	} else {
-		entries, err = client.listAll(ctx, targetEntry.Fid)
+		entries, err = client.listAllWithSort(ctx, targetEntry.Fid, sortExpr)
 	}
 	if err != nil {
 		logQuarkWarnf("[quarkFs:list] list target failed application=%s clientPath=%s targetFid=%s page=%d size=%d err=%v", strings.TrimSpace(pathDTO.Application), clientPath, strings.TrimSpace(targetEntry.Fid), page, size, err)

@@ -22,6 +22,7 @@ type quarkTransferTaskSubmission struct {
 	savePath     string
 	application  string
 	sourceType   string
+	renameTo     string
 	sourceTaskID *uint
 	ownerUserID  uint
 }
@@ -79,6 +80,7 @@ func (s *QuarkTransferTaskService) SubmitSearchManualTransfer(transferDTO *dto.Q
 		savePath:    savePath,
 		application: strings.TrimSpace(transferDTO.Application),
 		sourceType:  model.QuarkTransferTaskSourceSearchManual,
+		renameTo:    displayName,
 		ownerUserID: ownerUserID,
 	})
 }
@@ -133,10 +135,11 @@ func (s *QuarkTransferTaskService) submit(submission quarkTransferTaskSubmission
 	}
 
 	go s.runTransferTask(transferTask, quarkSaveTask{
-		ID:       transferTask.ID,
-		TaskName: transferTask.DisplayName,
-		ShareURL: transferTask.ShareURL,
-		SavePath: transferTask.SavePath,
+		ID:               transferTask.ID,
+		TaskName:         transferTask.DisplayName,
+		ShareURL:         transferTask.ShareURL,
+		SavePath:         transferTask.SavePath,
+		RenameTopLevelTo: submission.renameTo,
 	})
 
 	return transferTask, nil

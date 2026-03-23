@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"net/http"
 	"net/url"
+	"path"
 	"regexp"
 	"strconv"
 	"strings"
@@ -17,10 +18,11 @@ import (
 )
 
 type quarkSaveTask struct {
-	ID       uint
-	TaskName string
-	ShareURL string
-	SavePath string
+	ID               uint
+	TaskName         string
+	ShareURL         string
+	SavePath         string
+	RenameTopLevelTo string
 }
 
 type quarkSaveResult struct {
@@ -177,6 +179,15 @@ func (c *quarkClient) saveFromShare(ctx context.Context, task quarkSaveTask) (qu
 		return quarkSaveResult{Status: "fail", Message: err.Error()}, err
 	}
 
+	var topLevelBefore []quarkDirItem
+	renameTarget := strings.TrimSpace(task.RenameTopLevelTo)
+	if renameTarget != "" {
+		topLevelBefore, err = c.listDirAll(ctx, saveRootFid)
+		if err != nil {
+			return quarkSaveResult{Status: "fail", Message: err.Error()}, err
+		}
+	}
+
 	saved, err := c.syncShareDir(ctx, pwdID, stoken, pdirFid, saveRootPath, saveRootFid)
 	if err != nil {
 		return quarkSaveResult{Status: "fail", Message: err.Error()}, err
@@ -184,7 +195,24 @@ func (c *quarkClient) saveFromShare(ctx context.Context, task quarkSaveTask) (qu
 	if saved == 0 {
 		return quarkSaveResult{Status: "ok", Message: "无新增文件", SavedCount: 0}, nil
 	}
-	return quarkSaveResult{Status: "ok", Message: fmt.Sprintf("新增转存 %d 项", saved), SavedCount: saved}, nil
+
+	message := fmt.Sprintf("新增转存 %d 项", saved)
+	if renameTarget != "" {
+		renamedTo, renamed, renameErr := c.tryRenameTransferredTopLevelEntry(
+			ctx,
+			saveRootFid,
+			topLevelBefore,
+			renameTarget,
+		)
+		switch {
+		case renameErr != nil:
+			message = fmt.Sprintf("%s，自动重命名失败：%s", message, strings.TrimSpace(renameErr.Error()))
+		case renamed && strings.TrimSpace(renamedTo) != "":
+			message = fmt.Sprintf("%s，已重命名为 %s", message, strings.TrimSpace(renamedTo))
+		}
+	}
+
+	return quarkSaveResult{Status: "ok", Message: message, SavedCount: saved}, nil
 }
 
 func buildQuarkSavePath(storePath string) string {
@@ -712,6 +740,168 @@ func (c *quarkClient) syncShareDir(ctx context.Context, pwdID, stoken, shareDirF
 	}
 
 	return totalSaved, nil
+}
+
+func (c *quarkClient) tryRenameTransferredTopLevelEntry(
+	ctx context.Context,
+	destFid string,
+	beforeItems []quarkDirItem,
+	desiredName string,
+) (string, bool, error) {
+	desiredName = normalizeQuarkTransferRenameName(desiredName)
+	if desiredName == "" {
+		return "", false, nil
+	}
+
+	afterItems, err := c.listDirAll(ctx, destFid)
+	if err != nil {
+		return "", false, err
+	}
+
+	newItems := diffNewQuarkDirItems(beforeItems, afterItems)
+	candidate, ok := pickQuarkRenameCandidate(newItems)
+	if !ok {
+		return "", false, nil
+	}
+
+	targetName := buildQuarkTransferRenameTarget(candidate, desiredName)
+	targetName = dedupeQuarkTransferRenameTarget(targetName, afterItems, candidate.FileName)
+	if targetName == "" || strings.EqualFold(strings.TrimSpace(targetName), strings.TrimSpace(candidate.FileName)) {
+		return "", false, nil
+	}
+
+	if err := c.rename(ctx, candidate.Fid, targetName); err != nil {
+		return "", false, err
+	}
+	return targetName, true, nil
+}
+
+func diffNewQuarkDirItems(beforeItems, afterItems []quarkDirItem) []quarkDirItem {
+	beforeByFid := make(map[string]struct{}, len(beforeItems))
+	beforeByName := make(map[string]struct{}, len(beforeItems))
+	for _, item := range beforeItems {
+		name := strings.TrimSpace(item.FileName)
+		if name != "" {
+			beforeByName[strings.ToLower(name)] = struct{}{}
+		}
+		fid := strings.TrimSpace(item.Fid)
+		if fid != "" {
+			beforeByFid[fid] = struct{}{}
+		}
+	}
+
+	newItems := make([]quarkDirItem, 0, len(afterItems))
+	for _, item := range afterItems {
+		name := strings.TrimSpace(item.FileName)
+		fid := strings.TrimSpace(item.Fid)
+		if fid != "" {
+			if _, ok := beforeByFid[fid]; ok {
+				continue
+			}
+		}
+		if name != "" {
+			if _, ok := beforeByName[strings.ToLower(name)]; ok {
+				continue
+			}
+		}
+		newItems = append(newItems, item)
+	}
+	return newItems
+}
+
+func pickQuarkRenameCandidate(items []quarkDirItem) (quarkDirItem, bool) {
+	if len(items) == 1 {
+		return items[0], true
+	}
+
+	var dirCandidate quarkDirItem
+	dirCount := 0
+	for _, item := range items {
+		if item.Dir {
+			dirCandidate = item
+			dirCount++
+		}
+	}
+	if dirCount == 1 {
+		return dirCandidate, true
+	}
+
+	return quarkDirItem{}, false
+}
+
+func buildQuarkTransferRenameTarget(item quarkDirItem, desiredName string) string {
+	name := normalizeQuarkTransferRenameName(desiredName)
+	if name == "" {
+		return ""
+	}
+	if item.Dir {
+		return name
+	}
+
+	ext := strings.TrimSpace(path.Ext(strings.TrimSpace(item.FileName)))
+	if ext == "" {
+		return name
+	}
+	if len(name) >= len(ext) && strings.EqualFold(name[len(name)-len(ext):], ext) {
+		return name
+	}
+	return name + ext
+}
+
+func dedupeQuarkTransferRenameTarget(targetName string, siblingItems []quarkDirItem, selfName string) string {
+	targetName = strings.TrimSpace(targetName)
+	if targetName == "" {
+		return ""
+	}
+
+	usedNames := make(map[string]struct{}, len(siblingItems))
+	selfName = strings.TrimSpace(selfName)
+	for _, item := range siblingItems {
+		name := strings.TrimSpace(item.FileName)
+		if name == "" || strings.EqualFold(name, selfName) {
+			continue
+		}
+		usedNames[strings.ToLower(name)] = struct{}{}
+	}
+
+	if _, exists := usedNames[strings.ToLower(targetName)]; !exists {
+		return targetName
+	}
+
+	ext := path.Ext(targetName)
+	base := strings.TrimSuffix(targetName, ext)
+	if strings.TrimSpace(base) == "" {
+		base = "资源"
+	}
+
+	for i := 2; i <= 999; i++ {
+		candidate := fmt.Sprintf("%s (%d)%s", base, i, ext)
+		if _, exists := usedNames[strings.ToLower(candidate)]; !exists {
+			return candidate
+		}
+	}
+
+	return fmt.Sprintf("%s_%d%s", base, time.Now().Unix(), ext)
+}
+
+func normalizeQuarkTransferRenameName(name string) string {
+	name = strings.NewReplacer(
+		"\r", " ",
+		"\n", " ",
+		"\t", " ",
+		"/", "／",
+		"\\", "／",
+		":", "：",
+		"*", "＊",
+		"?", "？",
+		"\"", "”",
+		"<", "＜",
+		">", "＞",
+		"|", "｜",
+	).Replace(strings.TrimSpace(name))
+	name = strings.Join(strings.Fields(name), " ")
+	name = strings.Trim(name, ". ")
+	return strings.TrimSpace(name)
 }
 
 func (c *quarkClient) saveFile(ctx context.Context, files []quarkShareFile, toPdirFid, pwdID, stoken string) (string, error) {

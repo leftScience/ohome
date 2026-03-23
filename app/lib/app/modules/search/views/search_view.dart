@@ -11,13 +11,6 @@ class SearchView extends StatefulWidget {
   State<SearchView> createState() => _SearchViewState();
 }
 
-class _ResourceTextParts {
-  const _ResourceTextParts({required this.title, required this.description});
-
-  final String title;
-  final String description;
-}
-
 class _SearchViewState extends State<SearchView> {
   static const _searchPlaceholder = 'assets/images/douban_default.png';
 
@@ -62,75 +55,6 @@ class _SearchViewState extends State<SearchView> {
       return;
     }
     Get.back();
-  }
-
-  _ResourceTextParts _parseResourceText(String note, String fallbackUrl) {
-    final value = note.trim();
-    if (value.isEmpty) {
-      return _ResourceTextParts(title: fallbackUrl.trim(), description: '');
-    }
-
-    const descriptionMarkers = <String>[
-      '描述：',
-      '描述:',
-      '【描述】',
-      '简介：',
-      '简介:',
-      '亮点：',
-      '亮点:',
-    ];
-
-    var splitIndex = value.length;
-    var descriptionPart = '';
-    for (final marker in descriptionMarkers) {
-      final index = value.indexOf(marker);
-      if (index >= 0 && index < splitIndex) {
-        splitIndex = index;
-        descriptionPart = value.substring(index).trim();
-      }
-    }
-
-    final title = _normalizeResourceText(
-      value.substring(0, splitIndex).trim(),
-      fallbackUrl.trim(),
-      stripPattern: RegExp(r'^(?:名称|片名|标题|资源名|资源名称)\s*[：:]?\s*'),
-    );
-    final description = _normalizeResourceText(
-      descriptionPart,
-      '',
-      stripPattern: RegExp(r'^(?:【描述】|描述|简介|亮点)\s*[：:]?\s*'),
-    );
-
-    return _ResourceTextParts(title: title, description: description);
-  }
-
-  String _normalizeResourceText(
-    String value,
-    String fallback, {
-    RegExp? stripPattern,
-  }) {
-    if (value.trim().isEmpty) return fallback.trim();
-
-    final lines = value
-        .replaceAll('\r\n', '\n')
-        .replaceAll('\r', '\n')
-        .split('\n')
-        .map((line) => line.trim())
-        .where((line) => line.isNotEmpty && !_looksLikeUrl(line))
-        .toList(growable: false);
-
-    var merged = lines.join(' ').replaceAll(RegExp(r'\s+'), ' ').trim();
-    if (stripPattern != null) {
-      merged = merged.replaceFirst(stripPattern, '').trim();
-    }
-
-    if (merged.isNotEmpty) return merged;
-    return fallback.trim();
-  }
-
-  bool _looksLikeUrl(String value) {
-    final lower = value.trim().toLowerCase();
-    return lower.startsWith('http://') || lower.startsWith('https://');
   }
 
   @override
@@ -266,7 +190,7 @@ class _SearchViewState extends State<SearchView> {
                 separatorBuilder: (_, _) => SizedBox(height: 10.h),
                 itemBuilder: (context, index) {
                   final item = items[index];
-                  final textParts = _parseResourceText(item.note, item.url);
+                  final textParts = item.textParts;
                   final title = textParts.title;
                   final description = textParts.description;
                   final itemUrl = item.url.trim();

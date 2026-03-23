@@ -35,6 +35,7 @@ const (
 	quarkAPITimeout          = 60 * time.Second
 	quarkListRetryCount      = 2
 	quarkListSortByName      = "file_type:asc,file_name:asc"
+	quarkListSortByUpdated   = "updated_at:desc,file_name:asc"
 )
 
 var errQuarkEntryNotFound = errors.New("quark entry not found")
@@ -441,9 +442,17 @@ func (c *quarkClient) driveRequest(ctx context.Context, method, pathname string,
 }
 
 func (c *quarkClient) listAll(ctx context.Context, parentFid string) ([]quarkDriveFile, error) {
+	return c.listAllWithSort(ctx, parentFid, quarkListSortByName)
+}
+
+func (c *quarkClient) listAllWithSort(ctx context.Context, parentFid, sortExpr string) ([]quarkDriveFile, error) {
 	const pageSize = 100
 	page := 1
 	files := make([]quarkDriveFile, 0, pageSize)
+	sortExpr = strings.TrimSpace(sortExpr)
+	if sortExpr == "" {
+		sortExpr = quarkListSortByName
+	}
 
 	for {
 		var (
@@ -458,7 +467,7 @@ func (c *quarkClient) listAll(ctx context.Context, parentFid string) ([]quarkDri
 				"_fetch_total":         "1",
 				"fetch_all_file":       "1",
 				"fetch_risk_file_name": "1",
-				"_sort":                quarkListSortByName,
+				"_sort":                sortExpr,
 			}, nil)
 			if err == nil {
 				break
@@ -506,11 +515,19 @@ func (c *quarkClient) listAll(ctx context.Context, parentFid string) ([]quarkDri
 }
 
 func (c *quarkClient) listPage(ctx context.Context, parentFid string, page, size int) ([]quarkDriveFile, int, error) {
+	return c.listPageWithSort(ctx, parentFid, page, size, quarkListSortByName)
+}
+
+func (c *quarkClient) listPageWithSort(ctx context.Context, parentFid string, page, size int, sortExpr string) ([]quarkDriveFile, int, error) {
 	if page <= 0 {
 		page = 1
 	}
 	if size <= 0 {
 		size = 1
+	}
+	sortExpr = strings.TrimSpace(sortExpr)
+	if sortExpr == "" {
+		sortExpr = quarkListSortByName
 	}
 
 	var (
@@ -525,7 +542,7 @@ func (c *quarkClient) listPage(ctx context.Context, parentFid string, page, size
 			"_fetch_total":         "1",
 			"fetch_all_file":       "1",
 			"fetch_risk_file_name": "1",
-			"_sort":                quarkListSortByName,
+			"_sort":                sortExpr,
 		}, nil)
 		if err == nil {
 			break

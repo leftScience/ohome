@@ -242,9 +242,9 @@ class SearchController extends GetxController {
   }
 
   String _buildTransferResourceName(PansouResourceItem item) {
-    final note = item.note.trim();
-    if (note.isNotEmpty) {
-      return note;
+    final title = item.transferTitle;
+    if (title.isNotEmpty) {
+      return title;
     }
     final currentKeyword = keyword.value.trim();
     if (currentKeyword.isNotEmpty) {
