@@ -28,7 +28,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
   static const _speeds = <double>[0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
   static const _speedBoostDelay = Duration(milliseconds: 260);
   static const double _speedBoostZoneRatio = 0.66;
-  static const double _episodeListChipWidth = 140;
+  static const double _episodeListItemExtent = 72;
   static const double _gestureExcludeTopRatio = 0.15;
   static const double _gestureExcludeBottomRatio = 0.18;
 
@@ -106,7 +106,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Icon(Icons.arrow_back, color: Colors.white, size: 20),
-                SizedBox(width: 8.w),
+                SizedBox(width: 4.w),
                 ConstrainedBox(
                   constraints: BoxConstraints(maxWidth: 280.w),
                   child: SingleChildScrollView(
@@ -265,9 +265,9 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
     final visibleIndex = indices.indexOf(selected);
     if (visibleIndex < 0) return;
     final position = _episodeScrollController.position;
-    final itemWidth = _episodeListChipWidth.w;
-    final spacing = 10.0.w;
-    final target = visibleIndex * (itemWidth + spacing);
+    final itemExtent = _episodeListItemExtent.h;
+    final spacing = 10.0.h;
+    final target = visibleIndex * (itemExtent + spacing);
     final clamped = target.clamp(
       position.minScrollExtent,
       position.maxScrollExtent,
@@ -287,37 +287,160 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
     return (index + 1).toString().padLeft(2, '0');
   }
 
-  Widget _buildEpisodeChip({
-    required BuildContext context,
-    required bool selected,
-    required String text,
-    required VoidCallback onTap,
-    double? fontSize,
-    double? width,
+  String _episodeCountLabel() {
+    final count = controller.episodes.length;
+    if (count > 0) {
+      return '更新至 $count 集';
+    }
+    final intro = controller.resourceIntro.value.trim();
+    return intro.isNotEmpty ? intro : '更新中';
+  }
+
+  Widget _buildInfoPill({
+    required IconData icon,
+    required String label,
+    required String value,
+    VoidCallback? onTap,
   }) {
-    final theme = Theme.of(context);
-    final bg = selected ? theme.colorScheme.primary : Colors.white12;
+    final child = Container(
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: Colors.white12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16.sp, color: Colors.white70),
+          SizedBox(width: 6.w),
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.white60,
+              fontSize: 11.sp,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          SizedBox(width: 6.w),
+          Text(
+            value,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 12.sp,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (onTap == null) return child;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(10.r),
-      child: Container(
-        width: width?.w,
-        height: 40.h,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(10.r),
-          border: Border.all(color: Colors.white24),
-        ),
-        child: Text(
-          text,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-            fontSize: fontSize ?? 13.sp,
+      borderRadius: BorderRadius.circular(12.r),
+      child: child,
+    );
+  }
+
+  Widget _buildPortraitEpisodeTile({
+    required int episodeIndex,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    final episode = controller.episodes[episodeIndex];
+    final title = episode.title.trim().isNotEmpty
+        ? episode.title.trim()
+        : '第 ${episodeIndex + 1} 集';
+    final subtitle = episode.subTitle.trim();
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14.r),
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          height: _episodeListItemExtent.h,
+          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+          decoration: BoxDecoration(
+            color: selected
+                ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)
+                : Colors.white.withValues(alpha: 0.04),
+            borderRadius: BorderRadius.circular(14.r),
+            border: Border.all(
+              color: selected
+                  ? Theme.of(context).colorScheme.primary
+                  : Colors.white12,
+              width: selected ? 1.2 : 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 34.w,
+                height: 34.w,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: selected
+                      ? Theme.of(context).colorScheme.primary
+                      : Colors.white.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(10.r),
+                ),
+                child: Text(
+                  '${episodeIndex + 1}',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 14.sp,
+                        fontWeight: selected
+                            ? FontWeight.w700
+                            : FontWeight.w600,
+                      ),
+                    ),
+                    if (subtitle.isNotEmpty) ...[
+                      SizedBox(height: 4.h),
+                      Text(
+                        subtitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: Colors.white60,
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              SizedBox(width: 10.w),
+              Icon(
+                selected
+                    ? Icons.play_circle_fill_rounded
+                    : Icons.chevron_right_rounded,
+                color: selected
+                    ? Theme.of(context).colorScheme.primary
+                    : Colors.white38,
+                size: selected ? 22.sp : 20.sp,
+              ),
+            ],
           ),
         ),
       ),
@@ -617,6 +740,36 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
     );
   }
 
+  Widget _buildAppBarActionIcon({
+    required bool enabled,
+    required IconData icon,
+    required VoidCallback onTap,
+    String? tooltip,
+  }) {
+    final button = Opacity(
+      opacity: enabled ? 1.0 : 0.38,
+      child: Material(
+        color: Colors.white.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(14.r),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14.r),
+          onTap: enabled ? onTap : null,
+          child: Container(
+            width: 34.w,
+            height: 34.w,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14.r),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+            ),
+            child: Icon(icon, color: Colors.white, size: 18.sp),
+          ),
+        ),
+      ),
+    );
+    if (tooltip == null || tooltip.isEmpty) return button;
+    return Tooltip(message: tooltip, child: button);
+  }
+
   Widget _buildFullscreenFitModeToggle(VideoState state) {
     return Obx(() {
       final isCover = controller.isFullscreenCover;
@@ -674,32 +827,31 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
       backgroundColor: const Color(0xFF050505),
       appBar: AppBar(
         backgroundColor: const Color(0xFF050505),
+        toolbarHeight: 56.h,
+        leadingWidth: 40.w,
         leading: IconButton(
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(),
+          visualDensity: VisualDensity.compact,
           onPressed: () => Navigator.of(context).maybePop(),
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: Colors.white, size: 20.sp),
         ),
+        titleSpacing: 0,
         title: Obx(
-          () => Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                controller.resourceTitle.value,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                ),
+          () => Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              controller.resourceTitle.value,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              softWrap: true,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 14.sp,
+                height: 1.2,
+                fontWeight: FontWeight.w700,
               ),
-              if (controller.resourceIntro.value.isNotEmpty)
-                Text(
-                  controller.resourceIntro.value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: Colors.white54, fontSize: 12),
-                ),
-            ],
+            ),
           ),
         ),
         actions: [
@@ -708,6 +860,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
             return PopupMenuButton<double>(
               color: const Color(0xFF1A1A1A),
               initialValue: rate,
+              tooltip: '倍速 ${_formatRate(rate)}',
               onSelected: (value) {
                 unawaited(controller.setPlaybackRate(value));
               },
@@ -724,28 +877,22 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                     )
                     .toList(growable: false);
               },
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
-                decoration: BoxDecoration(
-                  color: Colors.white10,
-                  borderRadius: BorderRadius.circular(10.r),
-                  border: Border.all(color: Colors.white12),
-                ),
-                child: Text(
-                  _formatRate(rate),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
+              child: IgnorePointer(
+                child: _buildAppBarActionIcon(
+                  enabled: true,
+                  icon: Icons.speed_rounded,
+                  tooltip: '倍速 ${_formatRate(rate)}',
+                  onTap: () {},
                 ),
               ),
             );
           }),
-          SizedBox(width: 8.w),
+          SizedBox(width: 6.w),
           Obx(() {
-            return _buildActionIcon(
+            return _buildAppBarActionIcon(
               enabled: controller.canCastCurrentEpisode,
               icon: controller.isCasting ? Icons.cast_connected : Icons.cast,
+              tooltip: controller.isCasting ? '投屏中' : '投屏',
               onTap: () => unawaited(controller.castCurrentEpisode()),
             );
           }),
@@ -753,25 +900,17 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
             if (!controller.isCasting) return const SizedBox.shrink();
             return Row(
               children: [
-                SizedBox(width: 8.w),
-                _buildActionIcon(
+                SizedBox(width: 6.w),
+                _buildAppBarActionIcon(
                   enabled: true,
                   icon: Icons.stop_screen_share_outlined,
+                  tooltip: '停止投屏',
                   onTap: () => unawaited(controller.stopCasting()),
                 ),
               ],
             );
           }),
-          SizedBox(width: 8.w),
-          Obx(() {
-            final enabled = controller.episodes.isNotEmpty;
-            return _buildActionIcon(
-              enabled: enabled,
-              icon: Icons.access_time,
-              onTap: () => _showSkipSettingsSheet(context),
-            );
-          }),
-          SizedBox(width: 8.w),
+          SizedBox(width: 10.w),
         ],
       ),
       body: SafeArea(
@@ -787,280 +926,272 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                 : preferredVideoHeight;
 
             return SingleChildScrollView(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: maxHeight),
-                child: Column(
-                  children: [
-                    SizedBox(
-                      width: maxWidth,
-                      height: videoHeight,
-                      child: Obx(() {
-                        if (controller.isLoadingPlaylist.value) {
-                          return Container(
-                            color: const Color(0xFF111111),
-                            child: const PlaylistLoadingView(
-                              message: '正在加载播放列表...',
-                              accentColor: Color(0xFF2563FF),
-                            ),
-                          );
-                        }
-                        if (controller.episodes.isEmpty) {
-                          return Container(
-                            color: const Color(0xFF111111),
-                            child: const Center(
-                              child: Text(
-                                '播放列表为空',
-                                style: TextStyle(color: Colors.white70),
-                              ),
-                            ),
-                          );
-                        }
-                        final useFullscreenFitMode =
-                            controller.isFullscreen.value || isCompactHeight;
-                        final fit = useFullscreenFitMode
-                            ? (controller.isFullscreenCover
-                                  ? BoxFit.cover
-                                  : BoxFit.contain)
-                            : BoxFit.contain;
-                        return Video(
-                          controller: controller.videoController,
-                          fit: fit,
-                          fill: const Color(0xFF111111),
-                          controls: (state) {
-                            return Listener(
-                              behavior: HitTestBehavior.translucent,
-                              onPointerDown: (event) {
-                                _onSpeedBoostPointerDown(state, event);
-                              },
-                              onPointerMove: (event) =>
-                                  _onSpeedBoostPointerMove(state, event),
-                              onPointerUp: _onSpeedBoostPointerUp,
-                              onPointerCancel: _onSpeedBoostPointerCancel,
-                              child: Stack(
-                                fit: StackFit.expand,
-                                children: [
-                                  Obx(() {
-                                    if (controller.isSpeedBoosting.value) {
-                                      return const SizedBox.shrink();
-                                    }
-                                    final normalTheme =
-                                        kDefaultMaterialVideoControlsThemeData
-                                            .copyWith(
-                                              bottomButtonBar: [
-                                                _buildNextEpisodeControlsButton(),
-                                                SizedBox(width: 6.w),
-                                                const MaterialPositionIndicator(),
-                                                const Spacer(),
-                                                const MaterialFullscreenButton(),
-                                              ],
-                                            );
-
-                                    final fullscreenTheme =
-                                        kDefaultMaterialVideoControlsThemeDataFullscreen
-                                            .copyWith(
-                                              topButtonBar:
-                                                  _buildFullscreenTopButtonBar(
-                                                    state,
-                                                  ),
-                                              bottomButtonBar: [
-                                                _buildNextEpisodeControlsButton(),
-                                                SizedBox(width: 6.w),
-                                                const MaterialPositionIndicator(),
-                                                const Spacer(),
-                                                const MaterialFullscreenButton(),
-                                              ],
-                                            );
-                                    return MaterialVideoControlsTheme(
-                                      normal: normalTheme,
-                                      fullscreen: fullscreenTheme,
-                                      child: AdaptiveVideoControls(state),
-                                    );
-                                  }),
-                                  const SizedBox.shrink(),
-                                ],
-                              ),
-                            );
-                          },
-                          onEnterFullscreen: () async {
-                            controller.isFullscreen.value = true;
-                            await defaultEnterNativeFullscreen();
-                          },
-                          onExitFullscreen: () async {
-                            controller.isFullscreen.value = false;
-                            await defaultExitNativeFullscreen();
-                            await SystemChrome.setPreferredOrientations(const [
-                              DeviceOrientation.portraitUp,
-                            ]);
-                          },
+              child: Column(
+                children: [
+                  SizedBox(
+                    width: maxWidth,
+                    height: videoHeight,
+                    child: Obx(() {
+                      if (controller.isLoadingPlaylist.value) {
+                        return Container(
+                          color: const Color(0xFF111111),
+                          child: const PlaylistLoadingView(
+                            message: '正在加载播放列表...',
+                            accentColor: Color(0xFF2563FF),
+                          ),
                         );
-                      }),
-                    ),
-                    if (!isCompactHeight) SizedBox(height: 10.h),
-                    if (!isCompactHeight)
-                      Obx(() {
-                        if (controller.isFullscreen.value) {
-                          return const SizedBox.shrink();
-                        }
-                        final title = controller.resourceTitle.value.trim();
-                        final intro = controller.resourceIntro.value.trim();
-                        final index = controller.currentIndex.value;
-                        final episodeTitle =
-                            (index >= 0 && index < controller.episodes.length)
-                            ? controller.episodes[index].title.trim()
-                            : '';
-                        return Padding(
-                          padding: EdgeInsets.fromLTRB(16.w, 6.h, 16.w, 6.h),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    if (title.isNotEmpty)
-                                      Text(
-                                        title,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 18.sp,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
-                                    if (intro.isNotEmpty) ...[
-                                      SizedBox(height: 6.h),
-                                      Text(
-                                        intro,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          color: Colors.white70,
-                                          fontSize: 12.sp,
-                                        ),
-                                      ),
-                                    ],
-                                    if (episodeTitle.isNotEmpty) ...[
-                                      SizedBox(height: 6.h),
-                                      Text(
-                                        episodeTitle,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          color: Colors.white70,
-                                          fontSize: 12.sp,
-                                        ),
-                                      ),
-                                    ],
-                                  ],
+                      }
+                      if (controller.episodes.isEmpty) {
+                        return Container(
+                          color: const Color(0xFF111111),
+                          child: const Center(
+                            child: Text(
+                              '播放列表为空',
+                              style: TextStyle(color: Colors.white70),
+                            ),
+                          ),
+                        );
+                      }
+                      final useFullscreenFitMode =
+                          controller.isFullscreen.value || isCompactHeight;
+                      final fit = useFullscreenFitMode
+                          ? (controller.isFullscreenCover
+                                ? BoxFit.cover
+                                : BoxFit.contain)
+                          : BoxFit.contain;
+                      return Video(
+                        controller: controller.videoController,
+                        fit: fit,
+                        fill: const Color(0xFF111111),
+                        controls: (state) {
+                          return Listener(
+                            behavior: HitTestBehavior.translucent,
+                            onPointerDown: (event) {
+                              _onSpeedBoostPointerDown(state, event);
+                            },
+                            onPointerMove: (event) =>
+                                _onSpeedBoostPointerMove(state, event),
+                            onPointerUp: _onSpeedBoostPointerUp,
+                            onPointerCancel: _onSpeedBoostPointerCancel,
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                Obx(() {
+                                  if (controller.isSpeedBoosting.value) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  final normalTheme =
+                                      kDefaultMaterialVideoControlsThemeData
+                                          .copyWith(
+                                            bottomButtonBar: [
+                                              _buildNextEpisodeControlsButton(),
+                                              SizedBox(width: 6.w),
+                                              const MaterialPositionIndicator(),
+                                              const Spacer(),
+                                              const MaterialFullscreenButton(),
+                                            ],
+                                          );
+
+                                  final fullscreenTheme =
+                                      kDefaultMaterialVideoControlsThemeDataFullscreen
+                                          .copyWith(
+                                            topButtonBar:
+                                                _buildFullscreenTopButtonBar(
+                                                  state,
+                                                ),
+                                            bottomButtonBar: [
+                                              _buildNextEpisodeControlsButton(),
+                                              SizedBox(width: 6.w),
+                                              const MaterialPositionIndicator(),
+                                              const Spacer(),
+                                              const MaterialFullscreenButton(),
+                                            ],
+                                          );
+                                  return MaterialVideoControlsTheme(
+                                    normal: normalTheme,
+                                    fullscreen: fullscreenTheme,
+                                    child: AdaptiveVideoControls(state),
+                                  );
+                                }),
+                                const SizedBox.shrink(),
+                              ],
+                            ),
+                          );
+                        },
+                        onEnterFullscreen: () async {
+                          controller.isFullscreen.value = true;
+                          await defaultEnterNativeFullscreen();
+                        },
+                        onExitFullscreen: () async {
+                          controller.isFullscreen.value = false;
+                          await defaultExitNativeFullscreen();
+                          await SystemChrome.setPreferredOrientations(const [
+                            DeviceOrientation.portraitUp,
+                          ]);
+                        },
+                      );
+                    }),
+                  ),
+                  if (!isCompactHeight) SizedBox(height: 10.h),
+                  if (!isCompactHeight)
+                    Obx(() {
+                      if (controller.isFullscreen.value) {
+                        return const SizedBox.shrink();
+                      }
+                      final currentRate = _formatRate(
+                        controller.playbackRate.value,
+                      );
+                      final maxListHeight = maxHeight.isFinite && maxHeight > 0
+                          ? (maxHeight - videoHeight - 210.h)
+                                .clamp(220.h, 420.h)
+                                .toDouble()
+                          : 320.h;
+                      return Padding(
+                        padding: EdgeInsets.fromLTRB(16.w, 14.h, 16.w, 12.h),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Wrap(
+                              spacing: 8.w,
+                              runSpacing: 8.h,
+                              children: [
+                                _buildInfoPill(
+                                  icon: Icons.update_rounded,
+                                  label: '更新',
+                                  value: _episodeCountLabel(),
                                 ),
-                              ),
-                              SizedBox(width: 10.w),
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Obx(() {
-                                    final asc =
-                                        controller.episodesAscending.value;
-                                    return TextButton.icon(
-                                      onPressed: controller.toggleEpisodeOrder,
-                                      icon: Icon(
-                                        asc
-                                            ? Icons.arrow_downward
-                                            : Icons.arrow_upward,
-                                        color: Colors.white,
-                                        size: 18,
-                                      ),
-                                      label: Text(
-                                        asc ? '正序' : '倒序',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                      style: TextButton.styleFrom(
-                                        padding: EdgeInsets.symmetric(
-                                          horizontal: 10.w,
-                                          vertical: 8.h,
-                                        ),
-                                      ),
-                                    );
-                                  }),
-                                  TextButton.icon(
-                                    onPressed: controller.episodes.isEmpty
-                                        ? null
-                                        : () => _showEpisodeSheet(context),
-                                    icon: const Icon(
-                                      Icons.format_list_bulleted,
+                                _buildInfoPill(
+                                  icon: Icons.speed_rounded,
+                                  label: '倍速',
+                                  value: currentRate,
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 16.h),
+                            Row(
+                              children: [
+                                Text(
+                                  '选集',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16.sp,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const Spacer(),
+                                Obx(() {
+                                  final asc =
+                                      controller.episodesAscending.value;
+                                  return TextButton.icon(
+                                    onPressed: controller.toggleEpisodeOrder,
+                                    icon: Icon(
+                                      asc
+                                          ? Icons.arrow_downward_rounded
+                                          : Icons.arrow_upward_rounded,
                                       color: Colors.white,
+                                      size: 18.sp,
                                     ),
-                                    label: const Text(
-                                      '选集',
-                                      style: TextStyle(color: Colors.white),
+                                    label: Text(
+                                      asc ? '正序' : '倒序',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 13.sp,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
                                     style: TextButton.styleFrom(
                                       padding: EdgeInsets.symmetric(
-                                        horizontal: 10.w,
+                                        horizontal: 12.w,
                                         vertical: 8.h,
                                       ),
+                                      foregroundColor: Colors.white,
+                                    ),
+                                  );
+                                }),
+                                SizedBox(width: 4.w),
+                                TextButton.icon(
+                                  onPressed: controller.episodes.isEmpty
+                                      ? null
+                                      : _scrollToCurrentEpisode,
+                                  icon: Icon(
+                                    Icons.my_location_rounded,
+                                    color: Colors.white70,
+                                    size: 18.sp,
+                                  ),
+                                  label: Text(
+                                    '定位',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 13.sp,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
-                                  GestureDetector(
-                                    onTap: _scrollToCurrentEpisode,
-                                    child: Padding(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 4.w,
-                                        vertical: 8.h,
-                                      ),
-                                      child: Icon(
-                                        Icons.my_location,
-                                        color: Colors.white70,
-                                        size: 20.w,
-                                      ),
+                                  style: TextButton.styleFrom(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 12.w,
+                                      vertical: 8.h,
                                     ),
                                   ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        );
-                      }),
-                    if (!isCompactHeight)
-                      Obx(() {
-                        if (controller.isFullscreen.value ||
-                            controller.episodes.isEmpty) {
-                          return const SizedBox.shrink();
-                        }
-                        final indices = controller.visibleEpisodeIndices;
-                        final selected = controller.currentIndex.value;
-                        return SizedBox(
-                          height: 52.h,
-                          child: ListView.separated(
-                            controller: _episodeScrollController,
-                            padding: EdgeInsets.symmetric(horizontal: 16.w),
-                            scrollDirection: Axis.horizontal,
-                            itemCount: indices.length,
-                            separatorBuilder:
-                                (BuildContext context, int index) =>
-                                    SizedBox(width: 10.w),
-                            itemBuilder: (context, i) {
-                              final episodeIndex = indices[i];
-                              final selectedChip = episodeIndex == selected;
-                              return _buildEpisodeChip(
-                                context: context,
-                                selected: selectedChip,
-                                text: _episodeLabel(episodeIndex),
-                                width: _episodeListChipWidth,
-                                onTap: () =>
-                                    unawaited(controller.playAt(episodeIndex)),
-                              );
-                            },
-                          ),
-                        );
-                      }),
-                    if (!isCompactHeight) SizedBox(height: 12.h),
-                  ],
-                ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 10.h),
+                            if (controller.episodes.isEmpty)
+                              Container(
+                                width: double.infinity,
+                                padding: EdgeInsets.symmetric(vertical: 24.h),
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.04),
+                                  borderRadius: BorderRadius.circular(14.r),
+                                  border: Border.all(color: Colors.white12),
+                                ),
+                                child: Text(
+                                  '暂无选集',
+                                  style: TextStyle(
+                                    color: Colors.white60,
+                                    fontSize: 13.sp,
+                                  ),
+                                ),
+                              )
+                            else
+                              Obx(() {
+                                final indices =
+                                    controller.visibleEpisodeIndices;
+                                final selected = controller.currentIndex.value;
+                                final contentHeight =
+                                    indices.length * _episodeListItemExtent.h +
+                                    math.max(0, indices.length - 1) * 10.h;
+                                final viewportHeight = math.min(
+                                  maxListHeight,
+                                  contentHeight,
+                                );
+                                return SizedBox(
+                                  height: viewportHeight,
+                                  child: ListView.separated(
+                                    controller: _episodeScrollController,
+                                    padding: EdgeInsets.zero,
+                                    itemCount: indices.length,
+                                    separatorBuilder: (_, _) =>
+                                        SizedBox(height: 10.h),
+                                    itemBuilder: (context, i) {
+                                      final episodeIndex = indices[i];
+                                      return _buildPortraitEpisodeTile(
+                                        episodeIndex: episodeIndex,
+                                        selected: episodeIndex == selected,
+                                        onTap: () => unawaited(
+                                          controller.playAt(episodeIndex),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                );
+                              }),
+                          ],
+                        ),
+                      );
+                    }),
+                ],
               ),
             );
           },
