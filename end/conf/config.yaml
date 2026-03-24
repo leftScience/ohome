@@ -26,6 +26,7 @@ jwt:
 
 config:
   defaultPassword: 123
+  allowUserRegistration: true
 
 drops:
   itemReminderDays: "7,3,1,0" # 物资到期提醒：提前 7/3/1 天和当天

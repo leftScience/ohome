@@ -6,10 +6,10 @@ import 'package:get/get.dart';
 
 import '../../../data/models/discovered_server.dart';
 import '../../../theme/app_theme.dart';
-import '../controllers/login_controller.dart';
+import '../controllers/register_controller.dart';
 
-class LoginView extends GetView<LoginController> {
-  const LoginView({super.key});
+class RegisterView extends GetView<RegisterController> {
+  const RegisterView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -77,18 +77,20 @@ class LoginView extends GetView<LoginController> {
                             ),
                             child: Obx(
                               () => Form(
-                                key: controller.loginFormKey,
+                                key: controller.registerFormKey,
                                 autovalidateMode:
                                     controller.autoValidateMode.value,
                                 child: Column(
                                   children: [
                                     const _Header(),
-                                    SizedBox(height: 28.h),
+                                    SizedBox(height: 24.h),
                                     const _CredentialsFields(),
-                                    SizedBox(height: 32.h),
+                                    SizedBox(height: 18.h),
+                                    const _RegisterStatusBanner(),
+                                    SizedBox(height: 28.h),
                                     const _SubmitButton(),
                                     SizedBox(height: 14.h),
-                                    const _RegisterEntryButton(),
+                                    const _BackToLoginButton(),
                                   ],
                                 ),
                               ),
@@ -99,6 +101,7 @@ class LoginView extends GetView<LoginController> {
                     ),
                   ),
                 ),
+                Positioned(top: 16.h, left: 24.w, child: const _BackButton()),
                 Positioned(
                   top: 16.h,
                   right: 24.w,
@@ -108,6 +111,27 @@ class LoginView extends GetView<LoginController> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _BackButton extends StatelessWidget {
+  const _BackButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: Get.back<void>,
+      child: Container(
+        width: 44.w,
+        height: 44.w,
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(14.r),
+          border: Border.all(color: Colors.white12),
+        ),
+        child: Icon(Icons.arrow_back_rounded, size: 22.sp, color: Colors.white),
       ),
     );
   }
@@ -129,7 +153,7 @@ class _Header extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '欢迎回来',
+                    '创建你的家庭账号',
                     style: TextStyle(
                       fontSize: 15.sp,
                       fontWeight: FontWeight.w400,
@@ -139,7 +163,7 @@ class _Header extends StatelessWidget {
                   ),
                   SizedBox(height: 4.h),
                   Text(
-                    '登录',
+                    '注册',
                     style: TextStyle(
                       fontSize: 34.sp,
                       fontWeight: FontWeight.w800,
@@ -173,7 +197,7 @@ class _Header extends StatelessWidget {
         Align(
           alignment: Alignment.centerLeft,
           child: Text(
-            '输入账号继续使用',
+            '创建账号后返回登录',
             style: TextStyle(
               fontSize: 12.sp,
               color: Colors.white60,
@@ -186,7 +210,7 @@ class _Header extends StatelessWidget {
   }
 }
 
-class _SettingsIconButton extends GetView<LoginController> {
+class _SettingsIconButton extends GetView<RegisterController> {
   const _SettingsIconButton();
 
   @override
@@ -250,7 +274,7 @@ class _SettingsIconButton extends GetView<LoginController> {
   }
 }
 
-class _ServerSettingsSheet extends GetView<LoginController> {
+class _ServerSettingsSheet extends GetView<RegisterController> {
   const _ServerSettingsSheet();
 
   @override
@@ -343,7 +367,7 @@ class _ServerSettingsSheet extends GetView<LoginController> {
                             ),
                             SizedBox(height: 4.h),
                             Text(
-                              isManualEntryMode ? '登录时使用手动地址' : '关闭后自动扫描局域网',
+                              isManualEntryMode ? '注册时使用手动地址' : '关闭后自动扫描局域网',
                               style: TextStyle(
                                 fontSize: 12.sp,
                                 color: Colors.white70,
@@ -474,7 +498,7 @@ class _ServerSettingsSheet extends GetView<LoginController> {
                   ),
                   SizedBox(height: 8.h),
                   Text(
-                    '登录时将使用这里的地址。',
+                    '注册时将使用这里的地址。',
                     style: TextStyle(fontSize: 12.sp, color: Colors.white54),
                   ),
                 ],
@@ -487,7 +511,7 @@ class _ServerSettingsSheet extends GetView<LoginController> {
   }
 }
 
-class _ServerCard extends GetView<LoginController> {
+class _ServerCard extends GetView<RegisterController> {
   const _ServerCard({required this.server});
 
   final DiscoveredServer server;
@@ -567,7 +591,7 @@ class _ServerCard extends GetView<LoginController> {
   }
 }
 
-class _CredentialsFields extends GetView<LoginController> {
+class _CredentialsFields extends GetView<RegisterController> {
   const _CredentialsFields();
 
   @override
@@ -578,7 +602,7 @@ class _CredentialsFields extends GetView<LoginController> {
           controller: controller.nameController,
           style: TextStyle(color: Colors.white, fontSize: 16.sp),
           decoration: _fieldDecoration(
-            hintText: '输入用户名',
+            hintText: '设置用户名',
             icon: Icons.person_outline_rounded,
           ),
           validator: controller.validateName,
@@ -589,10 +613,21 @@ class _CredentialsFields extends GetView<LoginController> {
           obscureText: true,
           style: TextStyle(color: Colors.white, fontSize: 16.sp),
           decoration: _fieldDecoration(
-            hintText: '输入密码',
+            hintText: '设置密码',
             icon: Icons.lock_outline_rounded,
           ),
           validator: controller.validatePassword,
+        ),
+        SizedBox(height: 18.h),
+        TextFormField(
+          controller: controller.confirmPasswordController,
+          obscureText: true,
+          style: TextStyle(color: Colors.white, fontSize: 16.sp),
+          decoration: _fieldDecoration(
+            hintText: '再次输入密码',
+            icon: Icons.verified_user_outlined,
+          ),
+          validator: controller.validateConfirmPassword,
         ),
       ],
     );
@@ -622,6 +657,67 @@ class _CredentialsFields extends GetView<LoginController> {
   }
 }
 
+class _RegisterStatusBanner extends GetView<RegisterController> {
+  const _RegisterStatusBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final isChecking = controller.isCheckingRegisterStatus.value;
+    final enabled = controller.registerEnabled.value;
+    final message = controller.registerStatusMessage.value ?? '将检查注册状态';
+
+    final Color accent = switch (enabled) {
+      true => const Color(0xFF21C47B),
+      false => const Color(0xFFFF8A65),
+      null => Colors.white70,
+    };
+
+    final IconData icon = isChecking
+        ? Icons.sync_rounded
+        : enabled == false
+        ? Icons.lock_outline_rounded
+        : Icons.info_outline_rounded;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: accent.withValues(alpha: 0.45)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (isChecking)
+            SizedBox(
+              width: 18.w,
+              height: 18.w,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(accent),
+              ),
+            )
+          else
+            Icon(icon, size: 18.sp, color: accent),
+          SizedBox(width: 10.w),
+          Expanded(
+            child: Text(
+              isChecking ? '检查中...' : message,
+              style: TextStyle(
+                fontSize: 12.sp,
+                color: Colors.white70,
+                height: 1.5,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _Tag extends StatelessWidget {
   const _Tag({required this.text});
 
@@ -643,72 +739,80 @@ class _Tag extends StatelessWidget {
   }
 }
 
-class _SubmitButton extends GetView<LoginController> {
+class _SubmitButton extends GetView<RegisterController> {
   const _SubmitButton();
 
   @override
   Widget build(BuildContext context) {
+    final isBusy =
+        controller.isLoading.value || controller.isCheckingRegisterStatus.value;
+    final isDisabled =
+        controller.isLoading.value || controller.isRegisterExplicitlyDisabled;
+
     return Container(
       width: double.infinity,
       height: 52.h,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16.r),
-        gradient: const LinearGradient(
-          colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
+        gradient: LinearGradient(
+          colors: isDisabled
+              ? const [Color(0xFF4B5563), Color(0xFF374151)]
+              : const [Color(0xFF3B82F6), Color(0xFF2563EB)],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF3B82F6).withValues(alpha: 0.3),
+            color:
+                (isDisabled ? const Color(0xFF4B5563) : const Color(0xFF3B82F6))
+                    .withValues(alpha: 0.3),
             blurRadius: 12.r,
             offset: Offset(0, 4.h),
           ),
         ],
       ),
       child: ElevatedButton(
-        onPressed: controller.login,
+        onPressed: isDisabled ? null : controller.register,
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.transparent,
+          disabledBackgroundColor: Colors.transparent,
           shadowColor: Colors.transparent,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16.r),
           ),
         ),
-        child: Obx(
-          () => controller.isLoading.value
-              ? SizedBox(
-                  width: 24.sp,
-                  height: 24.sp,
-                  child: const CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                )
-              : Text(
-                  '立即登录',
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                    letterSpacing: 1.2,
-                  ),
+        child: isBusy
+            ? SizedBox(
+                width: 24.sp,
+                height: 24.sp,
+                child: const CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
-        ),
+              )
+            : Text(
+                '创建账号',
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                  letterSpacing: 1.2,
+                ),
+              ),
       ),
     );
   }
 }
 
-class _RegisterEntryButton extends GetView<LoginController> {
-  const _RegisterEntryButton();
+class _BackToLoginButton extends StatelessWidget {
+  const _BackToLoginButton();
 
   @override
   Widget build(BuildContext context) {
     return TextButton(
-      onPressed: controller.openRegister,
+      onPressed: Get.back<void>,
       child: Text(
-        '没有账号？立即注册',
+        '已有账号？返回登录',
         style: TextStyle(
           fontSize: 13.sp,
           color: Colors.white70,

@@ -6,6 +6,7 @@ import (
 	"ohome/model"
 	"ohome/service/dto"
 	"ohome/utils"
+	"strings"
 
 	"github.com/spf13/viper"
 )
@@ -41,6 +42,43 @@ func (m *UserService) Login(iUser dto.UserLoginDto) (model.User, string, string,
 	}
 
 	return mUser, accessToken, refreshToken, errResult
+}
+
+func (m *UserService) IsRegistrationEnabled() bool {
+	return viper.GetBool("config.allowUserRegistration")
+}
+
+func (m *UserService) Register(iUserRegisterDTO *dto.UserRegisterDTO) error {
+	if !m.IsRegistrationEnabled() {
+		return errors.New("当前服务端未开放注册")
+	}
+
+	name := strings.TrimSpace(iUserRegisterDTO.Name)
+	if name == "" {
+		return errors.New("用户名不能为空")
+	}
+	if strings.TrimSpace(iUserRegisterDTO.Password) == "" {
+		return errors.New("密码不能为空")
+	}
+	if userDao.CheckUserNameExist(name) {
+		return errors.New("用户名已存在")
+	}
+
+	role, err := m.resolveRoleByCode(model.RoleCodeUser, model.RoleCodeUser)
+	if err != nil {
+		return err
+	}
+
+	userAddDTO := &dto.UserAddDTO{
+		Name:     name,
+		Password: iUserRegisterDTO.Password,
+		RoleID:   role.ID,
+		RoleCode: role.Code,
+		RealName: "",
+		Avatar:   "",
+	}
+
+	return userDao.AddUser(userAddDTO)
 }
 
 func (m *UserService) AddUser(iUserAddDTO *dto.UserAddDTO) error {

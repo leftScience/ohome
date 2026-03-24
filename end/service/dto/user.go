@@ -7,6 +7,11 @@ type UserLoginDto struct {
 	Password string `json:"password" binding:"required" massage:"密码校验错误" required_err:"密码不能为空"`
 }
 
+type UserRegisterDTO struct {
+	Name     string `json:"name" binding:"required" massage:"用户名校验错误" required_err:"用户名不能为空"`
+	Password string `json:"password" binding:"required" massage:"密码校验错误" required_err:"密码不能为空"`
+}
+
 // UserAddDTO 添加用户相关
 type UserAddDTO struct {
 	ID       uint

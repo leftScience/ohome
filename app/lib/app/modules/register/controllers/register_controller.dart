@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:ohome/app/data/models/discovered_server.dart';
-import 'package:ohome/app/routes/app_pages.dart';
 import 'package:ohome/app/services/discovery_service.dart';
 import 'package:ohome/app/utils/app_env.dart';
 import 'package:ohome/app/utils/http_client.dart';
 
 import '../../../services/auth_service.dart';
 
-class LoginController extends GetxController {
-  LoginController({required DiscoveryService discoveryService})
+class RegisterController extends GetxController {
+  RegisterController({required DiscoveryService discoveryService})
     : _discoveryService = discoveryService;
 
-  final GlobalKey<FormState> loginFormKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> registerFormKey = GlobalKey<FormState>();
   final DiscoveryService _discoveryService;
 
   final autoValidateMode = AutovalidateMode.disabled.obs;
@@ -23,10 +22,9 @@ class LoginController extends GetxController {
   late TextEditingController confirmPasswordController;
 
   final isLoading = false.obs;
+  final isCheckingRegisterStatus = false.obs;
   final isDiscovering = false.obs;
   final isManualEntryMode = true.obs;
-  final isRegisterMode = false.obs;
-  final isCheckingRegisterStatus = false.obs;
   final registerEnabled = RxnBool();
   final registerStatusMessage = RxnString();
   final discoveryErrorMessage = RxnString();
@@ -48,6 +46,7 @@ class LoginController extends GetxController {
     nameController = TextEditingController();
     passwordController = TextEditingController();
     confirmPasswordController = TextEditingController();
+    Future<void>.microtask(refreshRegisterStatus);
   }
 
   String? validateApiBaseUrl(String? value) {
@@ -74,9 +73,6 @@ class LoginController extends GetxController {
   }
 
   String? validateConfirmPassword(String? value) {
-    if (!isRegisterMode.value) {
-      return null;
-    }
     if (value == null || value.isEmpty) {
       return '请再次输入密码';
     }
@@ -86,78 +82,10 @@ class LoginController extends GetxController {
     return null;
   }
 
+  bool get hasFoundServer =>
+      selectedServer.value != null || discoveredServers.isNotEmpty;
+
   bool get isRegisterExplicitlyDisabled => registerEnabled.value == false;
-
-  String get headerEyebrow => isRegisterMode.value ? '创建你的家庭账号' : '欢迎回来';
-
-  String get headerTitle => isRegisterMode.value ? '注册' : '登录';
-
-  String get headerDescription => isRegisterMode.value
-      ? '创建普通用户账号后，返回登录页继续进入家庭空间。'
-      : '连接家庭服务端，继续你的影音与事务管理。';
-
-  Future<void> submit() async {
-    if (isRegisterMode.value) {
-      await register();
-      return;
-    }
-    await login();
-  }
-
-  Future<void> openRegister() async {
-    final result = await Get.toNamed(Routes.REGISTER);
-    if (result is String && result.trim().isNotEmpty) {
-      nameController.text = result.trim();
-    }
-    passwordController.clear();
-    confirmPasswordController.clear();
-    autoValidateMode.value = AutovalidateMode.disabled;
-  }
-
-  Future<void> switchAuthMode(bool registerMode) async {
-    if (registerMode == isRegisterMode.value) {
-      return;
-    }
-
-    isRegisterMode.value = registerMode;
-    autoValidateMode.value = AutovalidateMode.disabled;
-    passwordController.clear();
-    confirmPasswordController.clear();
-
-    if (registerMode) {
-      await refreshRegisterStatus();
-      return;
-    }
-
-    registerEnabled.value = null;
-    registerStatusMessage.value = null;
-  }
-
-  Future<void> login() async {
-    autoValidateMode.value = AutovalidateMode.onUserInteraction;
-    final apiBaseUrlInput = _prepareApiBaseUrlInput(showSnackbar: true);
-    if (apiBaseUrlInput == null) {
-      return;
-    }
-
-    if (!loginFormKey.currentState!.validate()) {
-      return;
-    }
-
-    try {
-      isLoading.value = true;
-      await _syncApiBaseUrl(apiBaseUrlInput);
-      final auth = Get.find<AuthService>();
-      await auth.login(
-        name: nameController.text.trim(),
-        password: passwordController.text,
-      );
-      await _rememberSuccessfulServer();
-      Get.offAllNamed(Routes.MAIN);
-    } finally {
-      isLoading.value = false;
-    }
-  }
 
   Future<void> register() async {
     autoValidateMode.value = AutovalidateMode.onUserInteraction;
@@ -166,7 +94,7 @@ class LoginController extends GetxController {
       return;
     }
 
-    if (!loginFormKey.currentState!.validate()) {
+    if (!registerFormKey.currentState!.validate()) {
       return;
     }
 
@@ -184,15 +112,8 @@ class LoginController extends GetxController {
         password: passwordController.text,
       );
       await _rememberSuccessfulServer();
-
-      passwordController.clear();
-      confirmPasswordController.clear();
-      registerEnabled.value = null;
-      registerStatusMessage.value = null;
-      isRegisterMode.value = false;
-      autoValidateMode.value = AutovalidateMode.disabled;
-
       Get.snackbar('提示', '注册成功，请登录', duration: const Duration(seconds: 2));
+      Get.back<String>(result: nameController.text.trim());
     } finally {
       isLoading.value = false;
     }
@@ -206,7 +127,7 @@ class LoginController extends GetxController {
     );
     if (apiBaseUrlInput == null) {
       registerEnabled.value = null;
-      registerStatusMessage.value = '请先配置可用的服务器地址';
+      registerStatusMessage.value = '请先设置地址';
       return null;
     }
 
@@ -216,9 +137,7 @@ class LoginController extends GetxController {
       await _syncApiBaseUrl(apiBaseUrlInput);
       final status = await Get.find<AuthService>().getRegisterStatus();
       registerEnabled.value = status.enabled;
-      registerStatusMessage.value = status.enabled
-          ? '将创建普通用户账号，注册成功后请返回登录。'
-          : '当前服务端未开放注册';
+      registerStatusMessage.value = status.enabled ? '可注册' : '未开放注册';
       return status.enabled;
     } catch (error) {
       registerEnabled.value = null;
@@ -294,9 +213,7 @@ class LoginController extends GetxController {
 
   void selectDiscoveredServer(DiscoveredServer server) {
     _applySelectedServer(server, userInitiated: true);
-    if (isRegisterMode.value) {
-      Future<void>.microtask(refreshRegisterStatus);
-    }
+    Future<void>.microtask(refreshRegisterStatus);
   }
 
   void toggleManualEntryMode(bool enabled) {
@@ -314,6 +231,8 @@ class LoginController extends GetxController {
       selectedServer.value = null;
       _hasUserSelectedServer = false;
       _manualApiBaseUrlEdited = true;
+      registerEnabled.value = null;
+      registerStatusMessage.value = '地址已变更';
       return;
     }
 
@@ -321,23 +240,6 @@ class LoginController extends GetxController {
     _manualApiBaseUrlEdited = false;
     selectedServer.value = null;
     Future<void>.microtask(refreshDiscovery);
-  }
-
-  bool get hasFoundServer =>
-      selectedServer.value != null || discoveredServers.isNotEmpty;
-
-  String get serverStatusText {
-    final selected = selectedServer.value;
-    if (selected != null) {
-      return selected.serviceName;
-    }
-    if (isDiscovering.value) {
-      return '正在查找局域网服务';
-    }
-    if (discoveredServers.isNotEmpty) {
-      return '已找到 ${discoveredServers.length} 个局域网服务';
-    }
-    return '手动输入或重新扫描';
   }
 
   void _applySelectedServer(
@@ -368,11 +270,8 @@ class LoginController extends GetxController {
     _manualApiBaseUrlEdited = true;
     _hasUserSelectedServer = false;
     selectedServer.value = null;
-
-    if (isRegisterMode.value) {
-      registerEnabled.value = null;
-      registerStatusMessage.value = '服务器地址已变更，提交前会重新检查注册状态';
-    }
+    registerEnabled.value = null;
+    registerStatusMessage.value = '地址已变更';
   }
 
   bool _shouldIgnoreDiscoveryResult(int requestVersion) {

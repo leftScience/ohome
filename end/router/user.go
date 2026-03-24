@@ -14,6 +14,12 @@ func InitUserRoutes() {
 		rgPublic.POST("/login", func(context *gin.Context) {
 			userApi.Login(context)
 		})
+		rgPublic.POST("/register", func(context *gin.Context) {
+			userApi.Register(context)
+		})
+		rgPublic.GET("/register/status", func(context *gin.Context) {
+			userApi.GetRegisterStatus(context)
+		})
 		rgPublic.GET("/refreshToken", func(context *gin.Context) {
 			userApi.RefreshToken(context)
 		})

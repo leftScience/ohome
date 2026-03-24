@@ -12,7 +12,7 @@
     <uses-permission android:name="android.permission.CAMERA"/>
 
     <application
-        android:label="王盘"
+        android:label="oHome"
         android:name=".OhomeApplication"
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true">

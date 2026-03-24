@@ -18,6 +18,7 @@ func InitConfig() {
 	viper.SetDefault("DB.ImportInitSQLOnFirstRun", true)
 	viper.SetDefault("drops.itemReminderDays", "7,3,1,0")
 	viper.SetDefault("drops.eventReminderDays", "7,3,1,0")
+	viper.SetDefault("config.allowUserRegistration", true)
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
 

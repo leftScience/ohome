@@ -47,6 +47,29 @@ func (user *User) Login(context *gin.Context) {
 	}, "登录成功", context)
 }
 
+func (user *User) Register(c *gin.Context) {
+	var iUserRegisterDTO dto.UserRegisterDTO
+	if err := user.Request(RequestOptions{
+		Ctx: c,
+		DTO: &iUserRegisterDTO,
+	}).GetErrors(); err != nil {
+		return
+	}
+
+	if err := userService.Register(&iUserRegisterDTO); err != nil {
+		utils.FailWithMessage(err.Error(), c)
+		return
+	}
+
+	utils.OkWithMessage("注册成功", c)
+}
+
+func (user *User) GetRegisterStatus(c *gin.Context) {
+	utils.OkWithData(vo.UserRegisterStatusVO{
+		Enabled: userService.IsRegistrationEnabled(),
+	}, c)
+}
+
 // AddUser 增加用户
 func (user *User) AddUser(c *gin.Context) {
 	if _, ok := requireSuperAdmin(c); !ok {

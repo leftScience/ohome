@@ -7,6 +7,7 @@ abstract class Routes {
   Routes._();
   static const HOME = _Paths.HOME;
   static const LOGIN = _Paths.LOGIN;
+  static const REGISTER = _Paths.REGISTER;
   static const MAIN = _Paths.MAIN;
   static const MESSAGES = _Paths.MESSAGES;
   static const MOMENTS = _Paths.MOMENTS;
@@ -33,6 +34,7 @@ abstract class _Paths {
   _Paths._();
   static const HOME = '/home';
   static const LOGIN = '/login';
+  static const REGISTER = '/register';
   static const MAIN = '/main';
   static const MESSAGES = '/messages';
   static const MOMENTS = '/moments';
