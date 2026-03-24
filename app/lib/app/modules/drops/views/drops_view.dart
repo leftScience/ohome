@@ -15,13 +15,15 @@ class DropsView extends StatefulWidget {
   State<DropsView> createState() => _DropsViewState();
 }
 
-class _DropsViewState extends State<DropsView> {
+class _DropsViewState extends State<DropsView>
+    with SingleTickerProviderStateMixin {
   static const String _itemsTag = 'drops-main-items';
   static const String _eventsTag = 'drops-main-events';
 
   late final DropsController _controller;
   late final DropsItemsController _itemsController;
   late final DropsEventsController _eventsController;
+  late final TabController _tabController;
 
   @override
   void initState() {
@@ -34,296 +36,233 @@ class _DropsViewState extends State<DropsView> {
     _eventsController = Get.isRegistered<DropsEventsController>(tag: _eventsTag)
         ? Get.find<DropsEventsController>(tag: _eventsTag)
         : Get.put(DropsEventsController(), tag: _eventsTag);
+    _tabController = TabController(length: 2, vsync: this);
   }
 
-  Future<void> _showCreateSheet() async {
-    final action = await showModalBottomSheet<_DropsCreateType>(
-      context: context,
-      backgroundColor: const Color(0xFF181818),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
-      ),
-      builder: (_) {
-        return SafeArea(
-          top: false,
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 20.h),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 42.w,
-                    height: 4.h,
-                    decoration: BoxDecoration(
-                      color: Colors.white24,
-                      borderRadius: BorderRadius.circular(999.r),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 18.h),
-                Text(
-                  '新增类型',
-                  style: TextStyle(
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                ),
-                SizedBox(height: 8.h),
-                Text(
-                  '选择要添加的内容',
-                  style: TextStyle(fontSize: 13.sp, color: Colors.white60),
-                ),
-                SizedBox(height: 18.h),
-                _CreateSheetAction(
-                  icon: Icons.inventory_2_outlined,
-                  title: '物资',
-                  subtitle: '添加新的物资并记录到期时间',
-                  onTap: () => Get.back(result: _DropsCreateType.item),
-                ),
-                SizedBox(height: 12.h),
-                _CreateSheetAction(
-                  icon: Icons.event_note_outlined,
-                  title: '日期',
-                  subtitle: '添加生日、纪念日或其他提醒日期',
-                  onTap: () => Get.back(result: _DropsCreateType.event),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-    if (!mounted) return;
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleCreate() async {
+    final activeTabIndex = _tabController.index;
     var changed = false;
-    switch (action) {
-      case _DropsCreateType.item:
+    switch (activeTabIndex) {
+      case 0:
         changed = await _controller.openNewItem();
         break;
-      case _DropsCreateType.event:
+      case 1:
         changed = await _controller.openNewEvent();
         break;
-      case null:
+      default:
         break;
     }
     if (!changed) return;
-    await Future.wait<void>([
-      _itemsController.loadItems(refresh: true),
-      _eventsController.loadEvents(refresh: true),
-    ]);
+    if (activeTabIndex == 0) {
+      await _itemsController.loadItems(refresh: true);
+      return;
+    }
+    await _eventsController.loadEvents(refresh: true);
   }
 
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).padding.bottom + 108.h;
-    return DefaultTabController(
-      length: 2,
-      child: SafeArea(
-        bottom: false,
-        child: Stack(
-          children: [
-            const _DropsBackdrop(),
-            Column(
-              children: [
-                Padding(
-                  padding: EdgeInsets.fromLTRB(20.w, 24.h, 20.w, 0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '点滴',
-                        style: TextStyle(
-                          fontSize: 24.sp,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                          letterSpacing: 0.2,
-                        ),
+    return SafeArea(
+      bottom: false,
+      child: Stack(
+        children: [
+          const _DropsBackdrop(),
+          Column(
+            children: [
+              Padding(
+                padding: EdgeInsets.fromLTRB(20.w, 24.h, 20.w, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '点滴',
+                      style: TextStyle(
+                        fontSize: 24.sp,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        letterSpacing: 0.2,
                       ),
-                      SizedBox(height: 14.h),
-                      Obx(() {
-                        final overview = _controller.overview.value;
-                        return Row(
-                          children: [
-                            Expanded(
-                              child: _ReminderEntryCard(
-                                label: '临期',
-                                value: overview?.expiringSoonCount ?? 0,
-                                color: const Color(0xFFE57373),
-                                icon: Icons.inventory_2_outlined,
-                                onTap: _controller.openExpiringReminders,
-                              ),
+                    ),
+                    SizedBox(height: 14.h),
+                    Obx(() {
+                      final overview = _controller.overview.value;
+                      return Row(
+                        children: [
+                          Expanded(
+                            child: _ReminderEntryCard(
+                              label: '临期',
+                              value: overview?.expiringSoonCount ?? 0,
+                              color: const Color(0xFFE57373),
+                              icon: Icons.inventory_2_outlined,
+                              onTap: _controller.openExpiringReminders,
                             ),
-                            SizedBox(width: 12.w),
-                            Expanded(
-                              child: _ReminderEntryCard(
-                                label: '临近',
-                                value: overview?.monthEventCount ?? 0,
-                                color: const Color(0xFF81C784),
-                                icon: Icons.event_available_outlined,
-                                onTap: _controller.openUpcomingReminders,
-                              ),
+                          ),
+                          SizedBox(width: 12.w),
+                          Expanded(
+                            child: _ReminderEntryCard(
+                              label: '临近',
+                              value: overview?.monthEventCount ?? 0,
+                              color: const Color(0xFF81C784),
+                              icon: Icons.event_available_outlined,
+                              onTap: _controller.openUpcomingReminders,
                             ),
-                          ],
-                        );
-                      }),
+                          ),
+                        ],
+                      );
+                    }),
+                  ],
+                ),
+              ),
+              SizedBox(height: 6.h),
+              Expanded(
+                child: Container(
+                  margin: EdgeInsets.symmetric(horizontal: 14.w),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF151517).withValues(alpha: 0.96),
+                    borderRadius: BorderRadius.circular(30.r),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.06),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.24),
+                        blurRadius: 28,
+                        offset: const Offset(0, 16),
+                      ),
                     ],
                   ),
-                ),
-                SizedBox(height: 6.h),
-                Expanded(
-                  child: Container(
-                    margin: EdgeInsets.symmetric(horizontal: 14.w),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF151517).withValues(alpha: 0.96),
-                      borderRadius: BorderRadius.circular(30.r),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.06),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.24),
-                          blurRadius: 28,
-                          offset: const Offset(0, 16),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.fromLTRB(14.w, 6.h, 14.w, 0),
-                          child: Container(
-                            padding: EdgeInsets.all(5.w),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF101113),
-                              borderRadius: BorderRadius.circular(20.r),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.05),
-                              ),
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(14.w, 6.h, 14.w, 0),
+                        child: Container(
+                          padding: EdgeInsets.all(5.w),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF101113),
+                            borderRadius: BorderRadius.circular(20.r),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.05),
                             ),
-                            child: TabBar(
-                              isScrollable: false,
-                              dividerColor: Colors.transparent,
-                              indicatorSize: TabBarIndicatorSize.tab,
-                              indicator: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    Color(0xFF2B78FF),
-                                    Color(0xFF1967EA),
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(16.r),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppThemeColors.primary.withValues(
-                                      alpha: 0.28,
-                                    ),
-                                    blurRadius: 16,
-                                    offset: const Offset(0, 8),
+                          ),
+                          child: TabBar(
+                            controller: _tabController,
+                            isScrollable: false,
+                            dividerColor: Colors.transparent,
+                            indicatorSize: TabBarIndicatorSize.tab,
+                            indicator: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF2B78FF), Color(0xFF1967EA)],
+                              ),
+                              borderRadius: BorderRadius.circular(16.r),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppThemeColors.primary.withValues(
+                                    alpha: 0.28,
                                   ),
-                                ],
-                              ),
-                              overlayColor: WidgetStatePropertyAll(
-                                Colors.white.withValues(alpha: 0.03),
-                              ),
-                              labelColor: Colors.white,
-                              unselectedLabelColor: Colors.white54,
-                              labelPadding: EdgeInsets.zero,
-                              indicatorPadding: EdgeInsets.zero,
-                              labelStyle: TextStyle(
-                                fontSize: 15.sp,
-                                fontWeight: FontWeight.w700,
-                              ),
-                              unselectedLabelStyle: TextStyle(
-                                fontSize: 15.sp,
-                                fontWeight: FontWeight.w600,
-                              ),
-                              tabs: [
-                                Tab(
-                                  height: 48.h,
-                                  child: Text(
-                                    '物资',
-                                    style: TextStyle(height: 1),
-                                  ),
-                                ),
-                                Tab(
-                                  height: 48.h,
-                                  child: Text(
-                                    '日期',
-                                    style: TextStyle(height: 1),
-                                  ),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 8),
                                 ),
                               ],
                             ),
-                          ),
-                        ),
-                        SizedBox(height: 1.h),
-                        Expanded(
-                          child: TabBarView(
-                            children: [
-                              DropsItemsPanel(
-                                controller: _itemsController,
-                                filterPadding: EdgeInsets.fromLTRB(
-                                  14.w,
-                                  0,
-                                  14.w,
-                                  12.h,
-                                ),
-                                listPadding: EdgeInsets.fromLTRB(
-                                  14.w,
-                                  0,
-                                  14.w,
-                                  bottomInset,
-                                ),
+                            overlayColor: WidgetStatePropertyAll(
+                              Colors.white.withValues(alpha: 0.03),
+                            ),
+                            labelColor: Colors.white,
+                            unselectedLabelColor: Colors.white54,
+                            labelPadding: EdgeInsets.zero,
+                            indicatorPadding: EdgeInsets.zero,
+                            labelStyle: TextStyle(
+                              fontSize: 15.sp,
+                              fontWeight: FontWeight.w700,
+                            ),
+                            unselectedLabelStyle: TextStyle(
+                              fontSize: 15.sp,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            tabs: [
+                              Tab(
+                                height: 48.h,
+                                child: Text('物资', style: TextStyle(height: 1)),
                               ),
-                              DropsEventsPanel(
-                                controller: _eventsController,
-                                filterPadding: EdgeInsets.fromLTRB(
-                                  14.w,
-                                  0,
-                                  14.w,
-                                  12.h,
-                                ),
-                                listPadding: EdgeInsets.fromLTRB(
-                                  14.w,
-                                  0,
-                                  14.w,
-                                  bottomInset,
-                                ),
+                              Tab(
+                                height: 48.h,
+                                child: Text('日期', style: TextStyle(height: 1)),
                               ),
                             ],
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                      SizedBox(height: 1.h),
+                      Expanded(
+                        child: TabBarView(
+                          controller: _tabController,
+                          children: [
+                            DropsItemsPanel(
+                              controller: _itemsController,
+                              filterPadding: EdgeInsets.fromLTRB(
+                                14.w,
+                                0,
+                                14.w,
+                                12.h,
+                              ),
+                              listPadding: EdgeInsets.fromLTRB(
+                                14.w,
+                                0,
+                                14.w,
+                                bottomInset,
+                              ),
+                            ),
+                            DropsEventsPanel(
+                              controller: _eventsController,
+                              filterPadding: EdgeInsets.fromLTRB(
+                                14.w,
+                                0,
+                                14.w,
+                                12.h,
+                              ),
+                              listPadding: EdgeInsets.fromLTRB(
+                                14.w,
+                                0,
+                                14.w,
+                                bottomInset,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ),
-            Positioned(
-              right: 20.w,
-              bottom: MediaQuery.of(context).padding.bottom + 68.h,
-              child: FloatingActionButton(
-                heroTag: 'drops-create-fab',
-                onPressed: _showCreateSheet,
-                backgroundColor: AppThemeColors.primary,
-                foregroundColor: Colors.white,
-                elevation: 14,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(22.r),
-                ),
-                child: const Icon(Icons.add),
               ),
+            ],
+          ),
+          Positioned(
+            right: 20.w,
+            bottom: MediaQuery.of(context).padding.bottom + 68.h,
+            child: FloatingActionButton(
+              heroTag: 'drops-create-fab',
+              onPressed: _handleCreate,
+              backgroundColor: AppThemeColors.primary,
+              foregroundColor: Colors.white,
+              elevation: 14,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(22.r),
+              ),
+              child: const Icon(Icons.add),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
-
-enum _DropsCreateType { item, event }
 
 class _ReminderEntryCard extends StatelessWidget {
   const _ReminderEntryCard({
@@ -473,74 +412,6 @@ class _BackdropGlow extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: RadialGradient(colors: [color, color.withValues(alpha: 0)]),
-        ),
-      ),
-    );
-  }
-}
-
-class _CreateSheetAction extends StatelessWidget {
-  const _CreateSheetAction({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white.withValues(alpha: 0.04),
-      borderRadius: BorderRadius.circular(20.r),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20.r),
-        onTap: onTap,
-        child: Padding(
-          padding: EdgeInsets.all(16.w),
-          child: Row(
-            children: [
-              Container(
-                width: 48.w,
-                height: 48.w,
-                decoration: BoxDecoration(
-                  color: AppThemeColors.primary.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(14.r),
-                ),
-                child: Icon(icon, color: AppThemeColors.primary, size: 24.w),
-              ),
-              SizedBox(width: 14.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      subtitle,
-                      style: TextStyle(fontSize: 12.sp, color: Colors.white60),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 14.w,
-                color: Colors.white38,
-              ),
-            ],
-          ),
         ),
       ),
     );
