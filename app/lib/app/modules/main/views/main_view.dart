@@ -113,25 +113,33 @@ class MainView extends GetView<MainController> {
   }) {
     final isSelected = controller.index.value == index;
 
-    return GestureDetector(
-      onTap: () => controller.setIndex(index),
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeInOut,
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.white : Colors.transparent,
-          shape: BoxShape.circle,
-        ),
-        child: Stack(
-          children: [
-            Icon(
-              isSelected ? activeIcon : icon,
-              color: isSelected ? const Color(0xFF1E1E1E) : Colors.grey[400],
-              size: 20,
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => controller.setIndex(index),
+        behavior: HitTestBehavior.opaque,
+        child: SizedBox.expand(
+          child: Center(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeInOut,
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: isSelected ? Colors.white : Colors.transparent,
+                shape: BoxShape.circle,
+              ),
+              child: Stack(
+                children: [
+                  Icon(
+                    isSelected ? activeIcon : icon,
+                    color: isSelected
+                        ? const Color(0xFF1E1E1E)
+                        : Colors.grey[400],
+                    size: 20,
+                  ),
+                ],
+              ),
             ),
-          ],
+          ),
         ),
       ),
     );
