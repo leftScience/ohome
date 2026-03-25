@@ -153,48 +153,88 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
     return '返回';
   }
 
-  List<Widget> _buildFullscreenTopButtonBar(VideoState state) {
-    final title = _fullscreenBackTitle();
-    final hasEpisodes = controller.episodes.isNotEmpty;
-
-    final backButton = Semantics(
-      button: true,
-      label: '\u8fd4\u56de\uff1a$title',
-      child: Material(
-        color: Colors.black38,
-        borderRadius: BorderRadius.circular(24.r),
-        child: InkWell(
+  Widget _buildFullscreenBackButton(VideoState state) {
+    return Obx(() {
+      final title = _fullscreenBackTitle();
+      return Semantics(
+        button: true,
+        label: '\u8fd4\u56de\uff1a$title',
+        child: Material(
+          color: Colors.black38,
           borderRadius: BorderRadius.circular(24.r),
-          onTap: () => unawaited(exitFullscreen(state.context)),
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 10.r, vertical: 8.r),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.arrow_back, color: Colors.white, size: 20),
-                SizedBox(width: 4.w),
-                ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: 280.w),
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Text(
-                      title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(24.r),
+            onTap: () => unawaited(exitFullscreen(state.context)),
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 10.r, vertical: 8.r),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+                  SizedBox(width: 4.w),
+                  ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: 280.w),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Text(
+                        title,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
-      ),
-    );
+      );
+    });
+  }
 
-    final items = <Widget>[backButton, const Spacer()];
+  Widget _buildFullscreenEpisodeActions(BuildContext context) {
+    return Obx(() {
+      if (controller.episodes.isEmpty) {
+        return const SizedBox.shrink();
+      }
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildActionIcon(
+            enabled: controller.canCastCurrentEpisode,
+            icon: controller.isCasting ? Icons.cast_connected : Icons.cast,
+            onTap: () => unawaited(controller.castCurrentEpisode()),
+          ),
+          SizedBox(width: 8.w),
+          if (controller.isCasting) ...[
+            _buildActionIcon(
+              enabled: true,
+              icon: Icons.stop_screen_share_outlined,
+              onTap: () => unawaited(controller.stopCasting()),
+            ),
+            SizedBox(width: 8.w),
+          ],
+          _buildActionIcon(
+            enabled: true,
+            icon: Icons.format_list_bulleted,
+            onTap: () => _showEpisodeSheet(context, compact: true),
+          ),
+          SizedBox(width: 8.w),
+          _buildActionIcon(
+            enabled: true,
+            icon: Icons.access_time,
+            onTap: () => _showSkipSettingsSheet(context),
+          ),
+        ],
+      );
+    });
+  }
+
+  List<Widget> _buildFullscreenTopButtonBar(VideoState state) {
+    final items = <Widget>[_buildFullscreenBackButton(state), const Spacer()];
 
     items.add(
       Obx(() {
@@ -231,36 +271,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
     items.add(SizedBox(width: 8.w));
     items.add(_buildFullscreenFitModeToggle(state));
     items.add(SizedBox(width: 8.w));
-
-    if (!hasEpisodes) return items;
-
-    items.addAll([
-      _buildActionIcon(
-        enabled: controller.canCastCurrentEpisode,
-        icon: controller.isCasting ? Icons.cast_connected : Icons.cast,
-        onTap: () => unawaited(controller.castCurrentEpisode()),
-      ),
-      SizedBox(width: 8.w),
-      if (controller.isCasting) ...[
-        _buildActionIcon(
-          enabled: true,
-          icon: Icons.stop_screen_share_outlined,
-          onTap: () => unawaited(controller.stopCasting()),
-        ),
-        SizedBox(width: 8.w),
-      ],
-      _buildActionIcon(
-        enabled: true,
-        icon: Icons.format_list_bulleted,
-        onTap: () => _showEpisodeSheet(state.context, compact: true),
-      ),
-      SizedBox(width: 8.w),
-      _buildActionIcon(
-        enabled: true,
-        icon: Icons.access_time,
-        onTap: () => _showSkipSettingsSheet(state.context),
-      ),
-    ]);
+    items.add(_buildFullscreenEpisodeActions(state.context));
 
     return items;
   }
