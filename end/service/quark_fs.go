@@ -94,20 +94,16 @@ func (s *QuarkFsService) ListFiles(pathDTO *dto.QuarkPathDTO) ([]dto.QuarkFsInfo
 		}
 		filePath := s.buildPath(clientPath, name)
 		streamURL := ""
-		downloadURL := ""
 		if !entry.IsDir() {
-			baseURL := "/api/v1/public/quarkFs/" + url.PathEscape(pathDTO.Application) + "/files/stream?path=" + url.QueryEscape(filePath)
-			streamURL = baseURL
-			downloadURL = baseURL + "&download=true"
+			streamURL = "/api/v1/public/quarkFs/" + url.PathEscape(pathDTO.Application) + "/files/stream?path=" + url.QueryEscape(filePath)
 		}
 		files = append(files, dto.QuarkFsInfo{
-			Name:        name,
-			Path:        filePath,
-			StreamURL:   streamURL,
-			DownloadURL: downloadURL,
-			IsDir:       entry.IsDir(),
-			Size:        entry.Size,
-			UpdatedAt:   entry.UpdatedUnix(),
+			Name:      name,
+			Path:      filePath,
+			StreamURL: streamURL,
+			IsDir:     entry.IsDir(),
+			Size:      entry.Size,
+			UpdatedAt: entry.UpdatedUnix(),
 		})
 	}
 
@@ -404,12 +400,12 @@ func (s *QuarkFsService) StreamFile(ctx context.Context, pathDTO *dto.QuarkPathD
 		return nil, QuarkProxyMeta{}, err
 	}
 
-	link, err := client.getDownloadLink(ctx, entry.Fid)
+	link, err := client.getFileLink(ctx, entry.Fid)
 	if err != nil {
 		return nil, QuarkProxyMeta{}, err
 	}
 
-	result, err := client.openConcurrentStream(ctx, link.URL, link.Size, rangeHeader, filename)
+	result, err := client.openProxyStream(ctx, link.URL, link.Size, rangeHeader, filename)
 	if err != nil {
 		return nil, QuarkProxyMeta{}, err
 	}

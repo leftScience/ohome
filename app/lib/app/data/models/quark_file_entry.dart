@@ -5,7 +5,6 @@ class WebdavFileEntry {
     required this.name,
     required this.path,
     required this.streamUrl,
-    required this.downloadUrl,
     required this.isDir,
     required this.size,
     required this.updatedAt,
@@ -14,7 +13,6 @@ class WebdavFileEntry {
   final String name;
   final String path;
   final String streamUrl;
-  final String downloadUrl;
   final bool isDir;
   final int size;
   final int updatedAt;
@@ -24,7 +22,6 @@ class WebdavFileEntry {
       rawUrl: streamUrl,
       fallbackPath: path,
       applicationType: applicationType,
-      download: false,
     );
   }
 
@@ -32,26 +29,11 @@ class WebdavFileEntry {
     return resolveStreamUri(applicationType: applicationType)?.toString() ?? '';
   }
 
-  Uri? resolveDownloadUri({String? applicationType}) {
-    return _resolveProxyUri(
-      rawUrl: downloadUrl,
-      fallbackPath: path,
-      applicationType: applicationType,
-      download: true,
-    );
-  }
-
-  String resolveDownloadUrl({String? applicationType}) {
-    return resolveDownloadUri(applicationType: applicationType)?.toString() ??
-        '';
-  }
-
   factory WebdavFileEntry.fromJson(Map<String, dynamic> json) {
     return WebdavFileEntry(
       name: (json['name'] as String?)?.trim() ?? '',
       path: (json['path'] as String?)?.trim() ?? '',
       streamUrl: (json['streamUrl'] as String?)?.trim() ?? '',
-      downloadUrl: (json['downloadUrl'] as String?)?.trim() ?? '',
       isDir: json['isDir'] == true,
       size: _toInt(json['size']),
       updatedAt: _toInt(json['updatedAt']),
@@ -68,7 +50,6 @@ class WebdavFileEntry {
     required String rawUrl,
     required String fallbackPath,
     String? applicationType,
-    required bool download,
   }) {
     if (isDir) return null;
 
@@ -90,10 +71,7 @@ class WebdavFileEntry {
     );
     return base.replace(
       path: streamPath,
-      queryParameters: <String, dynamic>{
-        'path': normalizedPath,
-        if (download) 'download': 'true',
-      },
+      queryParameters: <String, dynamic>{'path': normalizedPath},
     );
   }
 

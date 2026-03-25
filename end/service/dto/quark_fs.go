@@ -18,13 +18,12 @@ type QuarkRenameDTO struct {
 
 // QuarkFsInfo 文件/文件夹信息
 type QuarkFsInfo struct {
-	Name        string `json:"name"`
-	Path        string `json:"path"`
-	StreamURL   string `json:"streamUrl"`
-	DownloadURL string `json:"downloadUrl"`
-	IsDir       bool   `json:"isDir"`
-	Size        int64  `json:"size"`
-	UpdatedAt   int64  `json:"updatedAt"`
+	Name      string `json:"name"`
+	Path      string `json:"path"`
+	StreamURL string `json:"streamUrl"`
+	IsDir     bool   `json:"isDir"`
+	Size      int64  `json:"size"`
+	UpdatedAt int64  `json:"updatedAt"`
 }
 
 // QuarkFsMetaInfo 文件/目录元数据

@@ -22,6 +22,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"gorm.io/gorm"
@@ -33,6 +34,8 @@ const (
 	quarkDriveReferer        = "https://pan.quark.cn"
 	quarkCookieConfigKey     = "quark_cookies"
 	quarkAPITimeout          = 60 * time.Second
+	quarkFileLinkTTL         = 10 * time.Minute
+	quarkFileLinkBuffer      = 30 * time.Second
 	quarkListRetryCount      = 2
 	quarkListSortByNameAsc   = "file_type:asc,file_name:asc"
 	quarkListSortByUpdated   = "updated_at:desc,file_name:asc"
@@ -134,16 +137,28 @@ type quarkUploadAuthResponse struct {
 	} `json:"data"`
 }
 
-type quarkDownloadResponse struct {
+type quarkFileLinkResponse struct {
 	Data []struct {
-		DownloadURL string `json:"download_url"`
-		Size        int64  `json:"size"`
+		FileURL string `json:"download_url"`
+		Size    int64  `json:"size"`
 	} `json:"data"`
 }
 
-type quarkDownloadLink struct {
+type quarkFileLink struct {
 	URL  string
 	Size int64
+}
+
+type cachedQuarkFileLink struct {
+	link      quarkFileLink
+	expiresAt time.Time
+}
+
+var quarkFileLinkCache = struct {
+	mu    sync.RWMutex
+	items map[string]cachedQuarkFileLink
+}{
+	items: make(map[string]cachedQuarkFileLink),
 }
 
 func newManagedQuarkClient() (*quarkClient, error) {
@@ -348,6 +363,55 @@ func ensureLeadingSlash(value string) string {
 		return value
 	}
 	return "/" + value
+}
+
+func getCachedFileLink(fid string, now time.Time, minRemaining time.Duration) (quarkFileLink, bool) {
+	fid = strings.TrimSpace(fid)
+	if fid == "" {
+		return quarkFileLink{}, false
+	}
+
+	quarkFileLinkCache.mu.RLock()
+	cached, ok := quarkFileLinkCache.items[fid]
+	quarkFileLinkCache.mu.RUnlock()
+	if !ok || strings.TrimSpace(cached.link.URL) == "" {
+		return quarkFileLink{}, false
+	}
+	if !cached.expiresAt.After(now.Add(minRemaining)) {
+		return quarkFileLink{}, false
+	}
+	return cached.link, true
+}
+
+func cacheFileLink(fid string, link quarkFileLink, now time.Time) {
+	fid = strings.TrimSpace(fid)
+	if fid == "" || strings.TrimSpace(link.URL) == "" {
+		return
+	}
+
+	quarkFileLinkCache.mu.Lock()
+	quarkFileLinkCache.items[fid] = cachedQuarkFileLink{
+		link:      link,
+		expiresAt: resolveFileLinkExpiry(link.URL, now),
+	}
+	quarkFileLinkCache.mu.Unlock()
+}
+
+func resolveFileLinkExpiry(fileURL string, now time.Time) time.Time {
+	parsedURL, err := url.Parse(strings.TrimSpace(fileURL))
+	if err == nil {
+		rawExpires := strings.TrimSpace(parsedURL.Query().Get("Expires"))
+		if rawExpires != "" {
+			expiresAt, parseErr := strconv.ParseInt(rawExpires, 10, 64)
+			if parseErr == nil {
+				expiry := time.Unix(expiresAt, 0)
+				if expiry.After(now) {
+					return expiry
+				}
+			}
+		}
+	}
+	return now.Add(quarkFileLinkTTL)
 }
 
 func (c *quarkClient) apiClient() *http.Client {
@@ -662,25 +726,36 @@ func (c *quarkClient) delete(ctx context.Context, fid string) error {
 	return err
 }
 
-func (c *quarkClient) getDownloadLink(ctx context.Context, fid string) (quarkDownloadLink, error) {
+func (c *quarkClient) getFileLink(ctx context.Context, fid string) (quarkFileLink, error) {
+	now := time.Now()
+	if cached, ok := getCachedFileLink(fid, now, quarkFileLinkBuffer); ok {
+		return cached, nil
+	}
+
 	resp, _, _, err := c.driveRequest(ctx, http.MethodPost, "/file/download", nil, map[string]any{
 		"fids": []string{fid},
 	})
 	if err != nil {
-		return quarkDownloadLink{}, err
+		if cached, ok := getCachedFileLink(fid, now, 0); ok {
+			logQuarkWarnf("[quarkFs:stream] reuse cached file link after refresh failed fid=%s err=%v", strings.TrimSpace(fid), err)
+			return cached, nil
+		}
+		return quarkFileLink{}, err
 	}
 
-	var data quarkDownloadResponse
+	var data quarkFileLinkResponse
 	if err := json.Unmarshal(resp.Data, &data.Data); err != nil {
-		return quarkDownloadLink{}, err
+		return quarkFileLink{}, err
 	}
-	if len(data.Data) == 0 || strings.TrimSpace(data.Data[0].DownloadURL) == "" {
-		return quarkDownloadLink{}, errors.New("获取下载链接失败")
+	if len(data.Data) == 0 || strings.TrimSpace(data.Data[0].FileURL) == "" {
+		return quarkFileLink{}, errors.New("获取播放链接失败")
 	}
-	return quarkDownloadLink{
-		URL:  strings.TrimSpace(data.Data[0].DownloadURL),
+	link := quarkFileLink{
+		URL:  strings.TrimSpace(data.Data[0].FileURL),
 		Size: data.Data[0].Size,
-	}, nil
+	}
+	cacheFileLink(fid, link, now)
+	return link, nil
 }
 
 func (c *quarkClient) openDownloadStream(ctx context.Context, downloadURL, rangeHeader string) (*http.Response, error) {

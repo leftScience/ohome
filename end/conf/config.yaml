@@ -31,9 +31,3 @@ config:
 drops:
   itemReminderDays: "7,3,1,0" # 物资到期提醒：提前 7/3/1 天和当天
   eventReminderDays: "7,3,1,0" # 重要日期提醒：提前 7/3/1 天和当天
-
-# quarkFs 文件流配置
-quarkFs:
-  concurrency: 3 # 并发下载连接数
-  partSizeMB: 10 # 每个分片大小（MB）
-  chunkMaxRetries: 3 # 每个分片最大重试次数

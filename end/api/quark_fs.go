@@ -65,7 +65,6 @@ func (a *QuarkFs) StreamQuarkFile(c *gin.Context) {
 		return
 	}
 
-	isDownload := c.Query("download") == "true"
 	isCast := c.Query("cast") == "true"
 	rangeHeader := c.GetHeader("Range")
 	if c.Request.Method == http.MethodHead {
@@ -79,7 +78,7 @@ func (a *QuarkFs) StreamQuarkFile(c *gin.Context) {
 			c.Status(http.StatusRequestedRangeNotSatisfiable)
 			return
 		}
-		a.writeProxyHeaders(c, meta, responseMeta, isDownload, isCast, "")
+		a.writeProxyHeaders(c, meta, responseMeta, isCast, "")
 		c.Status(responseMeta.StatusCode)
 		return
 	}
@@ -91,14 +90,13 @@ func (a *QuarkFs) StreamQuarkFile(c *gin.Context) {
 	}
 	defer result.Body.Close()
 
-	a.writeStreamResponse(c, result, meta, isDownload, isCast)
+	a.writeStreamResponse(c, result, meta, isCast)
 }
 
 func (a *QuarkFs) writeStreamResponse(
 	c *gin.Context,
 	result *service.QuarkStreamResult,
 	meta service.QuarkProxyMeta,
-	attachment bool,
 	cast bool,
 ) {
 	responseMeta := service.QuarkProxyResponseMeta{
@@ -106,7 +104,7 @@ func (a *QuarkFs) writeStreamResponse(
 		StatusCode:    result.StatusCode,
 		ContentRange:  result.ContentRange,
 	}
-	a.writeProxyHeaders(c, meta, responseMeta, attachment, cast, result.ContentType)
+	a.writeProxyHeaders(c, meta, responseMeta, cast, result.ContentType)
 	c.Status(result.StatusCode)
 	c.Writer.Flush() // 立即发送响应头，让播放器尽快获取文件信息
 	_, _ = io.Copy(c.Writer, result.Body)
@@ -116,7 +114,6 @@ func (a *QuarkFs) writeProxyHeaders(
 	c *gin.Context,
 	meta service.QuarkProxyMeta,
 	responseMeta service.QuarkProxyResponseMeta,
-	attachment bool,
 	cast bool,
 	contentType string,
 ) {
@@ -128,7 +125,7 @@ func (a *QuarkFs) writeProxyHeaders(
 	}
 	c.Header("Content-Type", contentType)
 	c.Header("Accept-Ranges", "bytes")
-	if cast && !attachment {
+	if cast {
 		c.Header("transferMode.dlna.org", "Streaming")
 		c.Header("contentFeatures.dlna.org", buildDLNAContentFeatures(contentType))
 	}
@@ -146,14 +143,10 @@ func (a *QuarkFs) writeProxyHeaders(
 		c.Header("Last-Modified", time.Unix(meta.UpdatedAt, 0).UTC().Format(http.TimeFormat))
 	}
 
-	disposition := "inline"
-	if attachment {
-		disposition = "attachment"
-	}
-	if header := mime.FormatMediaType(disposition, map[string]string{"filename": meta.Filename}); header != "" {
+	if header := mime.FormatMediaType("inline", map[string]string{"filename": meta.Filename}); header != "" {
 		c.Header("Content-Disposition", header)
 	} else if meta.Filename != "" {
-		c.Header("Content-Disposition", disposition+`; filename="`+meta.Filename+`"`)
+		c.Header("Content-Disposition", `inline; filename="`+meta.Filename+`"`)
 	}
 }
 
