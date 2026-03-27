@@ -229,9 +229,16 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
 
   List<Widget> _buildFullscreenTopButtonBar(VideoState state) {
     final items = <Widget>[_buildFullscreenBackButton(state), const Spacer()];
-    items.add(_buildFullscreenFitModeToggle(state));
     items.add(SizedBox(width: 8.w));
     items.add(_buildFullscreenEpisodeActions(state.context));
+    items.add(SizedBox(width: 8.w));
+    items.add(
+      _buildActionIcon(
+        enabled: true,
+        icon: Icons.more_vert_rounded,
+        onTap: () => _showFullscreenMoreDrawer(state.context, state),
+      ),
+    );
 
     return items;
   }
@@ -819,7 +826,10 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
     future.whenComplete(scrollController.dispose);
   }
 
-  void _showSkipSettingsSheet(BuildContext context) {
+  void _showSkipSettingsSheet(
+    BuildContext context, {
+    bool fullscreenDrawer = false,
+  }) {
     const maxSeconds = 300.0;
     double introValue = controller.skipIntro.value.inSeconds
         .clamp(0, maxSeconds.toInt())
@@ -828,135 +838,188 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
         .clamp(0, maxSeconds.toInt())
         .toDouble();
 
+    Widget buildBody(
+      BuildContext ctx,
+      void Function(void Function()) setState,
+    ) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildSliderSheetSection(
+            context: ctx,
+            icon: Icons.subtitles_outlined,
+            title: '跳过片头',
+            valueText: '${introValue.round()} 秒',
+            titleFontSize: 6.sp,
+            valueFontSize: 4.sp,
+            iconSize: 10.sp,
+            trailing: TextButton(
+              onPressed: () async {
+                await controller.clearSkipSettings();
+                setState(() {
+                  introValue = 0;
+                  outroValue = 0;
+                });
+              },
+              child: const Text('清除'),
+            ),
+            slider: Slider(
+              value: introValue,
+              min: 0,
+              max: maxSeconds,
+              divisions: maxSeconds.toInt(),
+              label: '${introValue.round()}s',
+              onChanged: (value) {
+                setState(() => introValue = value);
+                unawaited(
+                  controller.setSkipIntro(Duration(seconds: value.round())),
+                );
+              },
+            ),
+          ),
+          SizedBox(height: 12.h),
+          _buildSliderSheetSection(
+            context: ctx,
+            icon: Icons.notes_rounded,
+            title: '跳过片尾',
+            valueText: '${outroValue.round()} 秒',
+            titleFontSize: 6.sp,
+            valueFontSize: 4.sp,
+            iconSize: 10.sp,
+            slider: Slider(
+              value: outroValue,
+              min: 0,
+              max: maxSeconds,
+              divisions: maxSeconds.toInt(),
+              label: '${outroValue.round()}s',
+              onChanged: (value) {
+                setState(() => outroValue = value);
+                unawaited(
+                  controller.setSkipOutro(Duration(seconds: value.round())),
+                );
+              },
+            ),
+          ),
+        ],
+      );
+    }
+
+    Widget buildContent(
+      BuildContext ctx,
+      void Function(void Function()) setState,
+    ) {
+      return _buildStandardBottomSheet(
+        context: ctx,
+        title: '跳过片头片尾',
+        subtitle: '片头 ${introValue.round()} 秒 · 片尾 ${outroValue.round()} 秒',
+        titleFontSize: 8.sp,
+        subtitleFontSize: 5.sp,
+        child: buildBody(ctx, setState),
+      );
+    }
+
+    if (fullscreenDrawer) {
+      _showFullscreenSideDrawer(
+        context,
+        childBuilder: (ctx) {
+          return StatefulBuilder(
+            builder: (ctx, setState) => _buildFullscreenDrawerContainer(
+              child: _buildFullscreenDrawerSection(
+                title: '跳过片头片尾',
+                subtitle:
+                    '片头 ${introValue.round()} 秒 · 片尾 ${outroValue.round()} 秒',
+                titleFontSize: 8.sp,
+                subtitleFontSize: 5.sp,
+                child: buildBody(ctx, setState),
+              ),
+            ),
+          );
+        },
+      );
+      return;
+    }
+
     showModalBottomSheet<void>(
       context: context,
       useRootNavigator: true,
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (ctx) {
         return StatefulBuilder(
           builder: (ctx, setState) {
-            return SafeArea(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(ctx).viewPadding.bottom,
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(height: 8.h),
-                    ListTile(
-                      leading: const Icon(Icons.subtitles_outlined),
-                      title: const Text('跳过片头'),
-                      subtitle: Text('当前：${introValue.round()} 秒'),
-                      trailing: TextButton(
-                        onPressed: () async {
-                          await controller.clearSkipSettings();
-                          setState(() {
-                            introValue = 0;
-                            outroValue = 0;
-                          });
-                        },
-                        child: const Text('清除'),
-                      ),
-                    ),
-                    Slider(
-                      value: introValue,
-                      min: 0,
-                      max: maxSeconds,
-                      divisions: maxSeconds.toInt(),
-                      label: '${introValue.round()}s',
-                      onChanged: (value) {
-                        setState(() => introValue = value);
-                        unawaited(
-                          controller.setSkipIntro(
-                            Duration(seconds: value.round()),
-                          ),
-                        );
-                      },
-                    ),
-                    const Divider(height: 1),
-                    ListTile(
-                      leading: const Icon(Icons.notes_rounded),
-                      title: const Text('跳过片尾'),
-                      subtitle: Text('当前：${outroValue.round()} 秒'),
-                    ),
-                    Slider(
-                      value: outroValue,
-                      min: 0,
-                      max: maxSeconds,
-                      divisions: maxSeconds.toInt(),
-                      label: '${outroValue.round()}s',
-                      onChanged: (value) {
-                        setState(() => outroValue = value);
-                        unawaited(
-                          controller.setSkipOutro(
-                            Duration(seconds: value.round()),
-                          ),
-                        );
-                      },
-                    ),
-                    SizedBox(height: 12.h),
-                  ],
-                ),
-              ),
-            );
+            return buildContent(ctx, setState);
           },
         );
       },
     );
   }
 
-  void _showPlaybackRateSheet(BuildContext context) {
+  void _showPlaybackRateSheet(
+    BuildContext context, {
+    bool fullscreenDrawer = false,
+  }) {
+    Widget buildBody(BuildContext ctx, {bool compact = false}) {
+      return Obx(() {
+        final currentRate = controller.playbackRate.value;
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: _speeds
+              .map((value) {
+                final selected = (currentRate - value).abs() < 0.001;
+                return _buildSheetOptionTile(
+                  context: ctx,
+                  title: _formatRate(value),
+                  selected: selected,
+                  titleFontSize: compact ? 6.sp : null,
+                  subtitleFontSize: compact ? 4.sp : null,
+                  trailingIconSize: compact ? 10.sp : null,
+                  onTap: () {
+                    Navigator.of(ctx).pop();
+                    unawaited(controller.setPlaybackRate(value));
+                  },
+                );
+              })
+              .toList(growable: false),
+        );
+      });
+    }
+
+    Widget buildContent(BuildContext ctx) {
+      return Obx(() {
+        final currentRate = controller.playbackRate.value;
+        return _buildStandardBottomSheet(
+          context: ctx,
+          title: '倍速',
+          subtitle: '当前：${_formatRate(currentRate)}',
+          child: buildBody(ctx),
+        );
+      });
+    }
+
+    if (fullscreenDrawer) {
+      _showFullscreenSideDrawer(
+        context,
+        childBuilder: (ctx) => _buildFullscreenDrawerContainer(
+          child: Obx(() {
+            final currentRate = controller.playbackRate.value;
+            return _buildFullscreenDrawerSection(
+              title: '倍速',
+              subtitle: '当前：${_formatRate(currentRate)}',
+              child: buildBody(ctx, compact: true),
+            );
+          }),
+        ),
+      );
+      return;
+    }
+
     showModalBottomSheet<void>(
       context: context,
       useRootNavigator: true,
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (ctx) {
-        return SafeArea(
-          child: Obx(() {
-            final currentRate = controller.playbackRate.value;
-            return SingleChildScrollView(
-              child: Padding(
-                padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(ctx).viewPadding.bottom,
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(height: 8.h),
-                    ListTile(
-                      title: const Text('倍速'),
-                      subtitle: Text('当前：${_formatRate(currentRate)}'),
-                    ),
-                    ..._speeds.map((value) {
-                      final selected = (currentRate - value).abs() < 0.001;
-                      return ListTile(
-                        leading: Icon(
-                          Icons.speed_rounded,
-                          color: selected
-                              ? Theme.of(ctx).colorScheme.primary
-                              : null,
-                        ),
-                        title: Text(_formatRate(value)),
-                        trailing: selected
-                            ? Icon(
-                                Icons.check_rounded,
-                                color: Theme.of(ctx).colorScheme.primary,
-                              )
-                            : null,
-                        onTap: () {
-                          Navigator.of(ctx).pop();
-                          unawaited(controller.setPlaybackRate(value));
-                        },
-                      );
-                    }),
-                    SizedBox(height: 12.h),
-                  ],
-                ),
-              ),
-            );
-          }),
-        );
+        return buildContent(ctx);
       },
     );
   }
@@ -976,60 +1039,477 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
       context: context,
       useRootNavigator: true,
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (ctx) {
+        return Obx(() {
+          final currentMode = controller.effectivePlaybackProxyMode;
+          return _buildStandardBottomSheet(
+            context: ctx,
+            title: '当前视频播放模式',
+            subtitle: '当前：${controller.effectivePlaybackProxyModeLabel}',
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: options
+                  .map((option) {
+                    final selected = currentMode == option.value;
+                    return _buildSheetOptionTile(
+                      context: ctx,
+                      title: option.title,
+                      subtitle: option.subtitle,
+                      selected: selected,
+                      onTap: () {
+                        Navigator.of(ctx).pop();
+                        unawaited(
+                          controller.setCurrentPlaybackProxyMode(option.value),
+                        );
+                      },
+                    );
+                  })
+                  .toList(growable: false),
+            ),
+          );
+        });
+      },
+    );
+  }
+
+  void _showFullscreenMoreDrawer(BuildContext context, VideoState state) {
+    _showFullscreenSideDrawer(
+      context,
+      childBuilder: (ctx) => _buildFullscreenMoreDrawerPanel(ctx, state),
+    );
+  }
+
+  void _showFullscreenSideDrawer(
+    BuildContext context, {
+    required WidgetBuilder childBuilder,
+  }) {
+    showGeneralDialog<void>(
+      context: context,
+      useRootNavigator: true,
+      barrierDismissible: true,
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+      barrierColor: Colors.black38,
+      transitionDuration: const Duration(milliseconds: 220),
+      pageBuilder: (dialogContext, animation, secondaryAnimation) {
+        final mediaQuery = MediaQuery.of(dialogContext);
+        final panelWidth = _compactEpisodePanelWidth(mediaQuery);
         return SafeArea(
-          child: Obx(() {
-            final currentMode = controller.effectivePlaybackProxyMode;
-            return SingleChildScrollView(
-              child: Padding(
-                padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(ctx).viewPadding.bottom,
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: SizedBox(
+              width: panelWidth,
+              height: mediaQuery.size.height,
+              child: childBuilder(dialogContext),
+            ),
+          ),
+        );
+      },
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        final curved = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+          reverseCurve: Curves.easeInCubic,
+        );
+        return FadeTransition(
+          opacity: curved,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(1, 0),
+              end: Offset.zero,
+            ).animate(curved),
+            child: child,
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildFullscreenDrawerContainer({required Widget child}) {
+    return Material(
+      color: const Color(0xFF111111),
+      borderRadius: BorderRadius.horizontal(left: Radius.circular(20.r)),
+      child: SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(8.w, 12.h, 8.w, 12.h),
+        child: child,
+      ),
+    );
+  }
+
+  Widget _buildFullscreenDrawerSection({
+    required String title,
+    String? subtitle,
+    required Widget child,
+    double? titleFontSize,
+    double? subtitleFontSize,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 4.w),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: titleFontSize ?? 13,
+                  fontWeight: FontWeight.w600,
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(height: 8.h),
-                    ListTile(
-                      title: const Text('当前视频播放模式'),
-                      subtitle: Text(
-                        '当前：${controller.effectivePlaybackProxyModeLabel}',
+              ),
+              if (subtitle != null && subtitle.isNotEmpty) ...[
+                SizedBox(height: 2.h),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: Colors.white60,
+                    fontSize: subtitleFontSize ?? 5.sp,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        SizedBox(height: 8.h),
+        child,
+      ],
+    );
+  }
+
+  Widget _buildFullscreenSettingRow({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+    bool showDivider = true,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(6.r),
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 10.h),
+            child: Row(
+              children: [
+                Icon(icon, color: Colors.white60, size: 10.sp),
+                SizedBox(width: 8.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 6.sp,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      SizedBox(height: 2.h),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          color: Colors.white38,
+                          fontSize: 4.5.sp,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: Colors.white24,
+                  size: 10.sp,
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (showDivider)
+          Divider(
+            height: 1,
+            thickness: 0.5,
+            color: Colors.white.withValues(alpha: 0.06),
+            indent: 22.w,
+          ),
+      ],
+    );
+  }
+
+  Widget _buildFullscreenMoreDrawerPanel(
+    BuildContext context,
+    VideoState state,
+  ) {
+    return Obx(() {
+      final isCover = controller.isFullscreenCover;
+      final currentRate = controller.playbackRate.value;
+      return _buildFullscreenDrawerContainer(
+        child: _buildFullscreenDrawerSection(
+          title: '更多设置',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildFullscreenSettingRow(
+                icon: Icons.aspect_ratio_rounded,
+                title: '画面模式',
+                subtitle: isCover ? '铺满裁切' : '完整显示',
+                onTap: () {
+                  Navigator.of(context).pop();
+                  controller.toggleFullscreenFitMode();
+                  state.update(
+                    fit: controller.isFullscreenCover
+                        ? BoxFit.cover
+                        : BoxFit.contain,
+                  );
+                },
+              ),
+              _buildFullscreenSettingRow(
+                icon: Icons.speed_rounded,
+                title: '倍速',
+                subtitle: _formatRate(currentRate),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _showPlaybackRateSheet(
+                    state.context,
+                    fullscreenDrawer: true,
+                  );
+                },
+              ),
+              _buildFullscreenSettingRow(
+                icon: Icons.skip_next_rounded,
+                title: '跳过片头片尾',
+                subtitle:
+                    '片头 ${controller.skipIntro.value.inSeconds} 秒 · 片尾 ${controller.skipOutro.value.inSeconds} 秒',
+                showDivider: false,
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _showSkipSettingsSheet(state.context, fullscreenDrawer: true);
+                },
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
+  Widget _buildStandardBottomSheet({
+    required BuildContext context,
+    required String title,
+    String? subtitle,
+    required Widget child,
+    double? titleFontSize,
+    double? subtitleFontSize,
+    double? maxWidth,
+  }) {
+    final bottom = MediaQuery.of(context).viewPadding.bottom;
+    return SafeArea(
+      top: false,
+      child: SingleChildScrollView(
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: maxWidth ?? 320.w),
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFF141414),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+              ),
+              padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 12.h + bottom),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: 14.h),
+                  Center(
+                    child: Container(
+                      width: 42.w,
+                      height: 4.h,
+                      decoration: BoxDecoration(
+                        color: Colors.white24,
+                        borderRadius: BorderRadius.circular(999.r),
                       ),
                     ),
-                    ...options.map((option) {
-                      final selected = currentMode == option.value;
-                      return ListTile(
-                        leading: Icon(
-                          Icons.route_rounded,
-                          color: selected
-                              ? Theme.of(ctx).colorScheme.primary
-                              : null,
+                  ),
+                  SizedBox(height: 14.h),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 4.w),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: titleFontSize ?? 16.sp,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
-                        title: Text(option.title),
-                        subtitle: Text(option.subtitle),
-                        trailing: selected
-                            ? Icon(
-                                Icons.check_rounded,
-                                color: Theme.of(ctx).colorScheme.primary,
-                              )
-                            : null,
-                        onTap: () {
-                          Navigator.of(ctx).pop();
-                          unawaited(
-                            controller.setCurrentPlaybackProxyMode(
-                              option.value,
+                        if (subtitle != null && subtitle.isNotEmpty) ...[
+                          SizedBox(height: 4.h),
+                          Text(
+                            subtitle,
+                            style: TextStyle(
+                              color: Colors.white60,
+                              fontSize: subtitleFontSize ?? 12.sp,
+                              fontWeight: FontWeight.w500,
                             ),
-                          );
-                        },
-                      );
-                    }),
-                    SizedBox(height: 12.h),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 14.h),
+                  child,
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSheetOptionTile({
+    required BuildContext context,
+    required String title,
+    String? subtitle,
+    required bool selected,
+    required VoidCallback onTap,
+    double? titleFontSize,
+    double? subtitleFontSize,
+    double? trailingIconSize,
+  }) {
+    final primary = Theme.of(context).colorScheme.primary;
+    return Padding(
+      padding: EdgeInsets.only(bottom: 6.h),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(10.r),
+          child: Ink(
+            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
+            decoration: BoxDecoration(
+              color: selected
+                  ? primary.withValues(alpha: 0.14)
+                  : Colors.white.withValues(alpha: 0.04),
+              borderRadius: BorderRadius.circular(10.r),
+              border: Border.all(
+                color: selected
+                    ? primary.withValues(alpha: 0.45)
+                    : Colors.white.withValues(alpha: 0.08),
+              ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: titleFontSize ?? 14.sp,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (subtitle != null && subtitle.isNotEmpty) ...[
+                        SizedBox(height: 4.h),
+                        Text(
+                          subtitle,
+                          style: TextStyle(
+                            color: Colors.white60,
+                            fontSize: subtitleFontSize ?? 12.sp,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                SizedBox(width: 4.w),
+                Icon(
+                  selected
+                      ? Icons.check_circle_rounded
+                      : Icons.chevron_right_rounded,
+                  color: selected ? primary : Colors.white38,
+                  size: trailingIconSize ?? 20.sp,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSliderSheetSection({
+    required BuildContext context,
+    required IconData icon,
+    required String title,
+    required String valueText,
+    required Widget slider,
+    Widget? trailing,
+    double? titleFontSize,
+    double? valueFontSize,
+    double? iconSize,
+  }) {
+    return Container(
+      padding: EdgeInsets.fromLTRB(10.w, 8.h, 10.w, 4.h),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(10.r),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: Colors.white70, size: iconSize ?? 20.sp),
+              SizedBox(width: 6.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: titleFontSize ?? 14.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      '当前：$valueText',
+                      style: TextStyle(
+                        color: Colors.white60,
+                        fontSize: valueFontSize ?? 12.sp,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ],
                 ),
               ),
-            );
-          }),
-        );
-      },
+              ?trailing,
+            ],
+          ),
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(trackHeight: 3.2),
+            child: slider,
+          ),
+        ],
+      ),
     );
   }
 
@@ -1090,40 +1570,6 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
     );
     if (tooltip == null || tooltip.isEmpty) return button;
     return Tooltip(message: tooltip, child: button);
-  }
-
-  Widget _buildFullscreenFitModeToggle(VideoState state) {
-    return Obx(() {
-      final isCover = controller.isFullscreenCover;
-      final nextMode = isCover ? '完整显示' : '铺满裁切';
-      final icon = isCover ? Icons.fit_screen : Icons.crop_free;
-      return Semantics(
-        button: true,
-        label: '画面模式，点击切换到$nextMode',
-        child: Tooltip(
-          message: nextMode,
-          child: Material(
-            color: Colors.black38,
-            borderRadius: BorderRadius.circular(24.r),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(24.r),
-              onTap: () {
-                controller.toggleFullscreenFitMode();
-                state.update(
-                  fit: controller.isFullscreenCover
-                      ? BoxFit.cover
-                      : BoxFit.contain,
-                );
-              },
-              child: Padding(
-                padding: EdgeInsets.all(10.r),
-                child: Icon(icon, color: Colors.white, size: 22),
-              ),
-            ),
-          ),
-        ),
-      );
-    });
   }
 
   Widget _buildNextEpisodeControlsButton() {
@@ -1292,43 +1738,51 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                                           ],
                                         );
 
-                                final fullscreenTheme =
-                                    kDefaultMaterialVideoControlsThemeDataFullscreen
-                                        .copyWith(
-                                          initialBrightness: _gestureBrightness,
-                                          onBrightnessChanged:
-                                              _handleFullscreenBrightnessChanged,
-                                          initialVolume: _gestureVolume,
-                                          onVolumeChanged:
-                                              _handleFullscreenVolumeChanged,
-                                          topButtonBar:
-                                              _buildFullscreenTopButtonBar(
-                                                state,
-                                              ),
-                                          bottomButtonBar: [
-                                            _buildNextEpisodeControlsButton(),
-                                            SizedBox(width: 6.w),
-                                            const MaterialPositionIndicator(),
-                                            const Spacer(),
-                                            _buildFullscreenBottomControlButton(
-                                              icon: Icons.speed_rounded,
-                                              onPressed: () =>
-                                                  _showPlaybackRateSheet(
-                                                    state.context,
-                                                  ),
-                                            ),
-                                            SizedBox(width: 6.w),
-                                            _buildFullscreenBottomControlButton(
-                                              icon: Icons.access_time_rounded,
-                                              onPressed: () =>
-                                                  _showSkipSettingsSheet(
-                                                    state.context,
-                                                  ),
-                                            ),
-                                            SizedBox(width: 6.w),
-                                            const MaterialFullscreenButton(),
-                                          ],
-                                        );
+                                final fullscreenTheme = (() {
+                                  final fullscreenToolbarBottom = 14.h;
+                                  final fullscreenToolbarHeight = 56.0;
+                                  final fullscreenSeekGap = 10.h;
+                                  return kDefaultMaterialVideoControlsThemeDataFullscreen
+                                      .copyWith(
+                                        initialBrightness: _gestureBrightness,
+                                        onBrightnessChanged:
+                                            _handleFullscreenBrightnessChanged,
+                                        initialVolume: _gestureVolume,
+                                        onVolumeChanged:
+                                            _handleFullscreenVolumeChanged,
+                                        topButtonBar:
+                                            _buildFullscreenTopButtonBar(state),
+                                        bottomButtonBar: [
+                                          _buildNextEpisodeControlsButton(),
+                                          SizedBox(width: 6.w),
+                                          const MaterialPositionIndicator(),
+                                          const Spacer(),
+                                          _buildFullscreenBottomControlButton(
+                                            icon: Icons.speed_rounded,
+                                            onPressed: () =>
+                                                _showPlaybackRateSheet(
+                                                  state.context,
+                                                  fullscreenDrawer: true,
+                                                ),
+                                          ),
+                                          SizedBox(width: 6.w),
+                                          const MaterialFullscreenButton(),
+                                        ],
+                                        bottomButtonBarMargin: EdgeInsets.only(
+                                          left: 16.w,
+                                          right: 8.w,
+                                          bottom: fullscreenToolbarBottom,
+                                        ),
+                                        seekBarMargin: EdgeInsets.only(
+                                          left: 16.w,
+                                          right: 16.w,
+                                          bottom:
+                                              fullscreenToolbarBottom +
+                                              fullscreenToolbarHeight +
+                                              fullscreenSeekGap,
+                                        ),
+                                      );
+                                })();
                                 return MaterialVideoControlsTheme(
                                   normal: normalTheme,
                                   fullscreen: fullscreenTheme,
