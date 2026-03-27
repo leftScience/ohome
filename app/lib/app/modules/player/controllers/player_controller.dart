@@ -6,6 +6,7 @@ import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
+import '../../../data/api/config.dart';
 import '../../../data/api/quark.dart';
 import '../../../data/models/quark_file_entry.dart';
 import '../../../services/playback_entry_service.dart';
@@ -23,10 +24,12 @@ enum FullscreenFitMode { contain, cover }
 
 class PlayerController extends GetxController {
   PlayerController({
+    ConfigApi? configApi,
     PlaybackProgressStorage? progressStorage,
     SkipSettingsStorage? skipSettingsStorage,
     String applicationType = 'tv',
-  }) : _providedProgressStorage = progressStorage,
+  }) : _configApi = configApi ?? Get.find<ConfigApi>(),
+       _providedProgressStorage = progressStorage,
        _defaultApplicationType = applicationType,
        _applicationType = applicationType,
        _skipStorage =
@@ -48,6 +51,7 @@ class PlayerController extends GetxController {
   final PlaybackProgressStorage? _providedProgressStorage;
   late PlaybackProgressStorage _progressStorage;
   final String _defaultApplicationType;
+  final ConfigApi _configApi;
   final SkipSettingsStorage _skipStorage;
   final WebdavApi _webdavApi = Get.find<WebdavApi>();
   final VideoCastService _castService = Get.find<VideoCastService>();
@@ -64,6 +68,8 @@ class PlayerController extends GetxController {
   final Rx<Duration> skipOutro = Duration.zero.obs;
   final Rx<FullscreenFitMode> fullscreenFitMode = FullscreenFitMode.contain.obs;
   final RxBool isLoadingPlaylist = false.obs;
+  final RxString globalPlaybackProxyMode = _defaultPlaybackProxyMode.obs;
+  final RxnString currentPlaybackProxyModeOverride = RxnString();
 
   bool _autoNextRunning = false;
   Duration? _pendingSeek;
@@ -104,6 +110,21 @@ class PlayerController extends GetxController {
   bool get isPlayletMode => _applicationType.trim().toLowerCase() == 'playlet';
   bool get isCasting => _castService.isCasting.value;
   String get castingDeviceName => _castService.currentDeviceName.value.trim();
+  String get effectivePlaybackProxyMode =>
+      currentPlaybackProxyModeOverride.value ?? globalPlaybackProxyMode.value;
+  String get effectivePlaybackProxyModeLabel {
+    switch (effectivePlaybackProxyMode) {
+      case '302_redirect':
+        return '302';
+      default:
+        return '本地代理';
+    }
+  }
+
+  bool get canSwitchCurrentPlaybackProxyMode {
+    final current = _currentEpisode;
+    return current != null && _supportsPlaybackProxyMode(current);
+  }
 
   bool get canCastCurrentEpisode => currentCastUrl != null;
 
@@ -152,6 +173,7 @@ class PlayerController extends GetxController {
     _progressStorage =
         _providedProgressStorage ??
         PlaybackProgressStorage(applicationType: _applicationType);
+    unawaited(_loadGlobalPlaybackProxyMode());
     handleRouteArguments(Get.arguments);
   }
 
@@ -417,6 +439,27 @@ class PlayerController extends GetxController {
     } catch (_) {}
   }
 
+  Future<void> setCurrentPlaybackProxyMode(String mode) async {
+    if (!canSwitchCurrentPlaybackProxyMode) return;
+    if (isCasting) {
+      Get.snackbar('提示', '投屏时暂不支持切换当前播放模式');
+      return;
+    }
+
+    final normalized = _normalizePlaybackProxyMode(mode);
+    final nextOverride = normalized == globalPlaybackProxyMode.value
+        ? null
+        : normalized;
+    final currentOverride = currentPlaybackProxyModeOverride.value;
+    if (effectivePlaybackProxyMode == normalized &&
+        currentOverride == nextOverride) {
+      return;
+    }
+
+    currentPlaybackProxyModeOverride.value = nextOverride;
+    await _restartCurrentEpisode();
+  }
+
   Future<void> startSpeedBoost([double rate = 3.0]) async {
     if (isSpeedBoosting.value) return;
     if (rate <= 0) return;
@@ -580,12 +623,15 @@ class PlayerController extends GetxController {
     }
 
     final episode = episodes[index];
+    final episodePath = episode.path?.trim();
+    if (!_isSameEpisodeSelection(index, episodePath)) {
+      currentPlaybackProxyModeOverride.value = null;
+    }
     final url = _episodeUrl(episode);
     if (url == null) {
       Get.snackbar('提示', '登录已过期，请重新登录');
       return;
     }
-    final episodePath = episode.path?.trim();
 
     if (isCasting) {
       final castUrl = _castUrlForEpisode(episode);
@@ -661,20 +707,25 @@ class PlayerController extends GetxController {
   }
 
   String? _episodeUrl(Episode episode) {
-    final url = episode.url?.trim();
-    if (url != null && url.isNotEmpty) return url;
-
     final path = episode.path?.trim();
+    final url = episode.url?.trim();
+    if (url != null && url.isNotEmpty) {
+      if (_isLocalProxyStreamUrl(url)) {
+        return _applyPlaybackProxyModeToUrl(
+          url,
+          mode: currentPlaybackProxyModeOverride.value,
+        );
+      }
+      if (path == null || path.isEmpty) {
+        return url;
+      }
+    }
     if (path == null || path.isEmpty) return null;
-    return _buildStreamUrl(path);
+    return _buildStreamUrl(path, mode: currentPlaybackProxyModeOverride.value);
   }
 
   String? _castUrlForEpisode(Episode episode) {
-    final direct = episode.url?.trim();
-    if (direct != null && direct.isNotEmpty) return direct;
-    final path = episode.path?.trim();
-    if (path == null || path.isEmpty) return null;
-    final streamUrl = _buildStreamUrl(path);
+    final streamUrl = _episodeUrl(episode);
     if (streamUrl == null || streamUrl.isEmpty) return null;
     final uri = Uri.parse(streamUrl);
     return uri
@@ -708,6 +759,7 @@ class PlayerController extends GetxController {
     _lastPersistedPosition = null;
     _blockPlaybackOnOpen = false;
     isLoadingPlaylist.value = false;
+    currentPlaybackProxyModeOverride.value = null;
 
     final applicationType = args['applicationType'];
     if (applicationType is String && applicationType.trim().isNotEmpty) {
@@ -1193,15 +1245,109 @@ class PlayerController extends GetxController {
     );
   }
 
-  String? _buildStreamUrl(String path, {String? applicationType}) {
+  Future<void> _loadGlobalPlaybackProxyMode() async {
+    try {
+      final config = await _configApi.findConfigByKey(_webProxyModeKey);
+      globalPlaybackProxyMode.value = _normalizePlaybackProxyMode(
+        config?.value ?? _defaultPlaybackProxyMode,
+      );
+    } catch (_) {
+      globalPlaybackProxyMode.value = _defaultPlaybackProxyMode;
+    }
+  }
+
+  Future<void> _restartCurrentEpisode() async {
+    if (episodes.isEmpty) return;
+    final index = currentIndex.value;
+    if (index < 0 || index >= episodes.length) return;
+
+    final wasPlaying = player.state.playing;
+    final position = player.state.position;
+    await playAt(index, startPosition: position, clearResume: true);
+    if (!wasPlaying) {
+      try {
+        await player.pause();
+      } catch (_) {}
+    }
+  }
+
+  bool _supportsPlaybackProxyMode(Episode episode) {
+    final path = episode.path?.trim();
+    if (path != null && path.isNotEmpty) return true;
+    final url = episode.url?.trim();
+    if (url == null || url.isEmpty) return false;
+    return _isLocalProxyStreamUrl(url);
+  }
+
+  bool _isSameEpisodeSelection(int index, String? episodePath) {
+    final normalizedPath = MediaPath.normalize(episodePath);
+    if (normalizedPath.isNotEmpty) {
+      return MediaPath.equals(_currentEpisodePath, normalizedPath) ||
+          MediaPath.equals(_openingEpisodePath, normalizedPath);
+    }
+    return currentIndex.value == index;
+  }
+
+  String? _buildStreamUrl(
+    String path, {
+    String? applicationType,
+    String? mode,
+  }) {
     final base = Uri.parse(AppEnv.instance.apiBaseUrl);
     final streamPath = _joinPath(
       base.path,
       'public/quarkFs/${applicationType ?? _applicationType}/files/stream',
     );
+    final normalizedMode = mode == null || mode.trim().isEmpty
+        ? null
+        : _normalizePlaybackProxyMode(mode);
     return base
-        .replace(path: streamPath, queryParameters: {'path': path})
+        .replace(
+          path: streamPath,
+          queryParameters: <String, String>{
+            'path': path,
+            ...?normalizedMode == null
+                ? null
+                : <String, String>{'mode': normalizedMode},
+          },
+        )
         .toString();
+  }
+
+  String _normalizePlaybackProxyMode(String raw) {
+    switch (raw.trim().toLowerCase()) {
+      case 'redirect':
+      case '302':
+      case '302_redirect':
+      case 'direct':
+        return '302_redirect';
+      default:
+        return _defaultPlaybackProxyMode;
+    }
+  }
+
+  bool _isLocalProxyStreamUrl(String rawUrl) {
+    final uri = Uri.tryParse(rawUrl.trim());
+    if (uri == null) return false;
+    final normalizedPath = uri.path.replaceAll('\\', '/').trim();
+    return normalizedPath.contains('/public/quarkFs/') &&
+        normalizedPath.endsWith('/files/stream');
+  }
+
+  String _applyPlaybackProxyModeToUrl(String rawUrl, {String? mode}) {
+    final uri = Uri.tryParse(rawUrl.trim());
+    if (uri == null || !_isLocalProxyStreamUrl(rawUrl)) return rawUrl;
+
+    final nextQuery = <String, String>{...uri.queryParameters};
+    final normalizedMode = mode == null || mode.trim().isEmpty
+        ? null
+        : _normalizePlaybackProxyMode(mode);
+    if (normalizedMode == null) {
+      nextQuery.remove('mode');
+    } else {
+      nextQuery['mode'] = normalizedMode;
+    }
+    return uri.replace(queryParameters: nextQuery).toString();
   }
 
   static String _joinPath(String basePath, String child) {
@@ -1239,6 +1385,8 @@ class PlayerController extends GetxController {
     '.flv',
     '.webm',
   ];
+  static const String _webProxyModeKey = 'quark_fs_web_proxy_mode';
+  static const String _defaultPlaybackProxyMode = 'native_proxy';
 
   @override
   void onClose() {

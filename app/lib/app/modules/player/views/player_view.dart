@@ -222,12 +222,6 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
             icon: Icons.format_list_bulleted,
             onTap: () => _showEpisodeSheet(context, compact: true),
           ),
-          SizedBox(width: 8.w),
-          _buildActionIcon(
-            enabled: true,
-            icon: Icons.access_time,
-            onTap: () => _showSkipSettingsSheet(context),
-          ),
         ],
       );
     });
@@ -235,40 +229,6 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
 
   List<Widget> _buildFullscreenTopButtonBar(VideoState state) {
     final items = <Widget>[_buildFullscreenBackButton(state), const Spacer()];
-
-    items.add(
-      Obx(() {
-        final rate = controller.playbackRate.value;
-        return PopupMenuButton<double>(
-          color: const Color(0xFF1A1A1A),
-          initialValue: rate,
-          tooltip: '倍速 ${_formatRate(rate)}',
-          onSelected: (value) => unawaited(controller.setPlaybackRate(value)),
-          itemBuilder: (context) {
-            return _speeds
-                .map(
-                  (value) => PopupMenuItem<double>(
-                    value: value,
-                    child: Text(
-                      _formatRate(value),
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                  ),
-                )
-                .toList(growable: false);
-          },
-          child: IgnorePointer(
-            child: _buildActionIcon(
-              enabled: true,
-              icon: Icons.speed_rounded,
-              onTap: () {},
-            ),
-          ),
-        );
-      }),
-    );
-
-    items.add(SizedBox(width: 8.w));
     items.add(_buildFullscreenFitModeToggle(state));
     items.add(SizedBox(width: 8.w));
     items.add(_buildFullscreenEpisodeActions(state.context));
@@ -398,7 +358,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
   String _episodeCountLabel() {
     final count = controller.episodes.length;
     if (count > 0) {
-      return '更新至 $count 集';
+      return '$count 集';
     }
     final intro = controller.resourceIntro.value.trim();
     return intro.isNotEmpty ? intro : '更新中';
@@ -415,6 +375,12 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
     required String value,
     VoidCallback? onTap,
   }) {
+    final textStyle = TextStyle(
+      color: Colors.white,
+      fontSize: 13.sp,
+      height: 1,
+      fontWeight: FontWeight.w600,
+    );
     final child = Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
       decoration: BoxDecoration(
@@ -424,24 +390,21 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Icon(icon, size: 16.sp, color: Colors.white70),
           SizedBox(width: 6.w),
-          Text(
-            label,
-            style: TextStyle(
-              color: Colors.white60,
-              fontSize: 11.sp,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          SizedBox(width: 6.w),
-          Text(
-            value,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 12.sp,
-              fontWeight: FontWeight.w600,
+          RichText(
+            textAlign: TextAlign.center,
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: '$label ',
+                  style: textStyle.copyWith(color: Colors.white70),
+                ),
+                TextSpan(text: value, style: textStyle),
+              ],
             ),
           ),
         ],
@@ -943,6 +906,133 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
     );
   }
 
+  void _showPlaybackRateSheet(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return SafeArea(
+          child: Obx(() {
+            final currentRate = controller.playbackRate.value;
+            return SingleChildScrollView(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(ctx).viewPadding.bottom,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(height: 8.h),
+                    ListTile(
+                      title: const Text('倍速'),
+                      subtitle: Text('当前：${_formatRate(currentRate)}'),
+                    ),
+                    ..._speeds.map((value) {
+                      final selected = (currentRate - value).abs() < 0.001;
+                      return ListTile(
+                        leading: Icon(
+                          Icons.speed_rounded,
+                          color: selected
+                              ? Theme.of(ctx).colorScheme.primary
+                              : null,
+                        ),
+                        title: Text(_formatRate(value)),
+                        trailing: selected
+                            ? Icon(
+                                Icons.check_rounded,
+                                color: Theme.of(ctx).colorScheme.primary,
+                              )
+                            : null,
+                        onTap: () {
+                          Navigator.of(ctx).pop();
+                          unawaited(controller.setPlaybackRate(value));
+                        },
+                      );
+                    }),
+                    SizedBox(height: 12.h),
+                  ],
+                ),
+              ),
+            );
+          }),
+        );
+      },
+    );
+  }
+
+  void _showPlaybackProxyModeSheet(BuildContext context) {
+    if (!controller.canSwitchCurrentPlaybackProxyMode) {
+      Get.snackbar('提示', '当前视频不支持切换播放模式');
+      return;
+    }
+
+    const options = <({String value, String title, String subtitle})>[
+      (value: 'native_proxy', title: '本地代理', subtitle: '稳定，适合大多数播放场景'),
+      (value: '302_redirect', title: '302', subtitle: '直连转码，仅当前视频生效'),
+    ];
+
+    showModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return SafeArea(
+          child: Obx(() {
+            final currentMode = controller.effectivePlaybackProxyMode;
+            return SingleChildScrollView(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(ctx).viewPadding.bottom,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(height: 8.h),
+                    ListTile(
+                      title: const Text('当前视频播放模式'),
+                      subtitle: Text(
+                        '当前：${controller.effectivePlaybackProxyModeLabel}',
+                      ),
+                    ),
+                    ...options.map((option) {
+                      final selected = currentMode == option.value;
+                      return ListTile(
+                        leading: Icon(
+                          Icons.route_rounded,
+                          color: selected
+                              ? Theme.of(ctx).colorScheme.primary
+                              : null,
+                        ),
+                        title: Text(option.title),
+                        subtitle: Text(option.subtitle),
+                        trailing: selected
+                            ? Icon(
+                                Icons.check_rounded,
+                                color: Theme.of(ctx).colorScheme.primary,
+                              )
+                            : null,
+                        onTap: () {
+                          Navigator.of(ctx).pop();
+                          unawaited(
+                            controller.setCurrentPlaybackProxyMode(
+                              option.value,
+                            ),
+                          );
+                        },
+                      );
+                    }),
+                    SizedBox(height: 12.h),
+                  ],
+                ),
+              ),
+            );
+          }),
+        );
+      },
+    );
+  }
+
   String _formatRate(double rate) {
     if ((rate - rate.roundToDouble()).abs() < 0.001) {
       return '${rate.toStringAsFixed(0)}x';
@@ -1053,6 +1143,17 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
     });
   }
 
+  Widget _buildFullscreenBottomControlButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+  }) {
+    return MaterialCustomButton(
+      iconSize: 24,
+      icon: Icon(icon, size: 24),
+      onPressed: onPressed,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1087,39 +1188,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
           ),
         ),
         actions: [
-          Obx(() {
-            final rate = controller.playbackRate.value;
-            return PopupMenuButton<double>(
-              color: const Color(0xFF1A1A1A),
-              initialValue: rate,
-              tooltip: '倍速 ${_formatRate(rate)}',
-              onSelected: (value) {
-                unawaited(controller.setPlaybackRate(value));
-              },
-              itemBuilder: (context) {
-                return _speeds
-                    .map(
-                      (value) => PopupMenuItem<double>(
-                        value: value,
-                        child: Text(
-                          _formatRate(value),
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    )
-                    .toList(growable: false);
-              },
-              child: IgnorePointer(
-                child: _buildAppBarActionIcon(
-                  enabled: true,
-                  icon: Icons.speed_rounded,
-                  tooltip: '倍速 ${_formatRate(rate)}',
-                  onTap: () {},
-                ),
-              ),
-            );
-          }),
-          SizedBox(width: 6.w),
+          SizedBox(width: 8.w),
           Obx(() {
             return _buildAppBarActionIcon(
               enabled: controller.canCastCurrentEpisode,
@@ -1241,6 +1310,22 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                                             SizedBox(width: 6.w),
                                             const MaterialPositionIndicator(),
                                             const Spacer(),
+                                            _buildFullscreenBottomControlButton(
+                                              icon: Icons.speed_rounded,
+                                              onPressed: () =>
+                                                  _showPlaybackRateSheet(
+                                                    state.context,
+                                                  ),
+                                            ),
+                                            SizedBox(width: 6.w),
+                                            _buildFullscreenBottomControlButton(
+                                              icon: Icons.access_time_rounded,
+                                              onPressed: () =>
+                                                  _showSkipSettingsSheet(
+                                                    state.context,
+                                                  ),
+                                            ),
+                                            SizedBox(width: 6.w),
                                             const MaterialFullscreenButton(),
                                           ],
                                         );
@@ -1298,10 +1383,21 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                                   label: '更新',
                                   value: _episodeCountLabel(),
                                 ),
+                                if (controller
+                                    .canSwitchCurrentPlaybackProxyMode)
+                                  _buildInfoPill(
+                                    icon: Icons.route_rounded,
+                                    label: '播放',
+                                    value: controller
+                                        .effectivePlaybackProxyModeLabel,
+                                    onTap: () =>
+                                        _showPlaybackProxyModeSheet(context),
+                                  ),
                                 _buildInfoPill(
                                   icon: Icons.speed_rounded,
                                   label: '倍速',
                                   value: currentRate,
+                                  onTap: () => _showPlaybackRateSheet(context),
                                 ),
                               ],
                             ),
