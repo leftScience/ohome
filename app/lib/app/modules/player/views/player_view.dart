@@ -1453,7 +1453,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                         title,
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: titleFontSize ?? 14.sp,
+                          fontSize: titleFontSize ?? 14,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -1463,7 +1463,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                           subtitle,
                           style: TextStyle(
                             color: Colors.white60,
-                            fontSize: subtitleFontSize ?? 12.sp,
+                            fontSize: subtitleFontSize ?? 12,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -1477,7 +1477,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                       ? Icons.check_circle_rounded
                       : Icons.chevron_right_rounded,
                   color: selected ? primary : Colors.white38,
-                  size: trailingIconSize ?? 20.sp,
+                  size: trailingIconSize ?? 20,
                 ),
               ],
             ),
