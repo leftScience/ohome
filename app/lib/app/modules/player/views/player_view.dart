@@ -1019,6 +1019,83 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
     );
   }
 
+  void _showAudioTrackSheet(
+    BuildContext context, {
+    bool fullscreenDrawer = false,
+  }) {
+    if (!controller.canSwitchAudioTrack) {
+      Get.snackbar('提示', '当前视频未发现可切换音轨');
+      return;
+    }
+
+    Widget buildBody(BuildContext ctx, {bool compact = false}) {
+      return Obx(() {
+        final options = controller.audioTrackOptions;
+        final current = controller.currentAudioTrack.value;
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: options
+              .map((track) {
+                final selected = current != null
+                    ? current == track
+                    : track.id == 'auto';
+                return _buildSheetOptionTile(
+                  context: ctx,
+                  title: controller.audioTrackTitle(track),
+                  subtitle: controller.audioTrackSubtitle(track),
+                  selected: selected,
+                  titleFontSize: compact ? 6.sp : null,
+                  subtitleFontSize: compact ? 4.sp : null,
+                  trailingIconSize: compact ? 10.sp : null,
+                  onTap: () {
+                    Navigator.of(ctx).pop();
+                    unawaited(controller.setAudioTrackSelection(track));
+                  },
+                );
+              })
+              .toList(growable: false),
+        );
+      });
+    }
+
+    Widget buildContent(BuildContext ctx) {
+      return Obx(() {
+        final current = controller.currentAudioTrackDisplayLabel;
+        return _buildStandardBottomSheet(
+          context: ctx,
+          title: '音轨',
+          subtitle: '当前：$current',
+          child: buildBody(ctx),
+        );
+      });
+    }
+
+    if (fullscreenDrawer) {
+      _showFullscreenSideDrawer(
+        context,
+        childBuilder: (ctx) => _buildFullscreenDrawerContainer(
+          child: Obx(() {
+            final current = controller.currentAudioTrackDisplayLabel;
+            return _buildFullscreenDrawerSection(
+              title: '音轨',
+              subtitle: '当前：$current',
+              child: buildBody(ctx, compact: true),
+            );
+          }),
+        ),
+      );
+      return;
+    }
+
+    showModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => buildContent(ctx),
+    );
+  }
+
   void _showPlaybackProxyModeSheet(
     BuildContext context, {
     bool fullscreenDrawer = false,
@@ -1275,6 +1352,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
       final isCover = controller.isFullscreenCover;
       final currentRate = controller.playbackRate.value;
       final currentPlaybackMode = controller.effectivePlaybackProxyModeLabel;
+      final currentAudioTrack = controller.currentAudioTrackDisplayLabel;
       return _buildFullscreenDrawerContainer(
         child: _buildFullscreenDrawerSection(
           title: '更多设置',
@@ -1307,6 +1385,16 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                   );
                 },
               ),
+              if (controller.canSwitchAudioTrack)
+                _buildFullscreenSettingRow(
+                  icon: Icons.audiotrack_rounded,
+                  title: '音轨',
+                  subtitle: currentAudioTrack,
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    _showAudioTrackSheet(state.context, fullscreenDrawer: true);
+                  },
+                ),
               _buildFullscreenSettingRow(
                 icon: Icons.speed_rounded,
                 title: '倍速',
@@ -1881,6 +1969,14 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                                         .effectivePlaybackProxyModeLabel,
                                     onTap: () =>
                                         _showPlaybackProxyModeSheet(context),
+                                  ),
+                                if (controller.canSwitchAudioTrack)
+                                  _buildInfoPill(
+                                    icon: Icons.audiotrack_rounded,
+                                    label: '音轨',
+                                    value: controller
+                                        .currentAudioTrackDisplayLabel,
+                                    onTap: () => _showAudioTrackSheet(context),
                                   ),
                                 _buildInfoPill(
                                   icon: Icons.speed_rounded,

@@ -68,6 +68,8 @@ class PlayerController extends GetxController {
   final Rx<Duration> skipOutro = Duration.zero.obs;
   final Rx<FullscreenFitMode> fullscreenFitMode = FullscreenFitMode.contain.obs;
   final RxBool isLoadingPlaylist = false.obs;
+  final availableAudioTracks = <AudioTrack>[].obs;
+  final Rxn<AudioTrack> currentAudioTrack = Rxn<AudioTrack>();
   final RxString globalPlaybackProxyMode = _defaultPlaybackProxyMode.obs;
   final RxnString currentPlaybackProxyModeOverride = RxnString();
 
@@ -86,6 +88,8 @@ class PlayerController extends GetxController {
   StreamSubscription<int?>? _widthSubscription;
   StreamSubscription<int?>? _heightSubscription;
   StreamSubscription<VideoParams>? _videoParamsSubscription;
+  StreamSubscription<Track>? _trackSubscription;
+  StreamSubscription<Tracks>? _tracksSubscription;
   String? _folderPath;
   String? _resumeEpisodePath;
   Duration? _resumePosition;
@@ -127,6 +131,59 @@ class PlayerController extends GetxController {
   }
 
   bool get canCastCurrentEpisode => currentCastUrl != null;
+  List<AudioTrack> get audioTrackOptions {
+    final visible = <AudioTrack>[];
+    var hasAuto = false;
+    var hasNo = false;
+    final seen = <String>{};
+
+    for (final track in availableAudioTracks) {
+      final key = '${track.uri ? 'uri' : 'id'}:${track.id}';
+      if (!seen.add(key)) continue;
+      switch (track.id) {
+        case 'auto':
+          hasAuto = true;
+          break;
+        case 'no':
+          hasNo = true;
+          break;
+        default:
+          visible.add(track);
+          break;
+      }
+    }
+
+    final selected = currentAudioTrack.value;
+    final includeAuto =
+        hasAuto || visible.isNotEmpty || selected?.id == AudioTrack.auto().id;
+    final includeNo =
+        hasNo && (visible.isNotEmpty || selected?.id == AudioTrack.no().id);
+
+    return <AudioTrack>[
+      if (includeAuto) AudioTrack.auto(),
+      ...visible,
+      if (includeNo) AudioTrack.no(),
+    ];
+  }
+
+  bool get canSwitchAudioTrack => !isCasting && audioTrackOptions.length > 1;
+  String get currentAudioTrackDisplayLabel {
+    final track = currentAudioTrack.value;
+    if (track != null) {
+      return audioTrackTitle(track);
+    }
+    final options = audioTrackOptions;
+    if (options.isNotEmpty) {
+      return audioTrackTitle(options.first);
+    }
+    return '默认';
+  }
+
+  String get currentAudioTrackDisplaySubtitle {
+    final track = currentAudioTrack.value;
+    if (track == null) return '';
+    return audioTrackSubtitle(track);
+  }
 
   String? get currentCastUrl {
     final current = _currentEpisode;
@@ -187,6 +244,12 @@ class PlayerController extends GetxController {
     });
     _videoParamsSubscription = player.stream.videoParams.listen((_) {
       _updateAspectRatio();
+    });
+    _trackSubscription = player.stream.track.listen((track) {
+      _syncSelectedAudioTrack(track.audio);
+    });
+    _tracksSubscription = player.stream.tracks.listen((tracks) {
+      _syncAvailableAudioTracks(tracks.audio);
     });
     _ready = true;
     if (episodes.isNotEmpty) {
@@ -283,6 +346,7 @@ class PlayerController extends GetxController {
     try {
       await player.stop();
     } catch (_) {}
+    _resetAudioTrackState();
     unawaited(WakelockPlus.disable());
   }
 
@@ -404,6 +468,7 @@ class PlayerController extends GetxController {
       _openingEpisodePath = episodePath;
       _openingEpisodeUrl = url;
       await player.stop();
+      _resetAudioTrackState();
       _currentEpisodePath = episodePath;
       _currentEpisodeUrl = url;
       _lastPersistedPosition = null;
@@ -444,6 +509,64 @@ class PlayerController extends GetxController {
 
     currentPlaybackProxyModeOverride.value = nextOverride;
     await _restartCurrentEpisode();
+  }
+
+  Future<void> setAudioTrackSelection(AudioTrack track) async {
+    if (isCasting) {
+      Get.snackbar('提示', '投屏时暂不支持切换本地音轨');
+      return;
+    }
+    try {
+      await player.setAudioTrack(track);
+    } catch (_) {
+      Get.snackbar('切换失败', '当前音轨切换失败，请稍后重试');
+    }
+  }
+
+  String audioTrackTitle(AudioTrack track) {
+    switch (track.id) {
+      case 'auto':
+        return '自动';
+      case 'no':
+        return '关闭音频';
+    }
+    final rawTitle = track.title?.trim() ?? '';
+    if (rawTitle.isNotEmpty) return rawTitle;
+    final language = _audioLanguageLabel(track.language);
+    if (language.isNotEmpty) return language;
+    final codec = track.codec?.trim() ?? '';
+    if (codec.isNotEmpty) return codec.toUpperCase();
+    return '音轨';
+  }
+
+  String audioTrackSubtitle(AudioTrack track) {
+    if (track.id == 'auto') {
+      return '自动选择默认音轨';
+    }
+    if (track.id == 'no') {
+      return '关闭当前视频声音输出';
+    }
+
+    final parts = <String>[];
+    final language = _audioLanguageLabel(track.language);
+    final title = track.title?.trim() ?? '';
+    if (language.isNotEmpty && language != title) {
+      parts.add(language);
+    }
+    final codec = track.codec?.trim() ?? '';
+    if (codec.isNotEmpty) {
+      parts.add(codec.toUpperCase());
+    }
+    final channels = track.channels?.trim() ?? '';
+    if (channels.isNotEmpty) {
+      parts.add(channels.toUpperCase());
+    } else if (track.channelscount != null && track.channelscount! > 0) {
+      parts.add('${track.channelscount} 声道');
+    }
+    if (track.isDefault == true) {
+      parts.add('默认');
+    }
+    return parts.join(' · ');
   }
 
   Future<void> startSpeedBoost([double rate = 3.0]) async {
@@ -678,6 +801,7 @@ class PlayerController extends GetxController {
       _openingEpisodePath = episodePath;
       _openingEpisodeUrl = url;
       await player.stop();
+      _resetAudioTrackState();
       _currentEpisodePath = episodePath;
       _currentEpisodeUrl = url;
       _lastPersistedPosition = null;
@@ -750,6 +874,7 @@ class PlayerController extends GetxController {
     _blockPlaybackOnOpen = false;
     isLoadingPlaylist.value = false;
     currentPlaybackProxyModeOverride.value = null;
+    _resetAudioTrackState();
 
     final applicationType = args['applicationType'];
     if (applicationType is String && applicationType.trim().isNotEmpty) {
@@ -1151,6 +1276,47 @@ class PlayerController extends GetxController {
     unawaited(player.seek(target));
   }
 
+  void _syncSelectedAudioTrack(AudioTrack track) {
+    if (track.id == 'auto' &&
+        availableAudioTracks.isEmpty &&
+        currentAudioTrack.value == null) {
+      return;
+    }
+    currentAudioTrack.value = _findMatchingAudioTrack(track) ?? track;
+  }
+
+  void _syncAvailableAudioTracks(List<AudioTrack> tracks) {
+    availableAudioTracks.assignAll(_dedupeAudioTracks(tracks));
+    final selected = currentAudioTrack.value;
+    if (selected != null) {
+      currentAudioTrack.value = _findMatchingAudioTrack(selected) ?? selected;
+    }
+  }
+
+  AudioTrack? _findMatchingAudioTrack(AudioTrack track) {
+    for (final item in availableAudioTracks) {
+      if (item == track) return item;
+      if (item.id == track.id && item.uri == track.uri) return item;
+    }
+    return null;
+  }
+
+  List<AudioTrack> _dedupeAudioTracks(List<AudioTrack> tracks) {
+    final result = <AudioTrack>[];
+    final seen = <String>{};
+    for (final track in tracks) {
+      final key = '${track.uri ? 'uri' : 'id'}:${track.id}';
+      if (!seen.add(key)) continue;
+      result.add(track);
+    }
+    return result;
+  }
+
+  void _resetAudioTrackState() {
+    availableAudioTracks.clear();
+    currentAudioTrack.value = null;
+  }
+
   void _handlePositionUpdate(Duration position) {
     final folder = _folderPath;
     final episodePath = _currentEpisodePath;
@@ -1370,6 +1536,48 @@ class PlayerController extends GetxController {
     return null;
   }
 
+  static String _audioLanguageLabel(String? raw) {
+    final normalized = raw?.trim().toLowerCase() ?? '';
+    switch (normalized) {
+      case 'zh':
+      case 'zh-cn':
+      case 'zh-hans':
+      case 'zho':
+      case 'chi':
+      case 'cmn':
+        return '中文';
+      case 'zh-hk':
+      case 'zh-tw':
+      case 'zh-hant':
+        return '中文（繁体）';
+      case 'yue':
+      case 'zh-yue':
+        return '粤语';
+      case 'en':
+      case 'eng':
+        return '英语';
+      case 'ja':
+      case 'jpn':
+        return '日语';
+      case 'ko':
+      case 'kor':
+        return '韩语';
+      case 'fr':
+      case 'fra':
+      case 'fre':
+        return '法语';
+      case 'de':
+      case 'deu':
+      case 'ger':
+        return '德语';
+      case 'es':
+      case 'spa':
+        return '西班牙语';
+      default:
+        return raw?.trim() ?? '';
+    }
+  }
+
   static const List<String> _videoExtensions = <String>[
     '.mp4',
     '.mkv',
@@ -1393,6 +1601,8 @@ class PlayerController extends GetxController {
     _widthSubscription?.cancel();
     _heightSubscription?.cancel();
     _videoParamsSubscription?.cancel();
+    _trackSubscription?.cancel();
+    _tracksSubscription?.cancel();
     _scrubTimer?.cancel();
     _castProgressTimer?.cancel();
     player.dispose();
