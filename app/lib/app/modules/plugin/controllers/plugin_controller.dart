@@ -2,30 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../../data/models/app_update_info.dart';
 import '../../../data/models/user_model.dart';
 import '../../../data/api/user.dart';
 import '../../../routes/app_pages.dart';
-import '../../../services/app_update_service.dart';
 import '../../../services/auth_service.dart';
 
 class PluginController extends GetxController {
   PluginController({
     AuthService? authService,
-    AppUpdateService? appUpdateService,
     UserApi? userApi,
     ImagePicker? imagePicker,
   }) : _authService = authService ?? Get.find<AuthService>(),
-       _appUpdateService = appUpdateService ?? Get.find<AppUpdateService>(),
        _userApi = userApi ?? Get.find<UserApi>(),
        _imagePicker = imagePicker ?? ImagePicker();
 
   final AuthService _authService;
-  final AppUpdateService _appUpdateService;
   final UserApi _userApi;
   final ImagePicker _imagePicker;
 
-  final appUpdateChecking = false.obs;
   final avatarUploading = false.obs;
   final profileUpdating = false.obs;
   final quarkAdminMenuExpanded = false.obs;
@@ -40,7 +34,6 @@ class PluginController extends GetxController {
   }
 
   void openServerUpdate() {
-    if (!_ensureSuperAdmin()) return;
     Get.toNamed(Routes.SERVER_UPDATE);
   }
 
@@ -157,135 +150,6 @@ class PluginController extends GetxController {
       return false;
     } finally {
       profileUpdating.value = false;
-    }
-  }
-
-  Future<void> checkAppUpdate() async {
-    if (appUpdateChecking.value || _appUpdateService.isUpdating.value) return;
-
-    appUpdateChecking.value = true;
-    try {
-      final result = await _appUpdateService.checkForUpdate();
-      switch (result.status) {
-        case AppUpdateCheckStatus.disabledInDev:
-          Get.snackbar('提示', '开发环境已禁用在线更新');
-          return;
-        case AppUpdateCheckStatus.unsupported:
-          Get.snackbar('提示', '当前平台暂不支持在线更新');
-          return;
-        case AppUpdateCheckStatus.notConfigured:
-          Get.snackbar('提示', '未配置更新地址，请先设置 appUpdateManifestUrl');
-          return;
-        case AppUpdateCheckStatus.upToDate:
-          Get.snackbar('提示', '当前已是最新版本（${result.currentVersion}）');
-          return;
-        case AppUpdateCheckStatus.available:
-          final info = result.info;
-          if (info == null) {
-            Get.snackbar('提示', '更新信息为空，请稍后重试');
-            return;
-          }
-          await _showUpdateDialog(
-            currentVersion: result.currentVersion,
-            info: info,
-          );
-          return;
-      }
-    } catch (error) {
-      Get.snackbar('提示', '检查更新失败：$error');
-    } finally {
-      appUpdateChecking.value = false;
-    }
-  }
-
-  Future<void> _showUpdateDialog({
-    required String currentVersion,
-    required AppUpdateInfo info,
-  }) async {
-    final notes = (info.releaseNotes ?? '').trim();
-    final confirm = await Get.dialog<bool>(
-      AlertDialog(
-        title: const Text('发现新版本'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('当前版本：$currentVersion'),
-            const SizedBox(height: 8),
-            Text('最新版本：${info.displayVersion}'),
-            if (notes.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              const Text('更新内容：'),
-              const SizedBox(height: 4),
-              Text(notes),
-            ],
-          ],
-        ),
-        actions: [
-          if (!info.forceUpdate)
-            TextButton(
-              onPressed: () => Get.back(result: false),
-              child: const Text('稍后'),
-            ),
-          FilledButton(
-            onPressed: () => Get.back(result: true),
-            child: const Text('立即更新'),
-          ),
-        ],
-      ),
-      barrierDismissible: !info.forceUpdate,
-    );
-    if (confirm != true) return;
-
-    await _startOtaUpdate(info);
-  }
-
-  Future<void> _startOtaUpdate(AppUpdateInfo info) async {
-    Get.dialog<void>(
-      PopScope(
-        canPop: false,
-        child: Obx(() {
-          final progress = _appUpdateService.progress.value;
-          final statusText = _appUpdateService.statusText.value;
-          return AlertDialog(
-            title: const Text('正在更新'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (statusText.isNotEmpty) Text(statusText),
-                const SizedBox(height: 12),
-                if (progress != null) ...[
-                  LinearProgressIndicator(value: progress / 100),
-                  const SizedBox(height: 8),
-                  Text('${progress.toStringAsFixed(0)}%'),
-                ] else
-                  const LinearProgressIndicator(),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: _appUpdateService.cancelUpdate,
-                child: const Text('取消'),
-              ),
-            ],
-          );
-        }),
-      ),
-      barrierDismissible: false,
-    );
-
-    try {
-      await _appUpdateService.startUpdate(info);
-      if (Get.isDialogOpen ?? false) {
-        Get.back<void>();
-      }
-      Get.snackbar('提示', '安装包已准备完成，请按系统提示继续安装');
-    } catch (error) {
-      if (Get.isDialogOpen ?? false) {
-        Get.back<void>();
-      }
-      Get.snackbar('提示', '$error');
     }
   }
 
