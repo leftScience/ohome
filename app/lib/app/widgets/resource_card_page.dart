@@ -77,7 +77,6 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
   bool _entriesReadyRunning = false;
   bool _loadMoreCheckScheduled = false;
   bool _cardActionsVisible = false;
-  bool _renameMode = false;
   bool _renaming = false;
   bool _deletingSelected = false;
   bool _movingSelected = false;
@@ -102,9 +101,6 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
   );
   late final ButtonStyle _moveActionButtonStyle = _buildAppBarActionStyle(
     const Color(0xFF81C784),
-  );
-  late final ButtonStyle _cancelActionButtonStyle = _buildAppBarActionStyle(
-    Colors.white70,
   );
 
   ButtonStyle _buildAppBarActionStyle(Color color) {
@@ -209,8 +205,8 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
       final selectedPaths = _visibleSelectedPaths(entries);
       final selectedCount = selectedPaths.length;
       final actionDisabled = loading || _operationInProgress;
-      final idleCardActionsVisible = _cardActionsVisible && !_renameMode;
-      final sortDisabled = actionDisabled || loadingMore || _renameMode;
+      final idleCardActionsVisible = _cardActionsVisible;
+      final sortDisabled = actionDisabled || loadingMore;
 
       return Scaffold(
         appBar: AppBar(
@@ -237,14 +233,8 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
                 onPressed:
                     entries.isEmpty || actionDisabled || selectedCount != 1
                     ? null
-                    : _enterRenameMode,
+                    : () => _renameSelectedEntry(entries),
                 child: const Text('重命名'),
-              ),
-            if (widget.enableRename && _renameMode)
-              TextButton(
-                style: _cancelActionButtonStyle,
-                onPressed: actionDisabled ? null : _exitRenameMode,
-                child: const Text('取消'),
               ),
             if (widget.enableDelete && idleCardActionsVisible)
               TextButton(
@@ -516,32 +506,12 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
     );
   }
 
-  void _enterRenameMode() {
-    if (!widget.enableRename || _renameMode || _operationInProgress) return;
-    if (_selectedPaths.length != 1) {
-      Get.snackbar('提示', '请先选择 1 项资源');
-      return;
-    }
-    setState(() {
-      _cardActionsVisible = true;
-      _renameMode = true;
-    });
-  }
-
-  void _exitRenameMode() {
-    if (!_renameMode) return;
-    setState(() {
-      _renameMode = false;
-    });
-  }
-
   void _hideCardActions() {
-    if (!_cardActionsVisible && !_renameMode && _selectedPaths.isEmpty) {
+    if (!_cardActionsVisible && _selectedPaths.isEmpty) {
       return;
     }
     setState(() {
       _cardActionsVisible = false;
-      _renameMode = false;
       _selectedPaths.clear();
     });
   }
@@ -571,10 +541,21 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
       } else {
         _selectedPaths.add(path);
       }
-      if (_selectedPaths.isEmpty) {
-        _renameMode = false;
-      }
     });
+  }
+
+  Future<void> _renameSelectedEntry(List<WebdavFileEntry> entries) async {
+    if (!widget.enableRename || _operationInProgress) return;
+
+    final selectedEntries = entries
+        .where((entry) => _selectedPaths.contains(entry.path.trim()))
+        .toList(growable: false);
+    if (selectedEntries.length != 1) {
+      Get.snackbar('提示', '请先选择 1 项资源');
+      return;
+    }
+
+    await _showRenameDialog(selectedEntries.single);
   }
 
   Future<void> _showRenameDialog(WebdavFileEntry entry) async {
@@ -582,6 +563,7 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
       return;
     }
     var draftName = entry.name;
+    var renamed = false;
     final newName = await showDialog<String>(
       context: context,
       builder: (ctx) {
@@ -620,6 +602,7 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
         path: entry.path,
         newName: normalizedName,
       );
+      renamed = true;
       if (mounted) Get.snackbar('提示', '重命名成功');
     } catch (e) {
       if (mounted) Get.snackbar('错误', '重命名失败：$e');
@@ -627,6 +610,10 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
       if (mounted) {
         setState(() {
           _renaming = false;
+          if (renamed) {
+            _cardActionsVisible = false;
+            _selectedPaths.clear();
+          }
         });
       }
     }
@@ -711,7 +698,6 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
       _selectedPaths.removeAll(result.successPaths.map((path) => path.trim()));
       if (_selectedPaths.isEmpty) {
         _cardActionsVisible = false;
-        _renameMode = false;
       }
     });
   }
@@ -963,25 +949,17 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
     final subtitle = subtitleBuilder(entry).trim();
     final blocked = _isBlacklisted(entry);
     final deleting = widget.controller.isDeletingPath(entry.path);
-    final renameActive = _renameMode && !_operationInProgress;
     final status = blocked && !entry.isDir
         ? '不支持的文件类型'
         : statusBuilder(entry).trim();
-    final displayStatus = deleting
-        ? '删除中...'
-        : (renameActive ? '点击卡片重命名' : status);
+    final displayStatus = deleting ? '删除中...' : status;
     final highlightColor = Theme.of(context).colorScheme.primary;
-    final renameColor = Theme.of(context).colorScheme.secondary;
     final deletingColor = Theme.of(context).colorScheme.error;
     final selectionActive = _cardActionsVisible;
     final borderColor = deleting
         ? deletingColor.withValues(alpha: 0.9)
-        : (selected
-              ? highlightColor
-              : (renameActive
-                    ? renameColor.withValues(alpha: 0.55)
-                    : Colors.white.withValues(alpha: 0.08)));
-    final borderWidth = deleting || selected ? 1.4 : (renameActive ? 1.2 : 1.0);
+        : (selected ? highlightColor : Colors.white.withValues(alpha: 0.08));
+    final borderWidth = deleting || selected ? 1.4 : 1.0;
 
     return Container(
       decoration: BoxDecoration(
@@ -990,9 +968,7 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
         border: Border.all(color: borderColor, width: borderWidth),
         boxShadow: [
           BoxShadow(
-            color: renameActive
-                ? renameColor.withValues(alpha: 0.18)
-                : Colors.black.withValues(alpha: 0.3),
+            color: Colors.black.withValues(alpha: 0.3),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -1006,11 +982,6 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
           onTap: deleting
               ? null
               : () async {
-                  if (_renameMode) {
-                    if (!selected) return;
-                    await _showRenameDialog(entry);
-                    return;
-                  }
                   if (selectionActive) {
                     _toggleSelection(entry);
                     return;
@@ -1029,12 +1000,6 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
                   _operationInProgress
               ? null
               : () {
-                  if (_renameMode) {
-                    if (!selected) {
-                      _toggleSelection(entry);
-                    }
-                    return;
-                  }
                   if (selectionActive) {
                     _toggleSelection(entry);
                     return;
@@ -1043,7 +1008,6 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
                   if (path.isEmpty) return;
                   setState(() {
                     _cardActionsVisible = true;
-                    _renameMode = false;
                     _selectedPaths
                       ..clear()
                       ..add(path);
@@ -1072,17 +1036,7 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
                         ),
                       ),
                     ),
-                    if (_renameMode)
-                      Icon(
-                        selected
-                            ? Icons.edit_rounded
-                            : Icons.radio_button_unchecked_rounded,
-                        size: selected ? 18 : 20,
-                        color: selected
-                            ? renameColor.withValues(alpha: 0.9)
-                            : Colors.white54,
-                      )
-                    else if (selectionActive)
+                    if (selectionActive)
                       Icon(
                         selected
                             ? Icons.check_circle_rounded
@@ -1098,11 +1052,7 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
                 const SizedBox(height: 2),
                 Text(
                   displayStatus,
-                  style: TextStyle(
-                    color: renameActive
-                        ? renameColor.withValues(alpha: 0.9)
-                        : Colors.white38,
-                  ),
+                  style: const TextStyle(color: Colors.white38),
                 ),
               ],
             ),
