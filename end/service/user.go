@@ -150,7 +150,7 @@ func (m *UserService) RefreshToken(iUserRefreshTokenDTO *dto.UserRefreshTokenDTO
 	var refreshToken string
 	var err error
 
-	claims, err := utils.ParseToken(iUserRefreshTokenDTO.Token)
+	claims, err := utils.ParseRefreshToken(iUserRefreshTokenDTO.Token)
 	if err != nil {
 		errResult = errors.New("token已过期")
 		return accessToken, refreshToken, errResult

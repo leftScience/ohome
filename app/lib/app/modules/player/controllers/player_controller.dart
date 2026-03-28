@@ -9,6 +9,7 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import '../../../data/api/config.dart';
 import '../../../data/api/quark.dart';
 import '../../../data/models/quark_file_entry.dart';
+import '../../../services/auth_service.dart';
 import '../../../services/playback_entry_service.dart';
 import '../../../services/video_cast_service.dart';
 import '../../../utils/app_env.dart';
@@ -54,6 +55,7 @@ class PlayerController extends GetxController {
   final ConfigApi _configApi;
   final SkipSettingsStorage _skipStorage;
   final WebdavApi _webdavApi = Get.find<WebdavApi>();
+  final AuthService _authService = Get.find<AuthService>();
   final VideoCastService _castService = Get.find<VideoCastService>();
   final RxDouble videoAspectRatio = (16 / 9).obs;
   final RxBool isPortraitVideo = false.obs;
@@ -1698,11 +1700,15 @@ class PlayerController extends GetxController {
     final normalizedMode = mode == null || mode.trim().isEmpty
         ? null
         : _normalizePlaybackProxyMode(mode);
+    final accessToken = _currentAccessToken();
     return base
         .replace(
           path: streamPath,
           queryParameters: <String, String>{
             'path': path,
+            ...?accessToken == null
+                ? null
+                : <String, String>{'access_token': accessToken},
             ...?normalizedMode == null
                 ? null
                 : <String, String>{'mode': normalizedMode},
@@ -1727,7 +1733,8 @@ class PlayerController extends GetxController {
     final uri = Uri.tryParse(rawUrl.trim());
     if (uri == null) return false;
     final normalizedPath = uri.path.replaceAll('\\', '/').trim();
-    return normalizedPath.contains('/public/quarkFs/') &&
+    return (normalizedPath.contains('/public/quarkFs/') ||
+            normalizedPath.contains('/quarkFs/')) &&
         normalizedPath.endsWith('/files/stream');
   }
 
@@ -1739,12 +1746,24 @@ class PlayerController extends GetxController {
     final normalizedMode = mode == null || mode.trim().isEmpty
         ? null
         : _normalizePlaybackProxyMode(mode);
+    final accessToken = _currentAccessToken();
+    if (accessToken == null) {
+      nextQuery.remove('access_token');
+    } else {
+      nextQuery['access_token'] = accessToken;
+    }
     if (normalizedMode == null) {
       nextQuery.remove('mode');
     } else {
       nextQuery['mode'] = normalizedMode;
     }
     return uri.replace(queryParameters: nextQuery).toString();
+  }
+
+  String? _currentAccessToken() {
+    final token = _authService.accessToken.value?.trim() ?? '';
+    if (token.isEmpty) return null;
+    return token;
   }
 
   static String _joinPath(String basePath, String child) {
