@@ -451,6 +451,9 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
     required WebdavListSortType currentSort,
     required bool disabled,
   }) {
+    final labelColor = disabled ? Colors.white38 : Colors.white70;
+    final iconColor = disabled ? Colors.white30 : Colors.white54;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
       child: DecoratedBox(
@@ -460,61 +463,52 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          child: Row(
-            children: [
-              const Text(
-                '排序方式',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: PopupMenuButton<WebdavListSortType>(
+              enabled: !disabled,
+              tooltip: '排序方式',
+              padding: EdgeInsets.zero,
+              color: const Color(0xFF1A1A1A),
+              position: PopupMenuPosition.under,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18),
               ),
-              const Spacer(),
-              ConstrainedBox(
-                constraints: const BoxConstraints(minWidth: 132, maxWidth: 168),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<WebdavListSortType>(
-                    value: currentSort,
-                    isDense: true,
-                    isExpanded: true,
-                    dropdownColor: const Color(0xFF1A1A1A),
-                    icon: const Icon(
-                      Icons.keyboard_arrow_down_rounded,
-                      color: Colors.white54,
+              itemBuilder: (context) => WebdavListSortType.values
+                  .map(
+                    (option) => PopupMenuItem<WebdavListSortType>(
+                      value: option,
+                      child: Text(
+                        option.label,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
-                    style: const TextStyle(
-                      color: Colors.white70,
+                  )
+                  .toList(growable: false),
+              onSelected: (value) {
+                if (value == currentSort) return;
+                widget.controller.changeSort(value);
+              },
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    currentSort.label,
+                    style: TextStyle(
+                      color: labelColor,
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                     ),
-                    borderRadius: BorderRadius.circular(18),
-                    items: WebdavListSortType.values
-                        .map(
-                          (option) => DropdownMenuItem<WebdavListSortType>(
-                            value: option,
-                            child: Text(
-                              option.label,
-                              textAlign: TextAlign.right,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        )
-                        .toList(growable: false),
-                    onChanged: disabled
-                        ? null
-                        : (value) {
-                            if (value == null || value == currentSort) return;
-                            widget.controller.changeSort(value);
-                          },
                   ),
-                ),
+                  const SizedBox(width: 2),
+                  Icon(Icons.keyboard_arrow_down_rounded, color: iconColor),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
