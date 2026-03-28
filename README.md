@@ -321,11 +321,44 @@ DB:
 
 ### Android 安装包下载
 
-Android Release 工作流会把安装包发布到 GitHub Releases。
+Android Release 工作流会在 GitHub 打 tag 后：
+
+- 构建 Android APK
+- 同时上传一份到 MinIO / S3 兼容存储桶
+- 生成 OTA 更新清单 `android.json`
+- 再把 APK、清单和校验文件附加到 GitHub Releases 作为备份下载源
+
+当前 Android 分发使用 GitHub Actions Secrets 驱动：
+
+- `MINIO_ENDPOINT`
+- `MINIO_ACCESS_KEY`
+- `MINIO_SECRET_KEY`
+- `MINIO_BUCKET`
+
+如果上传用的 S3 接口地址和外部下载域名不同，还可以额外配置：
+
+- `MINIO_PUBLIC_BASE_URL`（可选）
+
+工作流会按下面的固定路径上传 Android 产物：
+
+- 更新清单：`<MINIO_ENDPOINT>/<MINIO_BUCKET>/android/android.json`
+- 版本 APK：`<MINIO_ENDPOINT>/<MINIO_BUCKET>/android/releases/<tag>/ohome-release-arm64-v8a.apk`
+- 版本校验：`<MINIO_ENDPOINT>/<MINIO_BUCKET>/android/releases/<tag>/checksums-android.txt`
+
+客户端生产包内的 OTA 地址会在 CI 构建时自动注入为：
+
+- `<MINIO_ENDPOINT>/<MINIO_BUCKET>/android/android.json`
+
+如果设置了 `MINIO_PUBLIC_BASE_URL`，则客户端和清单里的下载地址会改为：
+
+- `<MINIO_PUBLIC_BASE_URL>/android/android.json`
+- `<MINIO_PUBLIC_BASE_URL>/android/releases/<tag>/ohome-release-arm64-v8a.apk`
+
+GitHub Releases 仍然保留为备份下载源：
 
 - Release 页面：[https://github.com/leftScience/ohome/releases](https://github.com/leftScience/ohome/releases)
-- ARM64 APK（国内加速，推荐大多数真机）：[https://gh-proxy.org/https://github.com/leftScience/ohome/releases/latest/download/ohome-release-arm64-v8a.apk](https://gh-proxy.org/https://github.com/leftScience/ohome/releases/latest/download/ohome-release-arm64-v8a.apk)
-- 最新更新清单（国内加速）：[https://gh-proxy.org/https://github.com/leftScience/ohome/releases/latest/download/android.json](https://gh-proxy.org/https://github.com/leftScience/ohome/releases/latest/download/android.json)
+
+> 已移除 GitHub 加速代理相关逻辑，Android 在线更新不再依赖 gh-proxy。
 
 ### 客户端如何连接服务端
 

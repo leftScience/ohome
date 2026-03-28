@@ -55,6 +55,33 @@ jobs:
           storeFile=upload-keystore.jks
           EOF
 
+      - name: Prepare MinIO settings
+        shell: bash
+        run: |
+          test -n "${{ secrets.MINIO_ENDPOINT }}"
+          test -n "${{ secrets.MINIO_ACCESS_KEY }}"
+          test -n "${{ secrets.MINIO_SECRET_KEY }}"
+          test -n "${{ secrets.MINIO_BUCKET }}"
+
+          MINIO_ENDPOINT="${{ secrets.MINIO_ENDPOINT }}"
+          MINIO_ENDPOINT="${MINIO_ENDPOINT%/}"
+          MINIO_BUCKET="${{ secrets.MINIO_BUCKET }}"
+          MINIO_PUBLIC_BASE_URL="${{ secrets.MINIO_PUBLIC_BASE_URL }}"
+          MINIO_PUBLIC_BASE_URL="${MINIO_PUBLIC_BASE_URL%/}"
+          if [[ -z "${MINIO_PUBLIC_BASE_URL}" ]]; then
+            MINIO_PUBLIC_BASE_URL="${MINIO_ENDPOINT}/${MINIO_BUCKET}"
+          fi
+          APP_UPDATE_MANIFEST_URL="${MINIO_PUBLIC_BASE_URL}/android/android.json"
+          RELEASE_PREFIX="android/releases/${GITHUB_REF_NAME}"
+
+          {
+            echo "MINIO_ENDPOINT=${MINIO_ENDPOINT}"
+            echo "MINIO_BUCKET=${MINIO_BUCKET}"
+            echo "MINIO_PUBLIC_BASE_URL=${MINIO_PUBLIC_BASE_URL}"
+            echo "APP_UPDATE_MANIFEST_URL=${APP_UPDATE_MANIFEST_URL}"
+            echo "RELEASE_PREFIX=${RELEASE_PREFIX}"
+          } >> "$GITHUB_ENV"
+
       - name: Build release APK
         working-directory: app
         shell: bash
@@ -62,6 +89,7 @@ jobs:
           BUILD_METADATA_FILE="$RUNNER_TEMP/ohome-release.env" \
           CI_BUILD_NUMBER="${GITHUB_RUN_NUMBER}" \
           RELEASE_TAG="${GITHUB_REF_NAME}" \
+          APP_UPDATE_MANIFEST_URL="${APP_UPDATE_MANIFEST_URL}" \
           bash build_prod.sh
 
           cat "$RUNNER_TEMP/ohome-release.env" >> "$GITHUB_ENV"
@@ -69,31 +97,78 @@ jobs:
       - name: Prepare release assets
         shell: bash
         run: |
-          GH_PROXY_PREFIX="https://gh-proxy.org/"
           OUTPUT_DIR="app/build/app/outputs/flutter-apk"
           ABI="arm64-v8a"
           MANIFEST_ASSET="app/build/app/outputs/flutter-apk/android.json"
+          VERSIONED_MANIFEST_ASSET="app/build/app/outputs/flutter-apk/android-${GITHUB_REF_NAME}.json"
+          CHECKSUM_ASSET="app/build/app/outputs/flutter-apk/checksums-android.txt"
           SOURCE_APK="app/${APK_RELATIVE_PATH_ARM64_V8A}"
           RELEASE_APK="${OUTPUT_DIR}/ohome-release-arm64-v8a.apk"
+          VERSIONED_APK_URL="${MINIO_PUBLIC_BASE_URL}/${RELEASE_PREFIX}/ohome-release-${ABI}.apk"
 
           cp "$SOURCE_APK" "$RELEASE_APK"
           APK_SHA256=$(shasum -a 256 "$RELEASE_APK" | awk '{print $1}')
+          printf '%s  %s\n' "$APK_SHA256" "ohome-release-arm64-v8a.apk" > "$CHECKSUM_ASSET"
 
           cat > "$MANIFEST_ASSET" <<EOF
           {
             "versionName": "${BUILD_NAME}",
             "versionCode": ${BUILD_NUMBER},
-            "apkUrl": "${GH_PROXY_PREFIX}https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/ohome-release-${ABI}.apk",
+            "apkUrl": "${VERSIONED_APK_URL}",
             "sha256": "${APK_SHA256}",
-            "releaseNotes": "GitHub Release ${GITHUB_REF_NAME}",
+            "releaseNotes": "Release ${GITHUB_REF_NAME}",
             "artifacts": {
               "${ABI}": {
-                "apkUrl": "${GH_PROXY_PREFIX}https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/ohome-release-${ABI}.apk",
+                "apkUrl": "${VERSIONED_APK_URL}",
                 "sha256": "${APK_SHA256}"
               }
             }
           }
           EOF
+          cp "$MANIFEST_ASSET" "$VERSIONED_MANIFEST_ASSET"
+
+      - name: Install AWS CLI
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y awscli
+
+      - name: Upload Android assets to MinIO
+        shell: bash
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.MINIO_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.MINIO_SECRET_KEY }}
+          AWS_DEFAULT_REGION: us-east-1
+          AWS_EC2_METADATA_DISABLED: "true"
+        run: |
+          aws configure set default.s3.addressing_style path
+
+          OUTPUT_DIR="app/build/app/outputs/flutter-apk"
+          VERSIONED_PREFIX="${RELEASE_PREFIX}"
+
+          aws s3 cp "${OUTPUT_DIR}/ohome-release-arm64-v8a.apk" \
+            "s3://${MINIO_BUCKET}/${VERSIONED_PREFIX}/ohome-release-arm64-v8a.apk" \
+            --endpoint-url "${MINIO_ENDPOINT}" \
+            --content-type "application/vnd.android.package-archive" \
+            --cache-control "public,max-age=31536000,immutable"
+
+          aws s3 cp "${OUTPUT_DIR}/android.json" \
+            "s3://${MINIO_BUCKET}/android/android.json" \
+            --endpoint-url "${MINIO_ENDPOINT}" \
+            --content-type "application/json" \
+            --cache-control "no-cache,no-store,must-revalidate"
+
+          aws s3 cp "${OUTPUT_DIR}/android-${GITHUB_REF_NAME}.json" \
+            "s3://${MINIO_BUCKET}/${VERSIONED_PREFIX}/android.json" \
+            --endpoint-url "${MINIO_ENDPOINT}" \
+            --content-type "application/json" \
+            --cache-control "no-cache,no-store,must-revalidate"
+
+          aws s3 cp "${OUTPUT_DIR}/checksums-android.txt" \
+            "s3://${MINIO_BUCKET}/${VERSIONED_PREFIX}/checksums-android.txt" \
+            --endpoint-url "${MINIO_ENDPOINT}" \
+            --content-type "text/plain; charset=utf-8" \
+            --cache-control "public,max-age=300"
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
@@ -105,3 +180,4 @@ jobs:
           files: |
             app/build/app/outputs/flutter-apk/ohome-release-arm64-v8a.apk
             app/build/app/outputs/flutter-apk/android.json
+            app/build/app/outputs/flutter-apk/checksums-android.txt

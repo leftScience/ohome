@@ -25,7 +25,6 @@ class AppEnv {
     required String defaultApiBaseUrl,
     required String apiBaseUrl,
     required this.rawAppUpdateManifestUrl,
-    this.appUpdateUrlProxyPrefix,
     this.appUpdateUsePackageInstaller = false,
     AppEnvStorage? storage,
   }) : _defaultApiBaseUrl = defaultApiBaseUrl,
@@ -34,7 +33,6 @@ class AppEnv {
 
   final String environment;
   final String? rawAppUpdateManifestUrl;
-  final String? appUpdateUrlProxyPrefix;
   final bool appUpdateUsePackageInstaller;
   final AppEnvStorage _storage;
 
@@ -73,20 +71,7 @@ class AppEnv {
   String? get appUpdateManifestUrl {
     final resolved = _resolveConfiguredUrl(rawAppUpdateManifestUrl);
     if (resolved == null || resolved.isEmpty) return null;
-    return resolveAppUpdateUrl(resolved);
-  }
-
-  String resolveAppUpdateUrl(String value) {
-    final resolved = _resolveConfiguredUrl(value) ?? value.trim();
-    final proxyPrefix = _normalizedAppUpdateUrlProxyPrefix;
-    if (resolved.isEmpty || proxyPrefix == null) return resolved;
-
-    final uri = Uri.tryParse(resolved);
-    if (uri == null || !_isGitHubHost(uri.host)) {
-      return resolved;
-    }
-
-    return '$proxyPrefix$resolved';
+    return resolved;
   }
 
   static AppEnv? _instance;
@@ -132,24 +117,36 @@ class AppEnv {
     }
 
     String? appUpdateManifestUrl;
+    const appUpdateManifestUrlOverride = String.fromEnvironment(
+      'APP_UPDATE_MANIFEST_URL',
+      defaultValue: '',
+    );
+    if (appUpdateManifestUrlOverride.trim().isNotEmpty) {
+      appUpdateManifestUrl = appUpdateManifestUrlOverride.trim();
+    }
     final updateManifestValue = map['appUpdateManifestUrl'];
-    if (updateManifestValue is String &&
+    if (appUpdateManifestUrl == null &&
+        updateManifestValue is String &&
         updateManifestValue.trim().isNotEmpty) {
       appUpdateManifestUrl = updateManifestValue.trim();
     }
 
-    String? appUpdateUrlProxyPrefix;
-    final updateUrlProxyValue = map['appUpdateUrlProxyPrefix'];
-    if (updateUrlProxyValue is String &&
-        updateUrlProxyValue.trim().isNotEmpty) {
-      appUpdateUrlProxyPrefix = updateUrlProxyValue.trim();
+    var appUpdateUsePackageInstaller = false;
+    const packageInstallerOverride = String.fromEnvironment(
+      'APP_UPDATE_USE_PACKAGE_INSTALLER',
+      defaultValue: '',
+    );
+    if (packageInstallerOverride.trim().isNotEmpty) {
+      final normalized = packageInstallerOverride.trim().toLowerCase();
+      appUpdateUsePackageInstaller = normalized == 'true' || normalized == '1';
     }
 
-    var appUpdateUsePackageInstaller = false;
     final packageInstallerValue = map['appUpdateUsePackageInstaller'];
-    if (packageInstallerValue is bool) {
+    if (packageInstallerOverride.trim().isEmpty &&
+        packageInstallerValue is bool) {
       appUpdateUsePackageInstaller = packageInstallerValue;
-    } else if (packageInstallerValue is String) {
+    } else if (packageInstallerOverride.trim().isEmpty &&
+        packageInstallerValue is String) {
       final normalized = packageInstallerValue.trim().toLowerCase();
       appUpdateUsePackageInstaller = normalized == 'true' || normalized == '1';
     }
@@ -159,7 +156,6 @@ class AppEnv {
       defaultApiBaseUrl: defaultApiBaseUrl,
       apiBaseUrl: effectiveApiBaseUrl,
       rawAppUpdateManifestUrl: appUpdateManifestUrl,
-      appUpdateUrlProxyPrefix: appUpdateUrlProxyPrefix,
       appUpdateUsePackageInstaller: appUpdateUsePackageInstaller,
       storage: storage,
     );
@@ -207,19 +203,5 @@ class AppEnv {
     if (raw == null || raw.isEmpty) return null;
     if (!raw.startsWith('/')) return raw;
     return '$apiBaseUrl${raw.substring(1)}';
-  }
-
-  String? get _normalizedAppUpdateUrlProxyPrefix {
-    final raw = appUpdateUrlProxyPrefix?.trim();
-    if (raw == null || raw.isEmpty) return null;
-    return raw.endsWith('/') ? raw : '$raw/';
-  }
-
-  bool _isGitHubHost(String host) {
-    final normalized = host.trim().toLowerCase();
-    return normalized == 'github.com' ||
-        normalized == 'www.github.com' ||
-        normalized == 'raw.githubusercontent.com' ||
-        normalized.endsWith('.githubusercontent.com');
   }
 }

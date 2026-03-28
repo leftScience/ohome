@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:device_info_plus/device_info_plus.dart';
 
-import '../../utils/app_env.dart';
 import '../../utils/http_client.dart';
 import '../models/app_update_info.dart';
 
@@ -106,7 +105,7 @@ class AppUpdateApi {
         _readFirstBool(payload, const ['forceUpdate', 'force_update', 'force']);
 
     return AppUpdateInfo(
-      apkUrl: AppEnv.instance.resolveAppUpdateUrl(apkUrl),
+      apkUrl: apkUrl,
       versionName: versionName,
       versionCode: versionCode,
       sha256checksum: sha256,
