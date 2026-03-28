@@ -34,6 +34,7 @@ jobs:
             dist/server-release/ohome-server_windows_amd64.zip
             dist/server-release/ohome-server_darwin_amd64.zip
             dist/server-release/ohome-server_darwin_arm64.zip
+            dist/server-release/server-manifest.json
             dist/server-release/checksums.txt
 
   smoke-test:
@@ -84,8 +85,9 @@ jobs:
           Expand-Archive -Path $archivePath -DestinationPath $extractRoot -Force
 
           $packageDir = $extractRoot
+          $version = (Get-Content (Join-Path $packageDir "current.txt") -Raw).Trim()
           $scriptPath = Join-Path $packageDir "${{ matrix.start_script }}"
-          $binaryPath = Join-Path $packageDir "${{ matrix.binary_name }}"
+          $binaryPath = Join-Path $packageDir "versions/$version/${{ matrix.binary_name }}"
           $scriptStdOut = Join-Path $env:RUNNER_TEMP "${{ matrix.package_dir }}-script.stdout.log"
           $scriptStdErr = Join-Path $env:RUNNER_TEMP "${{ matrix.package_dir }}-script.stderr.log"
           $binaryStdOut = Join-Path $env:RUNNER_TEMP "${{ matrix.package_dir }}-binary.stdout.log"
@@ -108,7 +110,7 @@ jobs:
             }
 
             return Start-Process -FilePath "cmd.exe" `
-              -ArgumentList "/d", "/s", "/c", "set `"SERVER_PORT=$port`" && set `"GIN_MODE=release`" && `"$filePath`"" `
+              -ArgumentList "/d", "/s", "/c", "set `"SERVER_PORT=$port`" && set `"GIN_MODE=release`" && set `"OHOME_BASE_DIR=$packageDir`" && `"$filePath`"" `
               -WorkingDirectory $workingDir `
               -RedirectStandardOutput $stdoutPath `
               -RedirectStandardError $stderrPath `
@@ -147,11 +149,14 @@ jobs:
             if (-not (Test-Path (Join-Path $packageDir "data/ohome.db"))) {
               throw "SQLite database file was not created"
             }
+            if (-not (Test-Path (Join-Path $packageDir "ohome-updater.exe"))) {
+              throw "Updater binary missing"
+            }
             if (-not (Get-ChildItem (Join-Path $packageDir "log/*.log") -ErrorAction SilentlyContinue)) {
               throw "Log file was not created"
             }
 
-            Get-Process ohome -ErrorAction SilentlyContinue | Stop-Process -Force
+            Get-Process ohome, ohome-updater -ErrorAction SilentlyContinue | Stop-Process -Force
             Start-Sleep -Seconds 2
 
             $outsideDir = Join-Path $env:RUNNER_TEMP "outside"
@@ -166,7 +171,7 @@ jobs:
             & $showLogs @($scriptStdOut, $scriptStdErr, $binaryStdOut, $binaryStdErr)
             throw
           } finally {
-            Get-Process ohome -ErrorAction SilentlyContinue | Stop-Process -Force
+            Get-Process ohome, ohome-updater -ErrorAction SilentlyContinue | Stop-Process -Force
             foreach ($proc in @($scriptProcess, $binaryProcess)) {
               if ($null -ne $proc) {
                 Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
@@ -182,8 +187,9 @@ jobs:
           package_dir="$RUNNER_TEMP/${{ matrix.package_dir }}"
           mkdir -p "$package_dir"
           unzip -q "$archive_path" -d "$package_dir"
+          version="$(tr -d '\r\n' < "$package_dir/current.txt")"
 
-          chmod +x "$package_dir/${{ matrix.binary_name }}" "$package_dir/${{ matrix.start_script }}"
+          chmod +x "$package_dir/versions/$version/${{ matrix.binary_name }}" "$package_dir/${{ matrix.start_script }}" "$package_dir/ohome-updater"
 
           start_and_wait() {
             local launch_dir="$1"
@@ -193,7 +199,7 @@ jobs:
 
             (
               cd "$launch_dir"
-              SERVER_PORT="$port" "$command_path" >"$RUNNER_TEMP/server.log" 2>&1 &
+              OHOME_BASE_DIR="$package_dir" SERVER_PORT="$port" "$command_path" >"$RUNNER_TEMP/server.log" 2>&1 &
               echo $! >"$pid_file"
             )
 
@@ -211,7 +217,8 @@ jobs:
             if [[ -f "$1" ]]; then
               kill "$(cat "$1")" >/dev/null 2>&1 || true
             fi
-            pkill -f "$package_dir/${{ matrix.binary_name }}" >/dev/null 2>&1 || true
+            pkill -f "$package_dir/versions/$version/${{ matrix.binary_name }}" >/dev/null 2>&1 || true
+            pkill -f "$package_dir/ohome-updater" >/dev/null 2>&1 || true
           }
 
           pid_script="$RUNNER_TEMP/${{ matrix.package_dir }}-script.pid"
@@ -227,7 +234,7 @@ jobs:
 
           outside_dir="$RUNNER_TEMP/outside-${{ matrix.package_dir }}"
           mkdir -p "$outside_dir"
-          start_and_wait "$outside_dir" "$package_dir/${{ matrix.binary_name }}" "$pid_binary" "${{ matrix.binary_port }}"
+          start_and_wait "$outside_dir" "$package_dir/versions/$version/${{ matrix.binary_name }}" "$pid_binary" "${{ matrix.binary_port }}"
           test -f "$package_dir/data/ohome.db"
 
   publish-release:
@@ -255,4 +262,5 @@ jobs:
             dist/server-release/ohome-server_windows_amd64.zip
             dist/server-release/ohome-server_darwin_amd64.zip
             dist/server-release/ohome-server_darwin_arm64.zip
+            dist/server-release/server-manifest.json
             dist/server-release/checksums.txt

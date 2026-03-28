@@ -1,0 +1,37 @@
+services:
+  server:
+    image: ${OHOME_SERVER_IMAGE:-hanlinwang0606/ohome:latest}
+    container_name: ohome-server
+    environment:
+      GIN_MODE: release
+      PORT: 18090
+      UPDATE_UPDATER_BASEURL: http://updater:18091
+      UPDATE_UPDATER_TOKEN: ${OHOME_UPDATER_TOKEN:-ohome-local-updater}
+      UPDATE_DEPLOYMODE: docker
+    volumes:
+      - ./ohome/conf:/app/conf
+      - ./ohome/data:/app/data
+      - ./ohome/log:/app/log
+    ports:
+      - "18090:18090"
+    restart: unless-stopped
+
+  updater:
+    image: ${OHOME_UPDATER_IMAGE:-hanlinwang0606/ohome-updater:latest}
+    container_name: ohome-updater
+    environment:
+      UPDATE_UPDATER_LISTENADDR: :18091
+      UPDATE_UPDATER_TOKEN: ${OHOME_UPDATER_TOKEN:-ohome-local-updater}
+      UPDATE_DEPLOYMODE: docker
+      UPDATE_DOCKER_COMPOSEPROJECTDIR: /workspace
+      UPDATE_DOCKER_COMPOSEFILE: docker-compose.release.yml
+      UPDATE_DOCKER_ENVFILE: .env
+      UPDATE_DOCKER_SERVICENAME: server
+      UPDATE_HEALTHURL: http://server:18090/api/v1/public/discovery
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./:/workspace
+      - ./ohome/conf:/app/conf
+      - ./ohome/data:/app/data
+      - ./ohome/log:/app/log
+    restart: unless-stopped

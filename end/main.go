@@ -1,6 +1,10 @@
 package main
 
-import "ohome/cmd"
+import (
+	"fmt"
+	"ohome/buildinfo"
+	"ohome/cmd"
+)
 
 /**
 @title go项目实战
@@ -11,5 +15,6 @@ import "ohome/cmd"
 func main() {
 	defer cmd.Clear()
 
+	fmt.Printf("ohome server version=%s commit=%s buildTime=%s channel=%s\n", buildinfo.CleanVersion(), buildinfo.Commit, buildinfo.BuildTime, buildinfo.CleanChannel())
 	cmd.Start()
 }

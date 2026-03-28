@@ -107,6 +107,7 @@ func initBasePlatformRoutes() {
 	InitDropsItemRoutes()
 	InitDropsEventRoutes()
 	InitAppMessageRoutes()
+	InitSystemUpdateRoutes()
 }
 
 // 初始化自定义校验器

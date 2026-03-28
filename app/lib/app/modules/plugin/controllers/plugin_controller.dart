@@ -39,6 +39,11 @@ class PluginController extends GetxController {
     Get.toNamed(Routes.USER_MANAGEMENT);
   }
 
+  void openServerUpdate() {
+    if (!_ensureSuperAdmin()) return;
+    Get.toNamed(Routes.SERVER_UPDATE);
+  }
+
   void openQuarkLogin() {
     if (!_ensureSuperAdmin()) return;
     Get.toNamed(Routes.QUARK_LOGIN);

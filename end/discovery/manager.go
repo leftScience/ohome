@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"ohome/buildinfo"
 	"ohome/conf"
 	"os"
 	"path/filepath"
@@ -56,7 +57,7 @@ func Initialize() (*Manager, error) {
 	options := Options{
 		Port:           configuredPort(),
 		ServiceName:    configuredServiceName(),
-		Version:        DefaultVersion,
+		Version:        buildinfo.CleanVersion(),
 		APIBasePath:    DefaultAPIBasePath,
 		Capabilities:   defaultCapabilities(),
 		InstanceIDPath: defaultInstanceIDPath(),

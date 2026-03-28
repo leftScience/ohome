@@ -30,6 +30,8 @@ import '../modules/quark_transfer_tasks/bindings/quark_transfer_tasks_binding.da
 import '../modules/quark_transfer_tasks/views/quark_transfer_tasks_view.dart';
 import '../modules/search/bindings/search_binding.dart';
 import '../modules/search/views/search_view.dart';
+import '../modules/server_update/bindings/server_update_binding.dart';
+import '../modules/server_update/views/server_update_view.dart';
 import '../modules/user_management/bindings/user_management_binding.dart';
 import '../modules/user_management/views/user_management_view.dart';
 import '../modules/tv/bindings/tv_binding.dart';
@@ -135,6 +137,12 @@ class AppPages {
       name: _Paths.USER_MANAGEMENT,
       page: () => const UserManagementView(),
       binding: UserManagementBinding(),
+      middlewares: [AuthMiddleware(), SuperAdminMiddleware()],
+    ),
+    GetPage(
+      name: _Paths.SERVER_UPDATE,
+      page: () => const ServerUpdateView(),
+      binding: ServerUpdateBinding(),
       middlewares: [AuthMiddleware(), SuperAdminMiddleware()],
     ),
     GetPage(

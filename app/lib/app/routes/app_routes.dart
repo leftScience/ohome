@@ -29,6 +29,7 @@ abstract class Routes {
   static const AUDIOBOOK = _Paths.AUDIOBOOK;
   static const HISTORY = _Paths.HISTORY;
   static const USER_MANAGEMENT = _Paths.USER_MANAGEMENT;
+  static const SERVER_UPDATE = _Paths.SERVER_UPDATE;
 }
 
 abstract class _Paths {
@@ -57,4 +58,5 @@ abstract class _Paths {
   static const AUDIOBOOK = '/audiobook';
   static const HISTORY = '/history';
   static const USER_MANAGEMENT = '/user-management';
+  static const SERVER_UPDATE = '/server-update';
 }

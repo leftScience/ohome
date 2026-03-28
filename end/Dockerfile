@@ -4,6 +4,11 @@ FROM golang:1.25-alpine AS builder
 
 WORKDIR /app
 
+ARG VERSION=0.0.1
+ARG COMMIT=dev
+ARG BUILD_TIME=
+ARG CHANNEL=stable
+
 ENV CGO_ENABLED=0
 # 自动下载所需 Go 工具链版本（go.mod 要求 1.25）
 ENV GOTOOLCHAIN=auto
@@ -15,7 +20,7 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o /app/bin/ohome .
+RUN go build -ldflags="-X 'ohome/buildinfo.Version=${VERSION}' -X 'ohome/buildinfo.Commit=${COMMIT}' -X 'ohome/buildinfo.BuildTime=${BUILD_TIME}' -X 'ohome/buildinfo.Channel=${CHANNEL}'" -o /app/bin/ohome .
 
 FROM alpine:3.19
 

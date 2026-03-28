@@ -86,7 +86,7 @@
 - macOS Apple Silicon：[https://github.com/leftScience/ohome/releases/latest/download/ohome-server_darwin_arm64.zip](https://github.com/leftScience/ohome/releases/latest/download/ohome-server_darwin_arm64.zip)
 - SHA256 校验：[https://github.com/leftScience/ohome/releases/latest/download/checksums.txt](https://github.com/leftScience/ohome/releases/latest/download/checksums.txt)
 
-### 服务端本地一键运行
+### 服务端本地一键运行（Portable + 本地 updater）
 
 如果你不想装 Docker，直接使用服务端便携包最简单。便携包解压后即可本地运行
 
@@ -125,29 +125,54 @@ xattr -dr com.apple.quarantine .
 - 配置文件：`conf/config.yaml`
 - SQLite 数据库：`data/ohome.db`
 - 日志目录：`log/`
+- 当前运行版本：`current.txt`
+- 历史版本目录：`versions/`
+- 本地更新执行器：`ohome-updater(.exe)`
 
 如果你需要修改端口、默认密码或数据库类型，先编辑 `conf/config.yaml`，再执行 `start.bat` 或 `start.command`。
 
-### 服务端 Docker Hub 镜像部署
+便携包启动脚本会先拉起本地 `ohome-updater`，再根据 `current.txt` 启动当前服务版本。后续客户端可通过“设置 → 服务端更新”发起版本升级或回滚。
+
+### 服务端 Docker Hub 镜像部署（Docker + updater sidecar）
 
 Docker Hub 仓库：`hanlinwang0606/ohome`
 
-可以新建一个 `docker-compose.release.yml`：
+推荐直接使用仓库中的 [`end/docker-compose.release.yml`](./end/docker-compose.release.yml)。它会同时启动：
+
+- `server`：主服务
+- `updater`：本地更新执行器 sidecar
+
+示例：
 
 ```yaml
 services:
   server:
-    image: hanlinwang0606/ohome:latest
+    image: ${OHOME_SERVER_IMAGE:-hanlinwang0606/ohome:latest}
     container_name: ohome-server
     environment:
       GIN_MODE: release
       PORT: 18090
+      UPDATE_UPDATER_BASEURL: http://updater:18091
     volumes:
       - ./ohome/conf:/app/conf
       - ./ohome/data:/app/data
       - ./ohome/log:/app/log
     ports:
       - "18090:18090"
+    restart: unless-stopped
+
+  updater:
+    image: ${OHOME_UPDATER_IMAGE:-hanlinwang0606/ohome-updater:latest}
+    container_name: ohome-updater
+    environment:
+      UPDATE_UPDATER_LISTENADDR: :18091
+      UPDATE_DEPLOYMODE: docker
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./:/workspace
+      - ./ohome/conf:/app/conf
+      - ./ohome/data:/app/data
+      - ./ohome/log:/app/log
     restart: unless-stopped
 ```
 
@@ -161,24 +186,18 @@ docker compose -f docker-compose.release.yml pull
 docker compose -f docker-compose.release.yml up -d
 ```
 
-如果你不想额外维护 `compose` 文件，也可以直接用 `docker run`：
+Docker 更新依赖 sidecar，因此不再推荐仅用单独的 `docker run` 启动主服务。
 
-```bash
-docker pull hanlinwang0606/ohome:latest
+### 服务端更新接口与客户端入口
 
-mkdir -p ./ohome/conf ./ohome/data ./ohome/log
-
-docker run -d \
-  --name ohome-server \
-  -e GIN_MODE=release \
-  -e PORT=18090 \
-  -p 18090:18090 \
-  -v "$(pwd)/ohome/conf:/app/conf" \
-  -v "$(pwd)/ohome/data:/app/data" \
-  -v "$(pwd)/ohome/log:/app/log" \
-  --restart unless-stopped \
-  hanlinwang0606/ohome:latest
-```
+- 管理员公开接口：
+  - `GET /api/v1/system/update/info`
+  - `POST /api/v1/system/update/check`
+  - `POST /api/v1/system/update/apply`
+  - `GET /api/v1/system/update/tasks/:taskId`
+  - `POST /api/v1/system/update/rollback`
+- Flutter 客户端入口：`设置 → 服务端更新`
+- 发布清单：`server-manifest.json`
 
 ### 服务端配置说明
 

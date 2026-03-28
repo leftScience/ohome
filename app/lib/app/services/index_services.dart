@@ -10,6 +10,7 @@ import 'package:ohome/app/data/api/quark.dart';
 import 'package:ohome/app/data/api/quark_auto_save_task.dart';
 import 'package:ohome/app/data/api/quark_tv_login.dart';
 import 'package:ohome/app/data/api/quark_transfer_task.dart';
+import 'package:ohome/app/data/api/server_update.dart';
 import 'package:ohome/app/data/api/todo.dart';
 import 'package:ohome/app/data/api/user.dart';
 import 'package:ohome/app/data/storage/token_storage.dart';
@@ -53,6 +54,10 @@ class IndexServices {
       permanent: true,
     );
     Get.put<UserApi>(UserApi(httpClient: httpClient), permanent: true);
+    Get.put<ServerUpdateApi>(
+      ServerUpdateApi(httpClient: httpClient),
+      permanent: true,
+    );
     Get.put<MediaHistoryRepository>(
       MediaHistoryRepository(httpClient: httpClient),
       permanent: true,

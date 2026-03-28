@@ -37,3 +37,23 @@ quark:
     concurrency: 3 # 本地代理并发分片数
     partSizeMB: 10 # 本地代理分片大小（MB）
     chunkMaxRetries: 3 # 本地代理分片重试次数
+
+update:
+  channel: stable
+  manifestUrl: https://github.com/leftScience/ohome/releases/latest/download/server-manifest.json
+  deployMode: auto
+  updater:
+    token: ohome-local-updater
+    listenAddr: 127.0.0.1:18091
+    baseUrl: http://127.0.0.1:18091
+  portable:
+    currentVersionFile: current.txt
+    versionsDir: versions
+    serverPidFile: ./data/update/server.pid
+    downloadDir: ./data/update/downloads
+  docker:
+    composeProjectDir: .
+    composeFile: docker-compose.release.yml
+    envFile: .env
+    serviceName: server
+    imageEnvName: OHOME_SERVER_IMAGE

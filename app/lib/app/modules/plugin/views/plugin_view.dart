@@ -72,6 +72,14 @@ class PluginView extends GetView<PluginController> {
                         onTap: controller.openUserManagement,
                       ),
                       SizedBox(height: 12.h),
+                      _SettingsMenuCard(
+                        icon: Icons.cloud_sync_outlined,
+                        iconColor: const Color(0xFF64B5F6),
+                        title: '服务端更新',
+                        subtitle: '查看后端版本、检查更新、执行升级与回滚',
+                        onTap: controller.openServerUpdate,
+                      ),
+                      SizedBox(height: 12.h),
                       _QuarkAdminMenuCard(
                         expanded: controller.quarkAdminMenuExpanded.value,
                         onTap: controller.toggleQuarkAdminMenu,
