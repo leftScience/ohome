@@ -72,21 +72,6 @@ class ServerUpdateView extends GetView<ServerUpdateController> {
                             controller.appUpdateChecking.value ? '检查中' : '检查更新',
                           ),
                         ),
-                        FilledButton.icon(
-                          onPressed: controller.canStartAppUpdate
-                              ? controller.startAvailableAppUpdate
-                              : null,
-                          icon: controller.isAppUpdating
-                              ? SizedBox(
-                                  width: 14.w,
-                                  height: 14.w,
-                                  child: const CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Icon(Icons.system_update_alt_rounded),
-                          label: const Text('立即更新'),
-                        ),
                       ],
                     ),
                     if (controller.isAppUpdating) ...[
@@ -186,25 +171,6 @@ class ServerUpdateView extends GetView<ServerUpdateController> {
                                         )
                                       : const Icon(Icons.refresh_rounded),
                                   label: const Text('检查更新'),
-                                ),
-                                FilledButton.icon(
-                                  onPressed:
-                                      (check?.available == true &&
-                                          !controller.applying.value &&
-                                          !controller.hasActiveTask)
-                                      ? controller.applyUpdate
-                                      : null,
-                                  icon: controller.applying.value
-                                      ? SizedBox(
-                                          width: 14.w,
-                                          height: 14.w,
-                                          child:
-                                              const CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                              ),
-                                        )
-                                      : const Icon(Icons.cloud_sync_outlined),
-                                  label: const Text('立即更新'),
                                 ),
                                 OutlinedButton.icon(
                                   onPressed:

@@ -34,13 +34,13 @@ class ServerUpdateController extends GetxController {
   final checkResult = Rxn<ServerUpdateCheckResult>();
   final currentTask = Rxn<ServerUpdateTask>();
   final appUpdateResult = Rxn<AppUpdateCheckResult>();
+  final appCurrentVersionText = '--'.obs;
 
   Timer? _pollTimer;
   String? _activeTaskId;
 
   bool get isSuperAdmin => _authService.user.value?.isSuperAdmin ?? false;
   bool get isAppUpdating => _appUpdateService.isUpdating.value;
-  bool get hasCheckedAppUpdate => appUpdateResult.value != null;
 
   bool get hasActiveTask =>
       currentTask.value != null && !(currentTask.value?.isTerminal ?? true);
@@ -48,7 +48,7 @@ class ServerUpdateController extends GetxController {
   String get appCurrentVersion =>
       appUpdateResult.value?.currentVersion.trim().isNotEmpty == true
       ? appUpdateResult.value!.currentVersion
-      : '--';
+      : appCurrentVersionText.value;
 
   String get appLatestVersion {
     final result = appUpdateResult.value;
@@ -88,7 +88,7 @@ class ServerUpdateController extends GetxController {
     switch (result.status) {
       case AppUpdateCheckStatus.available:
         final notes = (result.info?.releaseNotes ?? '').trim();
-        return notes.isNotEmpty ? notes : '检测到新版本，可立即下载安装。';
+        return notes.isNotEmpty ? notes : '检测到新版本，点击“检查更新”后可直接选择安装。';
       case AppUpdateCheckStatus.upToDate:
         return '当前已是最新版本（${result.currentVersion}）。';
       case AppUpdateCheckStatus.notConfigured:
@@ -100,16 +100,13 @@ class ServerUpdateController extends GetxController {
     }
   }
 
-  bool get canStartAppUpdate =>
-      appUpdateResult.value?.status == AppUpdateCheckStatus.available &&
-      appUpdateResult.value?.info != null &&
-      !appUpdateChecking.value &&
-      !isAppUpdating;
-
   @override
   void onInit() {
     super.onInit();
-    unawaited(refreshPage(silent: true));
+    unawaited(_loadCurrentAppVersion());
+    if (isSuperAdmin) {
+      unawaited(loadInfo(silent: true));
+    }
   }
 
   @override
@@ -214,7 +211,9 @@ class ServerUpdateController extends GetxController {
     try {
       final result = await _serverUpdateApi.check();
       checkResult.value = result;
-      if (!result.available) {
+      if (result.available) {
+        await _showServerUpdateDialog(result);
+      } else {
         Get.snackbar('提示', '当前后端已是最新版本（${result.currentVersion}）');
       }
     } catch (error) {
@@ -332,7 +331,7 @@ class ServerUpdateController extends GetxController {
             ),
           FilledButton(
             onPressed: () => Get.back(result: true),
-            child: const Text('立即更新'),
+            child: const Text('更新'),
           ),
         ],
       ),
@@ -341,6 +340,42 @@ class ServerUpdateController extends GetxController {
     if (confirm != true) return;
 
     await _startOtaUpdate(info);
+  }
+
+  Future<void> _showServerUpdateDialog(ServerUpdateCheckResult result) async {
+    final notes = result.releaseNotes.trim();
+    final confirm = await Get.dialog<bool>(
+      AlertDialog(
+        title: const Text('发现服务端新版本'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('当前版本：${result.currentVersion}'),
+            const SizedBox(height: 8),
+            Text('最新版本：${result.latestVersion}'),
+            if (notes.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              const Text('更新内容：'),
+              const SizedBox(height: 4),
+              Text(notes),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: const Text('稍后'),
+          ),
+          FilledButton(
+            onPressed: () => Get.back(result: true),
+            child: const Text('更新'),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+    await applyUpdate();
   }
 
   Future<void> _startOtaUpdate(AppUpdateInfo info) async {
@@ -389,6 +424,15 @@ class ServerUpdateController extends GetxController {
         Get.back<void>();
       }
       Get.snackbar('提示', '$error');
+    }
+  }
+
+  Future<void> _loadCurrentAppVersion() async {
+    try {
+      appCurrentVersionText.value = await _appUpdateService
+          .getCurrentVersionLabel();
+    } catch (_) {
+      // ignore version read failures and keep placeholder
     }
   }
 }

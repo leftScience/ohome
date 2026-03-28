@@ -34,13 +34,19 @@ class AppUpdateService extends GetxService {
     : _appUpdateApi = appUpdateApi ?? AppUpdateApi();
 
   final AppUpdateApi _appUpdateApi;
+  PackageInfo? _packageInfo;
 
   final isUpdating = false.obs;
   final progress = RxnDouble();
   final statusText = ''.obs;
 
+  Future<String> getCurrentVersionLabel() async {
+    final packageInfo = await _getPackageInfo();
+    return _buildCurrentVersionLabel(packageInfo);
+  }
+
   Future<AppUpdateCheckResult> checkForUpdate() async {
-    final packageInfo = await PackageInfo.fromPlatform();
+    final packageInfo = await _getPackageInfo();
     final currentVersion = _buildCurrentVersionLabel(packageInfo);
 
     if (AppEnv.currentEnvironment == AppEnvironment.dev) {
@@ -254,5 +260,9 @@ class AppUpdateService extends GetxService {
     if (build.isEmpty) return version;
     if (version.isEmpty) return build;
     return '$version+$build';
+  }
+
+  Future<PackageInfo> _getPackageInfo() async {
+    return _packageInfo ??= await PackageInfo.fromPlatform();
   }
 }
