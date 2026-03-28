@@ -79,7 +79,6 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
   bool _cardActionsVisible = false;
   bool _selectionMode = false;
   bool _renameMode = false;
-  bool _moveMode = false;
   bool _renaming = false;
   bool _deletingSelected = false;
   bool _movingSelected = false;
@@ -212,13 +211,9 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
       final selectedCount = selectedPaths.length;
       final actionDisabled = loading || _operationInProgress;
       final idleCardActionsVisible =
-          _cardActionsVisible && !_selectionMode && !_renameMode && !_moveMode;
+          _cardActionsVisible && !_selectionMode && !_renameMode;
       final sortDisabled =
-          actionDisabled ||
-          loadingMore ||
-          _selectionMode ||
-          _renameMode ||
-          _moveMode;
+          actionDisabled || loadingMore || _selectionMode || _renameMode;
 
       return Scaffold(
         appBar: AppBar(
@@ -283,22 +278,8 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
                 onPressed:
                     entries.isEmpty || actionDisabled || selectedCount == 0
                     ? null
-                    : _enterMoveMode,
-                child: const Text('移动'),
-              ),
-            if (widget.enableMove && _moveMode)
-              TextButton(
-                style: _moveActionButtonStyle,
-                onPressed: actionDisabled || selectedCount == 0
-                    ? null
                     : _confirmMoveSelected,
-                child: Text('移动($selectedCount)'),
-              ),
-            if (widget.enableMove && _moveMode)
-              TextButton(
-                style: _cancelActionButtonStyle,
-                onPressed: actionDisabled ? null : _exitMoveMode,
-                child: const Text('取消'),
+                child: const Text('移动'),
               ),
             if (idleCardActionsVisible)
               IconButton(
@@ -562,7 +543,6 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
       _cardActionsVisible = true;
       _selectionMode = true;
       _renameMode = false;
-      _moveMode = false;
     });
   }
 
@@ -583,7 +563,6 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
       _cardActionsVisible = true;
       _renameMode = true;
       _selectionMode = false;
-      _moveMode = false;
     });
   }
 
@@ -594,25 +573,10 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
     });
   }
 
-  void _enterMoveMode() {
-    if (!widget.enableMove || _moveMode || _operationInProgress) return;
-    if (_selectedPaths.isEmpty) {
-      Get.snackbar('提示', '请先选择要移动的资源');
-      return;
-    }
-    setState(() {
-      _cardActionsVisible = true;
-      _moveMode = true;
-      _renameMode = false;
-      _selectionMode = false;
-    });
-  }
-
   void _hideCardActions() {
     if (!_cardActionsVisible &&
         !_selectionMode &&
         !_renameMode &&
-        !_moveMode &&
         _selectedPaths.isEmpty) {
       return;
     }
@@ -620,15 +584,7 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
       _cardActionsVisible = false;
       _selectionMode = false;
       _renameMode = false;
-      _moveMode = false;
       _selectedPaths.clear();
-    });
-  }
-
-  void _exitMoveMode() {
-    if (!_moveMode) return;
-    setState(() {
-      _moveMode = false;
     });
   }
 
@@ -659,7 +615,6 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
       }
       if (_selectedPaths.isEmpty) {
         _selectionMode = false;
-        _moveMode = false;
         _renameMode = false;
       }
     });
@@ -876,7 +831,6 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
       await widget.controller.refreshCurrent();
       if (!mounted) return;
       setState(() {
-        _moveMode = false;
         _selectedPaths.clear();
       });
       return;
@@ -1052,30 +1006,24 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
     final blocked = _isBlacklisted(entry);
     final deleting = widget.controller.isDeletingPath(entry.path);
     final renameActive = _renameMode && !_operationInProgress;
-    final moveActive = _moveMode && !_operationInProgress;
     final status = blocked && !entry.isDir
         ? '不支持的文件类型'
         : statusBuilder(entry).trim();
     final displayStatus = deleting
         ? '删除中...'
-        : (renameActive ? '点击卡片重命名' : (moveActive ? '点击卡片选择移动' : status));
+        : (renameActive ? '点击卡片重命名' : status);
     final highlightColor = Theme.of(context).colorScheme.primary;
     final renameColor = Theme.of(context).colorScheme.secondary;
-    final moveColor = Theme.of(context).colorScheme.tertiary;
     final deletingColor = Theme.of(context).colorScheme.error;
-    final selectionActive = _cardActionsVisible || _selectionMode || _moveMode;
+    final selectionActive = _cardActionsVisible || _selectionMode;
     final borderColor = deleting
         ? deletingColor.withValues(alpha: 0.9)
         : (selected
               ? highlightColor
               : (renameActive
                     ? renameColor.withValues(alpha: 0.55)
-                    : (moveActive
-                          ? moveColor.withValues(alpha: 0.55)
-                          : Colors.white.withValues(alpha: 0.08))));
-    final borderWidth = deleting || selected
-        ? 1.4
-        : ((renameActive || moveActive) ? 1.2 : 1.0);
+                    : Colors.white.withValues(alpha: 0.08)));
+    final borderWidth = deleting || selected ? 1.4 : (renameActive ? 1.2 : 1.0);
 
     return Container(
       decoration: BoxDecoration(
@@ -1086,9 +1034,7 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
           BoxShadow(
             color: renameActive
                 ? renameColor.withValues(alpha: 0.18)
-                : (moveActive
-                      ? moveColor.withValues(alpha: 0.18)
-                      : Colors.black.withValues(alpha: 0.3)),
+                : Colors.black.withValues(alpha: 0.3),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -1141,7 +1087,6 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
                     _cardActionsVisible = true;
                     _selectionMode = false;
                     _renameMode = false;
-                    _moveMode = false;
                     _selectedPaths
                       ..clear()
                       ..add(path);
@@ -1187,12 +1132,6 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
                             : Icons.radio_button_unchecked_rounded,
                         size: 20,
                         color: selected ? highlightColor : Colors.white54,
-                      )
-                    else if (moveActive)
-                      Icon(
-                        Icons.drive_file_move_rounded,
-                        size: 18,
-                        color: moveColor.withValues(alpha: 0.9),
                       ),
                   ],
                 ),
@@ -1205,9 +1144,7 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
                   style: TextStyle(
                     color: renameActive
                         ? renameColor.withValues(alpha: 0.9)
-                        : (moveActive
-                              ? moveColor.withValues(alpha: 0.9)
-                              : Colors.white38),
+                        : Colors.white38,
                   ),
                 ),
               ],
