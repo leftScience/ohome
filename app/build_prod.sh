@@ -6,7 +6,12 @@ cd "$(dirname "$0")"
 PUBSPEC_FILE="pubspec.yaml"
 APP_ENV="prod"
 OUTPUT_DIR="build/app/outputs/flutter-apk"
-APK_SPLIT_PER_ABI="${APK_SPLIT_PER_ABI:-1}"
+# For the current release flow we only ship an arm64 APK.
+# Keeping split-per-abi enabled makes Android rewrite versionCode with an ABI
+# offset (for example arm64 build 8 becomes 2008), which breaks our OTA
+# manifest/version expectations. Default to a single arm64-targeted APK and
+# allow callers to opt back into split builds explicitly.
+APK_SPLIT_PER_ABI="${APK_SPLIT_PER_ABI:-0}"
 DEFAULT_SPLIT_ABI="arm64-v8a"
 APK_TARGET_PLATFORM="${APK_TARGET_PLATFORM:-android-arm64}"
 APP_UPDATE_MANIFEST_URL="${APP_UPDATE_MANIFEST_URL:-}"

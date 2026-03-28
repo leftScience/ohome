@@ -87,6 +87,7 @@ jobs:
         shell: bash
         run: |
           BUILD_METADATA_FILE="$RUNNER_TEMP/ohome-release.env" \
+          APK_SPLIT_PER_ABI=0 \
           CI_BUILD_NUMBER="${GITHUB_RUN_NUMBER}" \
           RELEASE_TAG="${GITHUB_REF_NAME}" \
           APP_UPDATE_MANIFEST_URL="${APP_UPDATE_MANIFEST_URL}" \
@@ -102,7 +103,7 @@ jobs:
           MANIFEST_ASSET="app/build/app/outputs/flutter-apk/android.json"
           VERSIONED_MANIFEST_ASSET="app/build/app/outputs/flutter-apk/android-${GITHUB_REF_NAME}.json"
           CHECKSUM_ASSET="app/build/app/outputs/flutter-apk/checksums-android.txt"
-          SOURCE_APK="app/${APK_RELATIVE_PATH_ARM64_V8A}"
+          SOURCE_APK="app/${APK_RELATIVE_PATH}"
           RELEASE_APK="${OUTPUT_DIR}/ohome-release-arm64-v8a.apk"
           VERSIONED_APK_URL="${MINIO_PUBLIC_BASE_URL}/${RELEASE_PREFIX}/ohome-release-${ABI}.apk"
 
