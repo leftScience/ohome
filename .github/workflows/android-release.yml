@@ -127,11 +127,17 @@ jobs:
           EOF
           cp "$MANIFEST_ASSET" "$VERSIONED_MANIFEST_ASSET"
 
-      - name: Install AWS CLI
+      - name: Ensure AWS CLI
         shell: bash
         run: |
-          sudo apt-get update
-          sudo apt-get install -y awscli
+          if command -v aws >/dev/null 2>&1; then
+            aws --version
+          else
+            python3 -m pip install --user awscli
+            echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+            export PATH="$HOME/.local/bin:$PATH"
+            aws --version
+          fi
 
       - name: Upload Android assets to MinIO
         shell: bash
