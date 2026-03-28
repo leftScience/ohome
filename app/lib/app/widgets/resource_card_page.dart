@@ -76,6 +76,7 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
   String? _entriesReadyPath;
   bool _entriesReadyRunning = false;
   bool _loadMoreCheckScheduled = false;
+  bool _cardActionsVisible = false;
   bool _selectionMode = false;
   bool _renameMode = false;
   bool _moveMode = false;
@@ -210,6 +211,8 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
       final selectedPaths = _visibleSelectedPaths(entries);
       final selectedCount = selectedPaths.length;
       final actionDisabled = loading || _operationInProgress;
+      final idleCardActionsVisible =
+          _cardActionsVisible && !_selectionMode && !_renameMode && !_moveMode;
       final sortDisabled =
           actionDisabled ||
           loadingMore ||
@@ -236,10 +239,7 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
           ),
           centerTitle: false,
           actions: [
-            if (widget.enableRename &&
-                !_selectionMode &&
-                !_renameMode &&
-                !_moveMode)
+            if (widget.enableRename && idleCardActionsVisible)
               TextButton(
                 style: _renameActionButtonStyle,
                 onPressed: entries.isEmpty || actionDisabled
@@ -253,10 +253,7 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
                 onPressed: actionDisabled ? null : _exitRenameMode,
                 child: const Text('取消'),
               ),
-            if (widget.enableDelete &&
-                !_selectionMode &&
-                !_renameMode &&
-                !_moveMode)
+            if (widget.enableDelete && idleCardActionsVisible)
               TextButton(
                 style: _deleteActionButtonStyle,
                 onPressed: entries.isEmpty || actionDisabled
@@ -278,10 +275,7 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
                 onPressed: actionDisabled ? null : _exitSelectionMode,
                 child: const Text('取消'),
               ),
-            if (widget.enableMove &&
-                !_selectionMode &&
-                !_renameMode &&
-                !_moveMode)
+            if (widget.enableMove && idleCardActionsVisible)
               TextButton(
                 style: _moveActionButtonStyle,
                 onPressed: entries.isEmpty || actionDisabled
@@ -303,12 +297,18 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
                 onPressed: actionDisabled ? null : _exitMoveMode,
                 child: const Text('取消'),
               ),
-            IconButton(
-              onPressed: actionDisabled
-                  ? null
-                  : widget.controller.refreshCurrent,
-              icon: const Icon(Icons.refresh),
-            ),
+            if (idleCardActionsVisible)
+              IconButton(
+                onPressed: actionDisabled ? null : _hideCardActions,
+                icon: const Icon(Icons.close),
+              )
+            else if (!_cardActionsVisible)
+              IconButton(
+                onPressed: actionDisabled
+                    ? null
+                    : widget.controller.refreshCurrent,
+                icon: const Icon(Icons.refresh),
+              ),
           ],
         ),
         body: _buildBody(
@@ -552,6 +552,7 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
   void _enterSelectionMode() {
     if (!widget.enableDelete || _selectionMode || _operationInProgress) return;
     setState(() {
+      _cardActionsVisible = true;
       _selectionMode = true;
       _renameMode = false;
       _moveMode = false;
@@ -570,6 +571,7 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
   void _enterRenameMode() {
     if (!widget.enableRename || _renameMode || _operationInProgress) return;
     setState(() {
+      _cardActionsVisible = true;
       _renameMode = true;
       _selectionMode = false;
       _moveMode = false;
@@ -587,9 +589,38 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
   void _enterMoveMode() {
     if (!widget.enableMove || _moveMode || _operationInProgress) return;
     setState(() {
+      _cardActionsVisible = true;
       _moveMode = true;
       _renameMode = false;
       _selectionMode = false;
+      _selectedPaths.clear();
+    });
+  }
+
+  void _showCardActions() {
+    if (_operationInProgress) return;
+    if (!widget.enableRename && !widget.enableDelete && !widget.enableMove) {
+      return;
+    }
+    if (_cardActionsVisible) return;
+    setState(() {
+      _cardActionsVisible = true;
+    });
+  }
+
+  void _hideCardActions() {
+    if (!_cardActionsVisible &&
+        !_selectionMode &&
+        !_renameMode &&
+        !_moveMode &&
+        _selectedPaths.isEmpty) {
+      return;
+    }
+    setState(() {
+      _cardActionsVisible = false;
+      _selectionMode = false;
+      _renameMode = false;
+      _moveMode = false;
       _selectedPaths.clear();
     });
   }
@@ -1081,11 +1112,16 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
                     return;
                   }
                   if (blocked || _operationInProgress) return;
+                  if (_cardActionsVisible) {
+                    _hideCardActions();
+                  }
                   await _handleTap(entry, entries, currentPath);
                 },
           onLongPress:
               deleting ||
-                  (!widget.enableDelete && !widget.enableMove) ||
+                  (!widget.enableRename &&
+                      !widget.enableDelete &&
+                      !widget.enableMove) ||
                   _operationInProgress
               ? null
               : () {
@@ -1093,14 +1129,8 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
                     _toggleSelection(entry);
                     return;
                   }
-                  final path = entry.path.trim();
-                  if (path.isEmpty) return;
-                  setState(() {
-                    _renameMode = false;
-                    _selectionMode = widget.enableDelete;
-                    _moveMode = !widget.enableDelete && widget.enableMove;
-                    _selectedPaths.add(path);
-                  });
+                  if (_renameMode) return;
+                  _showCardActions();
                 },
           child: Padding(
             padding: const EdgeInsets.all(12),
