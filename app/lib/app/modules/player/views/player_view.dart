@@ -1792,13 +1792,13 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
           borderRadius: BorderRadius.circular(14.r),
           onTap: enabled ? onTap : null,
           child: Container(
-            width: 34.w,
-            height: 34.w,
+            width: 34,
+            height: 34,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(14.r),
               border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
             ),
-            child: Icon(icon, color: Colors.white, size: 18.sp),
+            child: Icon(icon, color: Colors.white, size: 18),
           ),
         ),
       ),
@@ -1841,14 +1841,14 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
       backgroundColor: const Color(0xFF050505),
       appBar: AppBar(
         backgroundColor: const Color(0xFF050505),
-        toolbarHeight: 56.h,
-        leadingWidth: 40.w,
+        toolbarHeight: 56,
+        leadingWidth: 40,
         leading: IconButton(
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints(),
           visualDensity: VisualDensity.compact,
           onPressed: () => Navigator.of(context).maybePop(),
-          icon: Icon(Icons.arrow_back, color: Colors.white, size: 20.sp),
+          icon: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
         ),
         titleSpacing: 0,
         title: Obx(
@@ -1861,7 +1861,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
               softWrap: true,
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 14.sp,
+                fontSize: 14,
                 height: 1.2,
                 fontWeight: FontWeight.w700,
               ),
@@ -1869,7 +1869,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
           ),
         ),
         actions: [
-          SizedBox(width: 8.w),
+          const SizedBox(width: 8),
           Obx(() {
             return _buildAppBarActionIcon(
               enabled: controller.canCastCurrentEpisode,
@@ -1882,7 +1882,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
             if (!controller.isCasting) return const SizedBox.shrink();
             return Row(
               children: [
-                SizedBox(width: 6.w),
+                const SizedBox(width: 6),
                 _buildAppBarActionIcon(
                   enabled: true,
                   icon: Icons.stop_screen_share_outlined,
@@ -1892,7 +1892,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
               ],
             );
           }),
-          SizedBox(width: 10.w),
+          const SizedBox(width: 10),
         ],
       ),
       body: SafeArea(
