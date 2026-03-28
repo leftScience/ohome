@@ -2,6 +2,7 @@ package router
 
 import (
 	"ohome/api"
+	"ohome/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -12,6 +13,7 @@ func InitQuarkFsRoutes() {
 
 		// 公共路由（无需登录，供播放器/外部访问）
 		rgQuarkPublic := rgPublic.Group("/quarkFs")
+		rgQuarkPublic.Use(middleware.StreamAuth())
 		{
 			rgQuarkPublic.GET("/:application/files/stream", quarkFsApi.StreamQuarkFile)
 			rgQuarkPublic.HEAD("/:application/files/stream", quarkFsApi.StreamQuarkFile)

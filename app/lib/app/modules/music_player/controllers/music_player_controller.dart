@@ -11,9 +11,11 @@ import '../../../data/models/quark_file_entry.dart';
 import '../../../data/storage/playback_progress_storage.dart';
 import '../../../data/storage/skip_settings_storage.dart';
 import '../../../data/storage/volume_settings_storage.dart';
+import '../../../services/auth_service.dart';
 import '../../../services/music_audio_handler.dart';
 import '../../../services/playback_audio_session.dart';
 import '../../../services/playback_entry_service.dart';
+import '../../../utils/app_env.dart';
 import '../../../utils/media_path.dart';
 
 enum _InitialTrackSource { none, preferred, explicitResume, storedResume }
@@ -34,6 +36,7 @@ class MusicPlayerController extends GetxController with WidgetsBindingObserver {
   final VolumeSettingsStorage _volumeStorage = VolumeSettingsStorage();
   final Random _random = Random();
   final WebdavApi _webdavApi = Get.find<WebdavApi>();
+  final AuthService _authService = Get.find<AuthService>();
   late final PlaybackAudioSession _audioSession = PlaybackAudioSession(
     onPauseRequested: pause,
     isPlaying: () => _player.state.playing,
@@ -762,7 +765,73 @@ class MusicPlayerController extends GetxController with WidgetsBindingObserver {
   }
 
   String _resolveStreamUrl(WebdavFileEntry entry) {
-    return entry.resolveStreamUrl(applicationType: _applicationType);
+    return _applyAccessTokenToStreamUrl(
+      entry.resolveStreamUrl(applicationType: _applicationType),
+    );
+  }
+
+  String _resolveTrackUrlForPlayback(MusicTrack track) {
+    final path = track.path.trim();
+    if (path.isNotEmpty) {
+      return _buildStreamUrl(path);
+    }
+    return _applyAccessTokenToStreamUrl(track.url);
+  }
+
+  String _buildStreamUrl(String path) {
+    final base = Uri.parse(AppEnv.instance.apiBaseUrl);
+    final streamPath = _joinPath(
+      base.path,
+      'public/quarkFs/$_applicationType/files/stream',
+    );
+    final accessToken = _currentAccessToken();
+    return base
+        .replace(
+          path: streamPath,
+          queryParameters: <String, String>{
+            'path': path,
+            ...?accessToken == null
+                ? null
+                : <String, String>{'access_token': accessToken},
+          },
+        )
+        .toString();
+  }
+
+  String _applyAccessTokenToStreamUrl(String rawUrl) {
+    final uri = Uri.tryParse(rawUrl.trim());
+    if (uri == null || !_isLocalProxyStreamUrl(rawUrl)) return rawUrl;
+
+    final nextQuery = <String, String>{...uri.queryParameters};
+    final accessToken = _currentAccessToken();
+    if (accessToken == null) {
+      nextQuery.remove('access_token');
+    } else {
+      nextQuery['access_token'] = accessToken;
+    }
+    return uri.replace(queryParameters: nextQuery).toString();
+  }
+
+  bool _isLocalProxyStreamUrl(String rawUrl) {
+    final uri = Uri.tryParse(rawUrl.trim());
+    if (uri == null) return false;
+    final normalizedPath = uri.path.replaceAll('\\', '/').trim();
+    return (normalizedPath.contains('/public/quarkFs/') ||
+            normalizedPath.contains('/quarkFs/')) &&
+        normalizedPath.endsWith('/files/stream');
+  }
+
+  String? _currentAccessToken() {
+    final token = _authService.accessToken.value?.trim() ?? '';
+    if (token.isEmpty) return null;
+    return token;
+  }
+
+  static String _joinPath(String basePath, String child) {
+    final bp = basePath.trim().isEmpty ? '' : basePath;
+    if (bp.isEmpty) return '/$child';
+    if (bp.endsWith('/')) return '$bp$child';
+    return '$bp/$child';
   }
 
   List<String> _parseSupportedExtensions(
@@ -820,7 +889,7 @@ class MusicPlayerController extends GetxController with WidgetsBindingObserver {
       tracks.length - 1,
     );
     final medias = tracks
-        .map((track) => Media(track.url))
+        .map((track) => Media(_resolveTrackUrlForPlayback(track)))
         .toList(growable: false);
     await _player.open(Playlist(medias, index: safeIndex), play: false);
     await _player.setVolume(volume.value * 100);
