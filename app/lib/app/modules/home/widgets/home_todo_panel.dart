@@ -12,9 +12,10 @@ class HomeTodoPanel extends StatelessWidget {
   static const Color _panelBackground = Color(0xFF15161B);
   static const Color _panelBackgroundSoft = Color(0xFF1A1B22);
   static const Color _panelBorder = Color(0xFF2B2D35);
-  static const Color _tileBackground = Color(0xFF202228);
   static const Color _tileBackgroundSoft = Color(0xFF1B1D23);
-  static const Color _tileBorder = Color(0xFF30323B);
+  static const Color _tilePendingStart = Color(0xFF31254E);
+  static const Color _tilePendingMiddle = Color(0xFF242B3F);
+  static const Color _tilePendingEnd = Color(0xFF1C2434);
   static const Color _textMuted = Color(0xFF8E919A);
 
   HomeController get controller => Get.find<HomeController>();
@@ -365,6 +366,12 @@ class HomeTodoPanel extends StatelessWidget {
   }) {
     final processing = controller.isProcessingTodo(item.id);
     final completed = item.completed;
+    final tileColors = completed
+        ? [
+            _tileBackgroundSoft.withValues(alpha: 0.92),
+            _panelBackgroundSoft.withValues(alpha: 0.9),
+          ]
+        : [_tilePendingStart, _tilePendingMiddle, _tilePendingEnd];
 
     return Material(
       color: Colors.transparent,
@@ -380,17 +387,12 @@ class HomeTodoPanel extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: completed
-                  ? [
-                      _tileBackgroundSoft.withValues(alpha: 0.92),
-                      _panelBackgroundSoft.withValues(alpha: 0.9),
-                    ]
-                  : [_tileBackground, const Color(0xFF1E2027)],
+              colors: tileColors,
             ),
             border: Border.all(
               color: completed
                   ? _panelBorder.withValues(alpha: 0.96)
-                  : _tileBorder.withValues(alpha: 0.98),
+                  : _panelAccent.withValues(alpha: 0.24),
             ),
             boxShadow: [
               BoxShadow(
@@ -398,6 +400,12 @@ class HomeTodoPanel extends StatelessWidget {
                 blurRadius: 10,
                 offset: const Offset(0, 6),
               ),
+              if (!completed)
+                BoxShadow(
+                  color: _panelAccent.withValues(alpha: 0.1),
+                  blurRadius: 14,
+                  offset: const Offset(0, 4),
+                ),
             ],
           ),
           child: Row(
