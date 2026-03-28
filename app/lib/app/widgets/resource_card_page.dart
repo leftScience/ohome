@@ -242,7 +242,8 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
             if (widget.enableRename && idleCardActionsVisible)
               TextButton(
                 style: _renameActionButtonStyle,
-                onPressed: entries.isEmpty || actionDisabled
+                onPressed:
+                    entries.isEmpty || actionDisabled || selectedCount != 1
                     ? null
                     : _enterRenameMode,
                 child: const Text('重命名'),
@@ -256,7 +257,8 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
             if (widget.enableDelete && idleCardActionsVisible)
               TextButton(
                 style: _deleteActionButtonStyle,
-                onPressed: entries.isEmpty || actionDisabled
+                onPressed:
+                    entries.isEmpty || actionDisabled || selectedCount == 0
                     ? null
                     : _enterSelectionMode,
                 child: const Text('删除'),
@@ -278,7 +280,8 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
             if (widget.enableMove && idleCardActionsVisible)
               TextButton(
                 style: _moveActionButtonStyle,
-                onPressed: entries.isEmpty || actionDisabled
+                onPressed:
+                    entries.isEmpty || actionDisabled || selectedCount == 0
                     ? null
                     : _enterMoveMode,
                 child: const Text('移动'),
@@ -551,31 +554,36 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
 
   void _enterSelectionMode() {
     if (!widget.enableDelete || _selectionMode || _operationInProgress) return;
+    if (_selectedPaths.isEmpty) {
+      Get.snackbar('提示', '请先选择要删除的资源');
+      return;
+    }
     setState(() {
       _cardActionsVisible = true;
       _selectionMode = true;
       _renameMode = false;
       _moveMode = false;
-      _selectedPaths.clear();
     });
   }
 
   void _exitSelectionMode() {
-    if (!_selectionMode && _selectedPaths.isEmpty) return;
+    if (!_selectionMode) return;
     setState(() {
       _selectionMode = false;
-      _selectedPaths.clear();
     });
   }
 
   void _enterRenameMode() {
     if (!widget.enableRename || _renameMode || _operationInProgress) return;
+    if (_selectedPaths.length != 1) {
+      Get.snackbar('提示', '请先选择 1 项资源');
+      return;
+    }
     setState(() {
       _cardActionsVisible = true;
       _renameMode = true;
       _selectionMode = false;
       _moveMode = false;
-      _selectedPaths.clear();
     });
   }
 
@@ -588,23 +596,15 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
 
   void _enterMoveMode() {
     if (!widget.enableMove || _moveMode || _operationInProgress) return;
+    if (_selectedPaths.isEmpty) {
+      Get.snackbar('提示', '请先选择要移动的资源');
+      return;
+    }
     setState(() {
       _cardActionsVisible = true;
       _moveMode = true;
       _renameMode = false;
       _selectionMode = false;
-      _selectedPaths.clear();
-    });
-  }
-
-  void _showCardActions() {
-    if (_operationInProgress) return;
-    if (!widget.enableRename && !widget.enableDelete && !widget.enableMove) {
-      return;
-    }
-    if (_cardActionsVisible) return;
-    setState(() {
-      _cardActionsVisible = true;
     });
   }
 
@@ -626,10 +626,9 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
   }
 
   void _exitMoveMode() {
-    if (!_moveMode && _selectedPaths.isEmpty) return;
+    if (!_moveMode) return;
     setState(() {
       _moveMode = false;
-      _selectedPaths.clear();
     });
   }
 
@@ -658,11 +657,10 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
       } else {
         _selectedPaths.add(path);
       }
-      if (_selectionMode && _selectedPaths.isEmpty) {
+      if (_selectedPaths.isEmpty) {
         _selectionMode = false;
-      }
-      if (_moveMode && _selectedPaths.isEmpty) {
         _moveMode = false;
+        _renameMode = false;
       }
     });
   }
@@ -1065,6 +1063,7 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
     final renameColor = Theme.of(context).colorScheme.secondary;
     final moveColor = Theme.of(context).colorScheme.tertiary;
     final deletingColor = Theme.of(context).colorScheme.error;
+    final selectionActive = _cardActionsVisible || _selectionMode || _moveMode;
     final borderColor = deleting
         ? deletingColor.withValues(alpha: 0.9)
         : (selected
@@ -1104,10 +1103,11 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
               ? null
               : () async {
                   if (_renameMode) {
+                    if (!selected) return;
                     await _showRenameDialog(entry);
                     return;
                   }
-                  if (_selectionMode || _moveMode) {
+                  if (selectionActive) {
                     _toggleSelection(entry);
                     return;
                   }
@@ -1125,12 +1125,27 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
                   _operationInProgress
               ? null
               : () {
-                  if (_selectionMode || _moveMode) {
+                  if (_renameMode) {
+                    if (!selected) {
+                      _toggleSelection(entry);
+                    }
+                    return;
+                  }
+                  if (selectionActive) {
                     _toggleSelection(entry);
                     return;
                   }
-                  if (_renameMode) return;
-                  _showCardActions();
+                  final path = entry.path.trim();
+                  if (path.isEmpty) return;
+                  setState(() {
+                    _cardActionsVisible = true;
+                    _selectionMode = false;
+                    _renameMode = false;
+                    _moveMode = false;
+                    _selectedPaths
+                      ..clear()
+                      ..add(path);
+                  });
                 },
           child: Padding(
             padding: const EdgeInsets.all(12),
@@ -1155,19 +1170,23 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
                         ),
                       ),
                     ),
-                    if (_selectionMode || _moveMode)
+                    if (_renameMode)
+                      Icon(
+                        selected
+                            ? Icons.edit_rounded
+                            : Icons.radio_button_unchecked_rounded,
+                        size: selected ? 18 : 20,
+                        color: selected
+                            ? renameColor.withValues(alpha: 0.9)
+                            : Colors.white54,
+                      )
+                    else if (selectionActive)
                       Icon(
                         selected
                             ? Icons.check_circle_rounded
                             : Icons.radio_button_unchecked_rounded,
                         size: 20,
                         color: selected ? highlightColor : Colors.white54,
-                      )
-                    else if (renameActive)
-                      Icon(
-                        Icons.edit_rounded,
-                        size: 18,
-                        color: renameColor.withValues(alpha: 0.9),
                       )
                     else if (moveActive)
                       Icon(
