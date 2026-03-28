@@ -49,10 +49,6 @@ func (m *Manager) Info() (InfoResponse, error) {
 
 func (m *Manager) Check(req CheckRequest) (CheckResponse, error) {
 	mode := DetectDeployMode()
-	channel := strings.TrimSpace(req.Channel)
-	if channel == "" {
-		channel = DefaultChannel()
-	}
 	manifest, err := FetchManifest(ManifestURL())
 	if err != nil {
 		return CheckResponse{}, err
@@ -149,11 +145,6 @@ func (m *Manager) Task(taskID string) (*Task, error) {
 }
 
 func (m *Manager) runApplyTask(task *Task, req ApplyRequest) {
-	mode := task.DeployMode
-	channel := strings.TrimSpace(req.Channel)
-	if channel == "" {
-		channel = DefaultChannel()
-	}
 	manifest, err := FetchManifest(ManifestURL())
 	if err != nil {
 		m.failTask(task, err)
@@ -172,16 +163,9 @@ func (m *Manager) runApplyTask(task *Task, req ApplyRequest) {
 	state, _ := m.store.LoadState()
 	previousVersion := task.CurrentVersion
 	previousImage := state.CurrentImage
-	if mode == DeployModeDocker {
-		if err := m.applyDocker(task, manifest, targetVersion, previousVersion, previousImage); err != nil {
-			m.failTask(task, err)
-			return
-		}
-	} else {
-		if err := m.applyPortable(task, manifest, targetVersion, previousVersion); err != nil {
-			m.failTask(task, err)
-			return
-		}
+	if err := m.applyDocker(task, manifest, previousImage); err != nil {
+		m.failTask(task, err)
+		return
 	}
 	if task.Status == StatusRolledBack {
 		state, _ = m.store.LoadState()
@@ -189,10 +173,8 @@ func (m *Manager) runApplyTask(task *Task, req ApplyRequest) {
 		state.CurrentTask = task
 		state.CurrentVersion = previousVersion
 		state.PreviousVersion = ""
-		if mode == DeployModeDocker {
-			state.CurrentImage = previousImage
-			state.PreviousImage = ""
-		}
+		state.CurrentImage = previousImage
+		state.PreviousImage = ""
 		_ = m.store.SaveState(state)
 		return
 	}
@@ -202,11 +184,9 @@ func (m *Manager) runApplyTask(task *Task, req ApplyRequest) {
 	state.CurrentTask = task
 	state.CurrentVersion = targetVersion
 	state.PreviousVersion = previousVersion
-	state.DeployMode = mode
-	if mode == DeployModeDocker {
-		state.PreviousImage = previousImage
-		state.CurrentImage = manifest.Docker.Image + ":" + manifest.Docker.Tag
-	}
+	state.DeployMode = DeployModeDocker
+	state.PreviousImage = previousImage
+	state.CurrentImage = manifest.Docker.Image + ":" + manifest.Docker.Tag
 	_ = m.store.SaveState(state)
 }
 
@@ -216,109 +196,25 @@ func (m *Manager) runRollbackTask(task *Task) {
 		m.failTask(task, err)
 		return
 	}
-	mode := DetectDeployMode()
-	currentVersion := m.detectCurrentVersion(mode)
-	if mode == DeployModeDocker {
-		if strings.TrimSpace(state.PreviousImage) == "" {
-			m.failTask(task, fmt.Errorf("缺少回滚镜像信息"))
-			return
-		}
-		if err := m.rollbackDocker(task, state.PreviousImage, state.PreviousVersion); err != nil {
-			m.failTask(task, err)
-			return
-		}
-	} else {
-		if err := m.rollbackPortable(task, state.PreviousVersion); err != nil {
-			m.failTask(task, err)
-			return
-		}
+	currentVersion := m.detectCurrentVersion(DetectDeployMode())
+	if strings.TrimSpace(state.PreviousImage) == "" {
+		m.failTask(task, fmt.Errorf("缺少回滚镜像信息"))
+		return
+	}
+	if err := m.rollbackDocker(task, state.PreviousImage, state.PreviousVersion); err != nil {
+		m.failTask(task, err)
+		return
 	}
 	m.completeTask(task, StatusRolledBack, 100, "已回滚到上一个稳定版本", true)
 	state.ActiveTaskID = ""
 	state.CurrentTask = task
 	state.CurrentVersion = state.PreviousVersion
 	state.PreviousVersion = currentVersion
-	if mode == DeployModeDocker {
-		state.CurrentImage, state.PreviousImage = state.PreviousImage, state.CurrentImage
-	}
+	state.CurrentImage, state.PreviousImage = state.PreviousImage, state.CurrentImage
 	_ = m.store.SaveState(state)
 }
 
-func (m *Manager) applyPortable(task *Task, manifest ServerManifest, targetVersion string, previousVersion string) error {
-	artifact, ok := manifest.Portable[CurrentPortableArtifactKey()]
-	if !ok || strings.TrimSpace(artifact.URL) == "" {
-		return fmt.Errorf("当前平台缺少可用便携包")
-	}
-	m.advanceTask(task, StatusDownloading, 20, "下载便携包")
-	archivePath := filepath.Join(PortableDownloadDir(), fmt.Sprintf("ohome-%s.zip", targetVersion))
-	if err := DownloadFile(artifact.URL, archivePath); err != nil {
-		return err
-	}
-	m.advanceTask(task, StatusVerifying, 35, "校验安装包")
-	if checksum := strings.TrimSpace(artifact.SHA256); checksum != "" {
-		actual, err := ComputeSHA256(archivePath)
-		if err != nil {
-			return err
-		}
-		if !strings.EqualFold(actual, checksum) {
-			return fmt.Errorf("安装包校验失败")
-		}
-	}
-	m.advanceTask(task, StatusStopping, 45, "停止当前服务")
-	if err := stopPortableServer(); err != nil {
-		return err
-	}
-	m.advanceTask(task, StatusInstalling, 60, "解压新版本")
-	versionDir := filepath.Join(PortableVersionsDir(), targetVersion)
-	if err := os.RemoveAll(versionDir); err != nil {
-		return err
-	}
-	if err := unzipArchive(archivePath, versionDir); err != nil {
-		return err
-	}
-	m.advanceTask(task, StatusStarting, 75, "切换并启动新版本")
-	if err := writeCurrentPortableVersion(targetVersion); err != nil {
-		return err
-	}
-	if err := startPortableServerDetached(targetVersion); err != nil {
-		_ = writeCurrentPortableVersion(previousVersion)
-		return err
-	}
-	m.advanceTask(task, StatusHealthCheck, 90, "等待服务恢复")
-	if err := waitForHealth(HealthURLForMode(DeployModePortable), 40*time.Second); err != nil {
-		_ = stopPortableServer()
-		_ = writeCurrentPortableVersion(previousVersion)
-		_ = startPortableServerDetached(previousVersion)
-		if rollbackErr := waitForHealth(HealthURLForMode(DeployModePortable), 30*time.Second); rollbackErr == nil {
-			m.completeTask(task, StatusRolledBack, 100, "新版本启动失败，已自动回滚", true)
-			state, _ := m.store.LoadState()
-			state.ActiveTaskID = ""
-			state.CurrentTask = task
-			_ = m.store.SaveState(state)
-			return nil
-		}
-		return err
-	}
-	return nil
-}
-
-func (m *Manager) rollbackPortable(task *Task, targetVersion string) error {
-	m.advanceTask(task, StatusStopping, 40, "停止当前服务")
-	if err := stopPortableServer(); err != nil {
-		return err
-	}
-	m.advanceTask(task, StatusStarting, 70, "启动回滚版本")
-	if err := writeCurrentPortableVersion(targetVersion); err != nil {
-		return err
-	}
-	if err := startPortableServerDetached(targetVersion); err != nil {
-		return err
-	}
-	m.advanceTask(task, StatusHealthCheck, 90, "等待服务恢复")
-	return waitForHealth(HealthURLForMode(DeployModePortable), 40*time.Second)
-}
-
-func (m *Manager) applyDocker(task *Task, manifest ServerManifest, targetVersion string, previousVersion string, previousImage string) error {
+func (m *Manager) applyDocker(task *Task, manifest ServerManifest, previousImage string) error {
 	dockerImage := strings.TrimSpace(manifest.Docker.Image)
 	dockerTag := strings.TrimSpace(manifest.Docker.Tag)
 	if dockerImage == "" || dockerTag == "" {
@@ -421,11 +317,6 @@ func writeComposeImage(image string) error {
 func (m *Manager) detectCurrentVersion(mode DeployMode) string {
 	if version, err := detectVersionFromHealth(HealthURLForMode(mode)); err == nil && strings.TrimSpace(version) != "" {
 		return strings.TrimSpace(version)
-	}
-	if mode == DeployModePortable {
-		if version, err := readCurrentPortableVersion(); err == nil && strings.TrimSpace(version) != "" {
-			return strings.TrimSpace(version)
-		}
 	}
 	if state, err := m.store.LoadState(); err == nil && strings.TrimSpace(state.CurrentVersion) != "" {
 		return strings.TrimSpace(state.CurrentVersion)

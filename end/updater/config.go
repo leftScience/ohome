@@ -2,7 +2,6 @@ package updater
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -17,17 +16,7 @@ const (
 )
 
 func DetectDeployMode() DeployMode {
-	configured := strings.ToLower(strings.TrimSpace(viper.GetString("update.deployMode")))
-	switch configured {
-	case string(DeployModeDocker):
-		return DeployModeDocker
-	case string(DeployModePortable):
-		return DeployModePortable
-	}
-	if _, err := os.Stat("/.dockerenv"); err == nil {
-		return DeployModeDocker
-	}
-	return DeployModePortable
+	return DeployModeDocker
 }
 
 func ManifestURL() string {
@@ -57,10 +46,7 @@ func UpdaterToken() string {
 func UpdaterListenAddr() string {
 	value := strings.TrimSpace(viper.GetString("update.updater.listenAddr"))
 	if value == "" {
-		if DetectDeployMode() == DeployModeDocker {
-			return ":18091"
-		}
-		return "127.0.0.1:18091"
+		return ":18091"
 	}
 	return value
 }
@@ -68,44 +54,9 @@ func UpdaterListenAddr() string {
 func UpdaterBaseURL() string {
 	value := strings.TrimSpace(viper.GetString("update.updater.baseUrl"))
 	if value == "" {
-		if DetectDeployMode() == DeployModeDocker {
-			return "http://updater:18091"
-		}
-		return "http://127.0.0.1:18091"
+		return "http://updater:18091"
 	}
 	return strings.TrimRight(value, "/")
-}
-
-func PortableCurrentVersionFile() string {
-	value := strings.TrimSpace(viper.GetString("update.portable.currentVersionFile"))
-	if value == "" {
-		return conf.ResolveAppPath("current.txt")
-	}
-	return conf.ResolveAppPath(value)
-}
-
-func PortableVersionsDir() string {
-	value := strings.TrimSpace(viper.GetString("update.portable.versionsDir"))
-	if value == "" {
-		return conf.ResolveAppPath("versions")
-	}
-	return conf.ResolveAppPath(value)
-}
-
-func PortableServerPIDFile() string {
-	value := strings.TrimSpace(viper.GetString("update.portable.serverPidFile"))
-	if value == "" {
-		return conf.ResolveAppPath(filepath.Join("data", "update", "server.pid"))
-	}
-	return conf.ResolveAppPath(value)
-}
-
-func PortableDownloadDir() string {
-	value := strings.TrimSpace(viper.GetString("update.portable.downloadDir"))
-	if value == "" {
-		return conf.ResolveAppPath(filepath.Join("data", "update", "downloads"))
-	}
-	return conf.ResolveAppPath(value)
 }
 
 func DockerComposeProjectDir() string {
@@ -154,7 +105,7 @@ func DockerImageEnvName() string {
 	return value
 }
 
-func HealthURLForMode(mode DeployMode) string {
+func HealthURLForMode(_ DeployMode) string {
 	configured := strings.TrimSpace(viper.GetString("update.healthUrl"))
 	if configured != "" {
 		return configured
@@ -163,9 +114,5 @@ func HealthURLForMode(mode DeployMode) string {
 	if port == "" {
 		port = "18090"
 	}
-	host := "127.0.0.1"
-	if mode == DeployModeDocker {
-		host = "server"
-	}
-	return fmt.Sprintf("http://%s:%s/api/v1/public/discovery", host, port)
+	return fmt.Sprintf("http://server:%s/api/v1/public/discovery", port)
 }

@@ -7,7 +7,6 @@ services:
       PORT: 18090
       UPDATE_UPDATER_BASEURL: http://updater:18091
       UPDATE_UPDATER_TOKEN: ${OHOME_UPDATER_TOKEN:-ohome-local-updater}
-      UPDATE_DEPLOYMODE: docker
     volumes:
       - /opt/ohome/conf:/app/conf
       - /opt/ohome/data:/app/data
@@ -22,7 +21,6 @@ services:
     environment:
       UPDATE_UPDATER_LISTENADDR: :18091
       UPDATE_UPDATER_TOKEN: ${OHOME_UPDATER_TOKEN:-ohome-local-updater}
-      UPDATE_DEPLOYMODE: docker
       UPDATE_DOCKER_COMPOSEPROJECTDIR: /workspace
       UPDATE_DOCKER_COMPOSEFILE: docker-compose.release.yml
       UPDATE_DOCKER_ENVFILE: .env

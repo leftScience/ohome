@@ -55,7 +55,6 @@
 │   ├── conf/             # 配置文件
 │   ├── data/             # SQLite 数据库、实例数据
 │   ├── log/              # 日志目录
-│   ├── release/          # Windows/macOS 便携包启动脚本
 │   ├── router/           # 路由定义
 │   ├── service/          # 业务逻辑
 │   ├── sql/              # 初始化 SQL
@@ -75,63 +74,6 @@
 - API：`http://<你的主机IP>:18090/api/v1`
 - 发现接口：`http://<你的主机IP>:18090/api/v1/public/discovery`
 - Swagger：`http://127.0.0.1:18090/swagger/index.html`
-
-### 服务端便携包下载
-
-后端 Server Release 工作流会把 Windows 和 macOS 便携包发布到 GitHub Releases。
-
-- Release 页面：[https://github.com/leftScience/ohome/releases](https://github.com/leftScience/ohome/releases)
-- Windows x64：[https://github.com/leftScience/ohome/releases/latest/download/ohome-server_windows_amd64.zip](https://github.com/leftScience/ohome/releases/latest/download/ohome-server_windows_amd64.zip)
-- macOS Intel：[https://github.com/leftScience/ohome/releases/latest/download/ohome-server_darwin_amd64.zip](https://github.com/leftScience/ohome/releases/latest/download/ohome-server_darwin_amd64.zip)
-- macOS Apple Silicon：[https://github.com/leftScience/ohome/releases/latest/download/ohome-server_darwin_arm64.zip](https://github.com/leftScience/ohome/releases/latest/download/ohome-server_darwin_arm64.zip)
-- SHA256 校验：[https://github.com/leftScience/ohome/releases/latest/download/checksums.txt](https://github.com/leftScience/ohome/releases/latest/download/checksums.txt)
-
-### 服务端本地一键运行（Portable + 本地 updater）
-
-如果你不想装 Docker，直接使用服务端便携包最简单。便携包解压后即可本地运行
-
-#### Windows
-
-1. 下载 `ohome-server_windows_amd64.zip`
-2. 解压到任意目录，例如 `D:\\ohome-server`
-3. 双击 `start.bat`
-
-#### macOS
-
-请根据你的机器芯片下载对应版本：
-
-- Intel Mac：`ohome-server_darwin_amd64.zip`
-- Apple Silicon（M1/M2/M3）：`ohome-server_darwin_arm64.zip`
-
-1. 下载对应 zip 包
-2. 解压到任意目录，例如 `/Applications/ohome-server` 或 `~/Applications/ohome-server`
-3. 双击 `start.command`
-
-如果 macOS 首次启动时拦截：
-
-1. 在 Finder 中右键 `start.command`
-2. 选择“打开”
-3. 再次确认打开
-
-如果下载后的文件被系统打上隔离标记，可在解压目录执行：
-
-```bash
-xattr -dr com.apple.quarantine .
-./start.command
-```
-
-#### 运行目录说明
-
-- 配置文件：`conf/config.yaml`
-- SQLite 数据库：`data/ohome.db`
-- 日志目录：`log/`
-- 当前运行版本：`current.txt`
-- 历史版本目录：`versions/`
-- 本地更新执行器：`ohome-updater(.exe)`
-
-如果你需要修改端口、默认密码或数据库类型，先编辑 `conf/config.yaml`，再执行 `start.bat` 或 `start.command`。
-
-便携包启动脚本会先拉起本地 `ohome-updater`，再根据 `current.txt` 启动当前服务版本。后续客户端可通过“设置 → 服务端更新”发起版本升级或回滚。
 
 ### 服务端 Docker Hub 镜像部署（Docker + updater sidecar）
 
@@ -198,6 +140,7 @@ Docker 更新依赖 sidecar，因此不再推荐仅用单独的 `docker run` 启
   - `POST /api/v1/system/update/rollback`
 - Flutter 客户端入口：`设置 → 服务端更新`
 - 发布清单：`server-manifest.json`
+- 当前仅支持 Docker 部署链路更新，不再提供 Windows/macOS 服务端便携包
 
 ### 服务端配置说明
 
