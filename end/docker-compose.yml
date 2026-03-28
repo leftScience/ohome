@@ -8,9 +8,9 @@ services:
       GIN_MODE: release
       PORT: 18090
     volumes:
-      - ./conf/config.yaml:/app/conf/config.yaml:ro
-      - ./data:/app/data
-      - ./log:/app/log
+      - /opt/ohome/conf/config.yaml:/app/conf/config.yaml:ro
+      - /opt/ohome/data:/app/data
+      - /opt/ohome/log:/app/log
     ports:
       - "18090:18090"
     restart: unless-stopped

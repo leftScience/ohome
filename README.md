@@ -154,9 +154,9 @@ services:
       PORT: 18090
       UPDATE_UPDATER_BASEURL: http://updater:18091
     volumes:
-      - ./ohome/conf:/app/conf
-      - ./ohome/data:/app/data
-      - ./ohome/log:/app/log
+      - /opt/ohome/conf:/app/conf
+      - /opt/ohome/data:/app/data
+      - /opt/ohome/log:/app/log
     ports:
       - "18090:18090"
     restart: unless-stopped
@@ -169,19 +169,19 @@ services:
       UPDATE_DEPLOYMODE: docker
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./:/workspace
-      - ./ohome/conf:/app/conf
-      - ./ohome/data:/app/data
-      - ./ohome/log:/app/log
+      - /opt/ohome:/workspace
+      - /opt/ohome/conf:/app/conf
+      - /opt/ohome/data:/app/data
+      - /opt/ohome/log:/app/log
     restart: unless-stopped
 ```
 
 启动命令：
 
-首次启动只需要准备目录即可。镜像会在 `./ohome/conf/config.yaml` 不存在时自动写入默认配置文件。
-
 ```bash
-mkdir -p ./ohome/conf ./ohome/data ./ohome/log
+mkdir -p /opt/ohome/conf /opt/ohome/data /opt/ohome/log
+cp ./end/docker-compose.release.yml /opt/ohome/docker-compose.release.yml
+cd /opt/ohome
 docker compose -f docker-compose.release.yml pull
 docker compose -f docker-compose.release.yml up -d
 ```

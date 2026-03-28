@@ -9,9 +9,9 @@ services:
       UPDATE_UPDATER_TOKEN: ${OHOME_UPDATER_TOKEN:-ohome-local-updater}
       UPDATE_DEPLOYMODE: docker
     volumes:
-      - ./ohome/conf:/app/conf
-      - ./ohome/data:/app/data
-      - ./ohome/log:/app/log
+      - /opt/ohome/conf:/app/conf
+      - /opt/ohome/data:/app/data
+      - /opt/ohome/log:/app/log
     ports:
       - "18090:18090"
     restart: unless-stopped
@@ -30,8 +30,8 @@ services:
       UPDATE_HEALTHURL: http://server:18090/api/v1/public/discovery
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./:/workspace
-      - ./ohome/conf:/app/conf
-      - ./ohome/data:/app/data
-      - ./ohome/log:/app/log
+      - /opt/ohome:/workspace
+      - /opt/ohome/conf:/app/conf
+      - /opt/ohome/data:/app/data
+      - /opt/ohome/log:/app/log
     restart: unless-stopped
