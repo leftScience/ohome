@@ -5,8 +5,7 @@ import "time"
 type DeployMode string
 
 const (
-	DeployModePortable DeployMode = "portable"
-	DeployModeDocker   DeployMode = "docker"
+	DeployModeDocker DeployMode = "docker"
 )
 
 type TaskStatus string
@@ -15,20 +14,12 @@ const (
 	StatusQueued      TaskStatus = "queued"
 	StatusChecking    TaskStatus = "checking"
 	StatusDownloading TaskStatus = "downloading"
-	StatusVerifying   TaskStatus = "verifying"
-	StatusStopping    TaskStatus = "stopping"
 	StatusInstalling  TaskStatus = "installing"
-	StatusStarting    TaskStatus = "starting"
 	StatusHealthCheck TaskStatus = "health_check"
 	StatusSuccess     TaskStatus = "success"
 	StatusFailed      TaskStatus = "failed"
 	StatusRolledBack  TaskStatus = "rolled_back"
 )
-
-type PortableRelease struct {
-	URL    string `json:"url"`
-	SHA256 string `json:"sha256"`
-}
 
 type DockerRelease struct {
 	Image string `json:"image"`
@@ -36,12 +27,11 @@ type DockerRelease struct {
 }
 
 type ServerManifest struct {
-	Channel      string                     `json:"channel"`
-	Version      string                     `json:"version"`
-	ReleaseNotes string                     `json:"releaseNotes"`
-	PublishedAt  string                     `json:"publishedAt"`
-	Docker       DockerRelease              `json:"docker"`
-	Portable     map[string]PortableRelease `json:"portable"`
+	Channel      string        `json:"channel"`
+	Version      string        `json:"version"`
+	ReleaseNotes string        `json:"releaseNotes"`
+	PublishedAt  string        `json:"publishedAt"`
+	Docker       DockerRelease `json:"docker"`
 }
 
 type Task struct {

@@ -6,7 +6,7 @@ on:
       - "*"
 
 permissions:
-  contents: read
+  contents: write
   packages: write
 
 jobs:
@@ -118,3 +118,24 @@ jobs:
             CHANNEL=stable
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Generate server update manifest
+        shell: bash
+        env:
+          VERSION: ${{ github.ref_name }}
+          DOCKER_IMAGE: ${{ steps.images.outputs.dockerhub_server }}
+          DOCKER_TAG: ${{ github.ref_name }}
+          CHANNEL: stable
+        run: |
+          mkdir -p dist/server-release
+          bash scripts/generate-server-manifest.sh dist/server-release/server-manifest.json
+
+      - name: Publish GitHub Release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          generate_release_notes: true
+          overwrite_files: true
+          fail_on_unmatched_files: true
+          files: |
+            dist/server-release/server-manifest.json
