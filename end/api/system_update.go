@@ -6,6 +6,7 @@ import (
 	"ohome/utils"
 
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/viper"
 )
 
 type SystemUpdate struct {
@@ -21,6 +22,9 @@ func (a *SystemUpdate) Info(c *gin.Context) {
 	if _, ok := requireSuperAdmin(c); !ok {
 		return
 	}
+	if !ensureSystemUpdateEnabled(c) {
+		return
+	}
 	result, err := a.service.Info()
 	if err != nil {
 		utils.FailWithMessage(err.Error(), c)
@@ -31,6 +35,9 @@ func (a *SystemUpdate) Info(c *gin.Context) {
 
 func (a *SystemUpdate) Check(c *gin.Context) {
 	if _, ok := requireSuperAdmin(c); !ok {
+		return
+	}
+	if !ensureSystemUpdateEnabled(c) {
 		return
 	}
 	var req updater.CheckRequest
@@ -50,6 +57,9 @@ func (a *SystemUpdate) Apply(c *gin.Context) {
 	if _, ok := requireSuperAdmin(c); !ok {
 		return
 	}
+	if !ensureSystemUpdateEnabled(c) {
+		return
+	}
 	var req updater.ApplyRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.FailWithMessage(err.Error(), c)
@@ -67,6 +77,9 @@ func (a *SystemUpdate) Task(c *gin.Context) {
 	if _, ok := requireSuperAdmin(c); !ok {
 		return
 	}
+	if !ensureSystemUpdateEnabled(c) {
+		return
+	}
 	result, err := a.service.Task(c.Param("taskId"))
 	if err != nil {
 		utils.FailWithMessage(err.Error(), c)
@@ -77,6 +90,9 @@ func (a *SystemUpdate) Task(c *gin.Context) {
 
 func (a *SystemUpdate) Rollback(c *gin.Context) {
 	if _, ok := requireSuperAdmin(c); !ok {
+		return
+	}
+	if !ensureSystemUpdateEnabled(c) {
 		return
 	}
 	var req updater.RollbackRequest
@@ -90,4 +106,12 @@ func (a *SystemUpdate) Rollback(c *gin.Context) {
 		return
 	}
 	utils.OkWithData(result, c)
+}
+
+func ensureSystemUpdateEnabled(c *gin.Context) bool {
+	if viper.GetBool("mode.develop") {
+		utils.PermissionFail("开发环境已禁用后端更新功能", c)
+		return false
+	}
+	return true
 }
