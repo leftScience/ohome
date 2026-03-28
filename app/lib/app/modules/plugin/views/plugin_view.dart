@@ -72,14 +72,6 @@ class PluginView extends GetView<PluginController> {
                         onTap: controller.openUserManagement,
                       ),
                       SizedBox(height: 12.h),
-                      _SettingsMenuCard(
-                        icon: Icons.cloud_sync_outlined,
-                        iconColor: const Color(0xFF64B5F6),
-                        title: '服务端更新',
-                        subtitle: '查看后端版本、检查更新、执行升级与回滚',
-                        onTap: controller.openServerUpdate,
-                      ),
-                      SizedBox(height: 12.h),
                       _QuarkAdminMenuCard(
                         expanded: controller.quarkAdminMenuExpanded.value,
                         onTap: controller.toggleQuarkAdminMenu,
@@ -113,22 +105,11 @@ class PluginView extends GetView<PluginController> {
                 () => _SettingsMenuCard(
                   icon: Icons.system_update_alt_rounded,
                   iconColor: const Color(0xFF64B5F6),
-                  title: '检查更新',
-                  subtitle: controller.appUpdateChecking.value
-                      ? '正在检查版本信息'
+                  title: '更新管理',
+                  subtitle: controller.isSuperAdmin
+                      ? '统一管理 App 与服务端更新'
                       : '检查当前是否有可用新版本',
-                  onTap: controller.appUpdateChecking.value
-                      ? null
-                      : controller.checkAppUpdate,
-                  trailing: controller.appUpdateChecking.value
-                      ? SizedBox(
-                          width: 18.w,
-                          height: 18.w,
-                          child: const CircularProgressIndicator(
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : null,
+                  onTap: controller.openServerUpdate,
                 ),
               ),
               SizedBox(height: 12.h),
@@ -846,7 +827,6 @@ class _SettingsMenuCard extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.onTap,
-    this.trailing,
   });
 
   final IconData icon;
@@ -854,7 +834,6 @@ class _SettingsMenuCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final VoidCallback? onTap;
-  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -902,12 +881,11 @@ class _SettingsMenuCard extends StatelessWidget {
                   ],
                 ),
               ),
-              trailing ??
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    size: 20.w,
-                    color: Colors.white38,
-                  ),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 20.w,
+                color: Colors.white38,
+              ),
             ],
           ),
         ),

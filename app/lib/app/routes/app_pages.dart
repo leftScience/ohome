@@ -143,7 +143,7 @@ class AppPages {
       name: _Paths.SERVER_UPDATE,
       page: () => const ServerUpdateView(),
       binding: ServerUpdateBinding(),
-      middlewares: [AuthMiddleware(), SuperAdminMiddleware()],
+      middlewares: [AuthMiddleware()],
     ),
     GetPage(
       name: _Paths.SEARCH,
