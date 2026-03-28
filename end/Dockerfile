@@ -28,9 +28,14 @@ FROM alpine:3.19
 
 WORKDIR /app
 
+ARG VERSION=0.0.1
+ARG DEFAULT_UPDATE_MANIFEST_URL=
+
 ENV GIN_MODE=release
 ENV PORT=18090
-ARG VERSION=0.0.1
+ENV UPDATE_UPDATER_BASEURL=http://127.0.0.1:18091
+ENV UPDATE_UPDATER_TOKEN=ohome-local-updater
+ENV UPDATE_MANIFESTURL=${DEFAULT_UPDATE_MANIFEST_URL}
 
 # 创建配置/数据目录，默认配置和 sql 初始化文件随镜像一起拷贝
 RUN apk add --no-cache ca-certificates tzdata && mkdir -p /app/bin /app/conf /app/data /app/log /app/sql /app/defaults

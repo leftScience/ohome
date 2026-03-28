@@ -35,6 +35,25 @@ jobs:
             exit 1
           fi
 
+      - name: Derive baked manifest URL
+        shell: bash
+        run: |
+          MINIO_ENDPOINT="${{ secrets.MINIO_ENDPOINT }}"
+          MINIO_ENDPOINT="${MINIO_ENDPOINT%/}"
+          MINIO_BUCKET="${{ secrets.MINIO_BUCKET }}"
+          MINIO_PUBLIC_BASE_URL="${{ secrets.MINIO_PUBLIC_BASE_URL }}"
+          MINIO_PUBLIC_BASE_URL="${MINIO_PUBLIC_BASE_URL%/}"
+
+          if [[ -z "${MINIO_PUBLIC_BASE_URL}" ]]; then
+            if [[ -z "${MINIO_ENDPOINT}" || -z "${MINIO_BUCKET}" ]]; then
+              echo "::error::Missing MINIO_PUBLIC_BASE_URL, or MINIO_ENDPOINT + MINIO_BUCKET for baked manifest URL."
+              exit 1
+            fi
+            MINIO_PUBLIC_BASE_URL="${MINIO_ENDPOINT}/${MINIO_BUCKET}"
+          fi
+
+          echo "DEFAULT_UPDATE_MANIFEST_URL=${MINIO_PUBLIC_BASE_URL}/server/server.json" >> "$GITHUB_ENV"
+
       - name: Derive image names
         id: images
         shell: bash
@@ -115,5 +134,6 @@ jobs:
             BUILD_TIME=${{ steps.meta.outputs.build_time }}
             CHANNEL=stable
             RUNTIME_VERSION=${{ inputs.runtime_version }}
+            DEFAULT_UPDATE_MANIFEST_URL=${{ env.DEFAULT_UPDATE_MANIFEST_URL }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

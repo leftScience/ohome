@@ -49,5 +49,6 @@ jobs:
             BUILD_TIME=${{ steps.meta.outputs.build_time }}
             CHANNEL=stable
             RUNTIME_VERSION=${{ env.RUNTIME_VERSION }}
+            DEFAULT_UPDATE_MANIFEST_URL=https://example.invalid/server/server.json
           cache-from: type=gha
           cache-to: type=gha,mode=max

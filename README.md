@@ -79,7 +79,23 @@
 
 Docker Hub 仓库：`hanlinwang0606/ohome`
 
-推荐直接使用仓库中的 [`end/docker-compose.release.yml`](./end/docker-compose.release.yml)。它只启动一个 `server` 容器，容器内由 `launcher` 管理实际业务进程，并通过 OSS/MinIO 上的 Linux 二进制包完成更新。
+当前推荐使用单容器部署。容器内由 `launcher` 管理实际业务进程，并通过 OSS/MinIO 上的 Linux 二进制包完成更新。
+
+部署前你至少需要准备两项：
+
+- 一台已安装 Docker 的 Linux 主机
+- 一份通过 GitHub Actions 手动发布出来的 runtime 镜像
+
+#### 一行命令快速启动（docker run）
+
+官方 runtime 镜像已经内置默认的服务端滚动清单地址，直接执行即可：
+
+```bash
+mkdir -p /opt/ohome/conf /opt/ohome/data /opt/ohome/log && docker run -d --name ohome-server --restart unless-stopped -p 18090:18090 -v /opt/ohome/conf:/app/conf -v /opt/ohome/data:/app/data -v /opt/ohome/log:/app/log hanlinwang0606/ohome:runtime-v2026.03.1
+```
+
+#### 推荐方式（docker compose）
+推荐直接使用仓库中的 [`end/docker-compose.release.yml`](./end/docker-compose.release.yml)。它只启动一个 `server` 容器，后续手动升级 runtime 镜像时也更方便维护。
 
 示例：
 
@@ -91,9 +107,6 @@ services:
     environment:
       GIN_MODE: release
       PORT: 18090
-      UPDATE_MANIFESTURL: ${OHOME_SERVER_MANIFEST_URL:-https://your-minio.example.com/ohome/server/server.json}
-      UPDATE_UPDATER_BASEURL: http://127.0.0.1:18091
-      UPDATE_UPDATER_TOKEN: ${OHOME_UPDATER_TOKEN:-ohome-local-updater}
     volumes:
       - /opt/ohome/conf:/app/conf
       - /opt/ohome/data:/app/data
@@ -103,11 +116,18 @@ services:
     restart: unless-stopped
 ```
 
-启动命令：
+首次启动命令：
 
 ```bash
 mkdir -p /opt/ohome/conf /opt/ohome/data /opt/ohome/log
 cp ./end/docker-compose.release.yml /opt/ohome/docker-compose.release.yml
+cd /opt/ohome
+docker compose -f docker-compose.release.yml up -d
+```
+
+如果你是升级 runtime 镜像，使用：
+
+```bash
 cd /opt/ohome
 docker compose -f docker-compose.release.yml pull
 docker compose -f docker-compose.release.yml up -d
@@ -118,8 +138,9 @@ docker compose -f docker-compose.release.yml up -d
 - 业务版本：tag 触发，构建 `linux-amd64` / `linux-arm64` 二进制并上传到 OSS/MinIO
 - Docker runtime 镜像：手动触发 GitHub Action，仅在 launcher、基础镜像或运行时底座变化时发布
 - runtime 基线版本统一记录在 [`end/runtime-version.txt`](./end/runtime-version.txt)，`server-binary-release.yml` 会用它填充 `minRuntimeVersion/recommendedRuntimeVersion`
+- 手动 runtime 发布时，工作流会基于 GitHub Secrets 自动计算并烘入默认 `UPDATE_MANIFESTURL`
 
-服务端自动更新依赖 `UPDATE_MANIFESTURL` 指向的滚动清单，例如：`https://<你的 MinIO 域名>/server/server.json`。
+服务端自动更新依赖 `UPDATE_MANIFESTURL` 指向的滚动清单，例如：`https://<你的 MinIO 域名>/server/server.json`。如果你使用官方发布的 runtime 镜像，这个值已经预置在镜像中。
 
 手动发布 runtime 镜像时，`docker-runtime-release.yml` 的 `runtime_version` 输入需要与 [`end/runtime-version.txt`](./end/runtime-version.txt) 保持一致。
 

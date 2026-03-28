@@ -5,9 +5,6 @@ services:
     environment:
       GIN_MODE: release
       PORT: 18090
-      UPDATE_MANIFESTURL: ${OHOME_SERVER_MANIFEST_URL:-https://your-minio.example.com/ohome/server/server.json}
-      UPDATE_UPDATER_BASEURL: http://127.0.0.1:18091
-      UPDATE_UPDATER_TOKEN: ${OHOME_UPDATER_TOKEN:-ohome-local-updater}
     volumes:
       - /opt/ohome/conf:/app/conf
       - /opt/ohome/data:/app/data
