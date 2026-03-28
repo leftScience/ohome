@@ -37,6 +37,8 @@ dependencies:
   screen_brightness: ^2.1.7
   volume_controller: ^3.4.3
   device_info_plus: ^12.3.0
+  crop_your_image: ^2.0.0
+  path: ^1.9.1
 
 dev_dependencies:
   flutter_lints: ^6.0.0

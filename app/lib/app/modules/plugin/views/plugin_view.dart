@@ -230,6 +230,13 @@ class PluginView extends GetView<PluginController> {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(fontSize: 12.sp, color: Colors.white54),
                   ),
+                  if (user != null) ...[
+                    SizedBox(height: 6.h),
+                    Text(
+                      '点击更换头像',
+                      style: TextStyle(fontSize: 11.sp, color: Colors.white38),
+                    ),
+                  ],
                 ],
               ),
             ),

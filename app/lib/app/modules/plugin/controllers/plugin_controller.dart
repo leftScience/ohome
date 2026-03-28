@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart' as path;
 
 import '../../../data/models/user_model.dart';
 import '../../../data/api/user.dart';
 import '../../../routes/app_pages.dart';
 import '../../../services/auth_service.dart';
+import '../widgets/avatar_crop_sheet.dart';
 
 class PluginController extends GetxController {
   PluginController({
@@ -91,16 +93,26 @@ class PluginController extends GetxController {
       return;
     }
 
-    final file = await _imagePicker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 85,
-      maxWidth: 1280,
-    );
-    if (file == null) return;
-
-    avatarUploading.value = true;
     try {
-      await _userApi.uploadAvatar(file);
+      final file = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 90,
+        maxWidth: 1600,
+      );
+      if (file == null) return;
+
+      final imageBytes = await file.readAsBytes();
+      final croppedBytes = await AvatarCropSheet.show(imageBytes: imageBytes);
+      if (croppedBytes == null) return;
+
+      final uploadFile = XFile.fromData(
+        croppedBytes,
+        name: _buildAvatarUploadFileName(file),
+        mimeType: 'image/png',
+      );
+
+      avatarUploading.value = true;
+      await _userApi.uploadAvatar(uploadFile);
       await _authService.refreshProfile();
       Get.snackbar('提示', '头像更新成功');
     } catch (error) {
@@ -159,5 +171,14 @@ class PluginController extends GetxController {
     }
     Get.snackbar('提示', '仅超级管理员可访问');
     return false;
+  }
+
+  String _buildAvatarUploadFileName(XFile sourceFile) {
+    final rawName = sourceFile.name.trim().isNotEmpty
+        ? sourceFile.name.trim()
+        : path.basename(sourceFile.path);
+    final baseName = path.basenameWithoutExtension(rawName).trim();
+    final normalizedBaseName = baseName.isNotEmpty ? baseName : 'avatar';
+    return '${normalizedBaseName}_avatar.png';
   }
 }
