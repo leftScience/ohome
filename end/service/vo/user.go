@@ -18,6 +18,10 @@ type UserRegisterStatusVO struct {
 	Enabled bool `json:"enabled"`
 }
 
+type UserPasswordStatusVO struct {
+	UsingDefaultPassword bool `json:"usingDefaultPassword"`
+}
+
 func BuildUserVO(user model.User) UserVO {
 	return UserVO{
 		ID:        user.ID,

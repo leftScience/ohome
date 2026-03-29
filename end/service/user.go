@@ -194,6 +194,20 @@ func (m *UserService) GetProfile(loginUser model.LoginUser) (model.User, error) 
 	return userDao.GetUserById(loginUser.ID)
 }
 
+func (m *UserService) IsUsingDefaultPassword(loginUser model.LoginUser) (bool, error) {
+	defaultPassword := strings.TrimSpace(viper.GetString("config.defaultPassword"))
+	if defaultPassword == "" {
+		return false, nil
+	}
+
+	mUser, err := userDao.GetUserById(loginUser.ID)
+	if err != nil {
+		return false, errors.New("用户不存在")
+	}
+
+	return utils.CompareHashAndPassword(mUser.Password, defaultPassword), nil
+}
+
 func (m *UserService) RefreshToken(iUserRefreshTokenDTO *dto.UserRefreshTokenDTO) (string, string, error) {
 	var errResult error
 	var accessToken string

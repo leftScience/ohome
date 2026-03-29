@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../utils/http_client.dart';
+import '../models/password_status.dart';
 import '../models/user_model.dart';
 import '../models/user_list_result.dart';
 import '../models/user_upsert_payload.dart';
@@ -37,6 +38,14 @@ class UserApi {
     return _httpClient.get<UserModel>(
       '/user/profile',
       decoder: _decodeUserOrThrow,
+    );
+  }
+
+  Future<PasswordStatus> getPasswordStatus({bool showErrorToast = true}) {
+    return _httpClient.get<PasswordStatus>(
+      '/user/password/status',
+      showErrorToast: showErrorToast,
+      decoder: _decodePasswordStatusOrThrow,
     );
   }
 
@@ -81,6 +90,20 @@ class UserApi {
     );
   }
 
+  Future<void> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) {
+    return _httpClient.post<void>(
+      '/user/changePwd',
+      data: <String, dynamic>{
+        'oldPassword': oldPassword,
+        'newPassword': newPassword,
+      },
+      decoder: (_) {},
+    );
+  }
+
   Future<bool> uploadAvatar(XFile file) async {
     final bytes = await file.readAsBytes();
     final fileName = file.name.trim().isNotEmpty ? file.name.trim() : 'avatar';
@@ -110,5 +133,13 @@ class UserApi {
       return UserListResult.fromJson(data.cast<String, dynamic>());
     }
     throw ApiException('用户列表响应格式错误');
+  }
+
+  static PasswordStatus _decodePasswordStatusOrThrow(dynamic data) {
+    if (data is Map<String, dynamic>) return PasswordStatus.fromJson(data);
+    if (data is Map) {
+      return PasswordStatus.fromJson(data.cast<String, dynamic>());
+    }
+    throw ApiException('密码状态响应格式错误');
   }
 }

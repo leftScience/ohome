@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:ohome/app/data/api/auth.dart';
+import 'package:ohome/app/data/models/password_status.dart';
 import 'package:ohome/app/data/models/login_result.dart';
 import 'package:ohome/app/data/models/register_status.dart';
 import 'package:ohome/app/data/models/token_pair.dart';
@@ -109,6 +110,25 @@ class AuthService extends GetxService {
     final profile = await _userApi.getProfile();
     await _applyUser(profile);
     return profile;
+  }
+
+  Future<PasswordStatus> getPasswordStatus({bool showErrorToast = true}) {
+    return _userApi.getPasswordStatus(showErrorToast: showErrorToast);
+  }
+
+  Future<bool> isUsingDefaultPassword({bool showErrorToast = true}) async {
+    final status = await getPasswordStatus(showErrorToast: showErrorToast);
+    return status.usingDefaultPassword;
+  }
+
+  Future<void> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) {
+    return _userApi.changePassword(
+      oldPassword: oldPassword,
+      newPassword: newPassword,
+    );
   }
 
   Future<void> _syncProfileSilently() async {

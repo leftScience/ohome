@@ -8,6 +8,7 @@ import '../../../data/api/user.dart';
 import '../../../routes/app_pages.dart';
 import '../../../services/auth_service.dart';
 import '../widgets/avatar_crop_sheet.dart';
+import '../widgets/change_password_sheet.dart';
 
 class PluginController extends GetxController {
   PluginController({
@@ -37,6 +38,10 @@ class PluginController extends GetxController {
 
   void openServerUpdate() {
     Get.toNamed(Routes.SERVER_UPDATE);
+  }
+
+  void openChangePassword() {
+    ChangePasswordSheet.show();
   }
 
   void openQuarkLogin() {

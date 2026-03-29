@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:ohome/app/data/models/discovered_server.dart';
+import 'package:ohome/app/modules/plugin/widgets/change_password_sheet.dart';
 import 'package:ohome/app/routes/app_pages.dart';
 import 'package:ohome/app/services/discovery_service.dart';
 import 'package:ohome/app/utils/app_env.dart';
@@ -149,12 +150,25 @@ class LoginController extends GetxController {
       isLoading.value = true;
       await _syncApiBaseUrl(apiBaseUrlInput);
       final auth = Get.find<AuthService>();
+      final loginPassword = passwordController.text;
       await auth.login(
         name: nameController.text.trim(),
-        password: passwordController.text,
+        password: loginPassword,
       );
+      var usingDefaultPassword = false;
+      try {
+        usingDefaultPassword = await auth.isUsingDefaultPassword(
+          showErrorToast: false,
+        );
+      } catch (_) {
+        usingDefaultPassword = false;
+      }
       await _rememberSuccessfulServer();
       Get.offAllNamed(Routes.MAIN);
+      if (usingDefaultPassword) {
+        await Future<void>.delayed(const Duration(milliseconds: 180));
+        await _promptDefaultPasswordChange(loginPassword);
+      }
     } finally {
       isLoading.value = false;
     }
@@ -434,6 +448,37 @@ class LoginController extends GetxController {
     return _discoveryService.rememberSuccessfulServer(
       apiBaseUrlInput: apiBaseUrlController.text,
       selectedServer: selectedServer.value,
+    );
+  }
+
+  Future<void> _promptDefaultPasswordChange(String currentPassword) async {
+    final action = await Get.dialog<bool>(
+      AlertDialog(
+        title: const Text('建议修改默认密码'),
+        content: const Text('当前账号仍在使用默认密码。为了安全，建议现在就修改'),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: const Text('跳过'),
+          ),
+          FilledButton(
+            onPressed: () => Get.back(result: true),
+            child: const Text('立即修改'),
+          ),
+        ],
+      ),
+      barrierDismissible: true,
+    );
+    if (action != true) {
+      return;
+    }
+
+    await ChangePasswordSheet.show(
+      initialOldPassword: currentPassword,
+      lockOldPassword: true,
+      title: '修改默认密码',
+      description: '当前账号仍在使用默认密码，请设置一个新的登录密码。',
+      submitLabel: '立即更新',
     );
   }
 

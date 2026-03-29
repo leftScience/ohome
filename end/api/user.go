@@ -195,6 +195,24 @@ func (user *User) GetProfile(c *gin.Context) {
 	utils.OkWithData(vo.BuildUserVO(profile), c)
 }
 
+func (user *User) GetPasswordStatus(c *gin.Context) {
+	loginUser, err := getLoginUser(c)
+	if err != nil {
+		utils.FailWithMessage(err.Error(), c)
+		return
+	}
+
+	usingDefaultPassword, err := userService.IsUsingDefaultPassword(loginUser)
+	if err != nil {
+		utils.FailWithMessage(err.Error(), c)
+		return
+	}
+
+	utils.OkWithData(vo.UserPasswordStatusVO{
+		UsingDefaultPassword: usingDefaultPassword,
+	}, c)
+}
+
 func (user *User) RefreshToken(c *gin.Context) {
 	var iUserRefreshTokenDTO dto.UserRefreshTokenDTO
 	if err := user.Request(RequestOptions{Ctx: c, DTO: &iUserRefreshTokenDTO}).GetErrors(); err != nil {

@@ -101,6 +101,14 @@ class PluginView extends GetView<PluginController> {
                 ),
               ),
               SizedBox(height: 12.h),
+              _SettingsMenuCard(
+                icon: Icons.lock_reset_rounded,
+                iconColor: const Color(0xFFFFB74D),
+                title: '修改密码',
+                subtitle: '更新当前账号的登录密码',
+                onTap: controller.openChangePassword,
+              ),
+              SizedBox(height: 12.h),
               Obx(
                 () => _SettingsMenuCard(
                   icon: Icons.system_update_alt_rounded,

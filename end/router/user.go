@@ -28,6 +28,7 @@ func InitUserRoutes() {
 		rgAuthUser := rgAuth.Group("/user")
 		{
 			rgAuthUser.GET("/profile", userApi.GetProfile)
+			rgAuthUser.GET("/password/status", userApi.GetPasswordStatus)
 			rgAuthUser.POST("/add", userApi.AddUser)
 			rgAuthUser.DELETE("/:id", userApi.DeleteUserById)
 			rgAuthUser.PUT("/:id", userApi.UpdateUser)
