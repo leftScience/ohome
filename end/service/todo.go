@@ -66,7 +66,7 @@ func (s *TodoService) Update(updateDTO *dto.TodoItemUpdateDTO, loginUser model.L
 
 func (s *TodoService) UpdateStatus(statusDTO *dto.TodoItemStatusDTO, loginUser model.LoginUser) (model.TodoItem, error) {
 	if statusDTO.Completed == nil {
-		return model.TodoItem{}, errors.New("completed 不能为空")
+		return model.TodoItem{}, errors.New("完成状态不能为空")
 	}
 
 	item, err := s.getOwnedTodoItem(statusDTO.ID, loginUser.ID)

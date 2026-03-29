@@ -32,7 +32,7 @@ func (s *APIServer) Run() error {
 			return
 		}
 		if c.GetHeader("X-Ohome-Updater-Token") != UpdaterToken() {
-			utils.PermissionFail("updater token 无效", c)
+			utils.PermissionFail("更新服务令牌无效", c)
 			return
 		}
 		c.Next()

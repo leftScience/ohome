@@ -120,7 +120,7 @@ func (e *Engine) Search(ctx context.Context, settings Settings, req Request) (Se
 	}
 	response, ok := value.(SearchResponse)
 	if !ok {
-		return SearchResponse{}, errors.New("invalid search response")
+		return SearchResponse{}, errors.New("搜索响应格式无效")
 	}
 	return response, nil
 }
@@ -142,7 +142,7 @@ func (e *Engine) searchTelegram(ctx context.Context, client *http.Client, settin
 	}
 	results, ok := value.([]SearchResult)
 	if !ok {
-		return nil, errors.New("invalid telegram search response")
+		return nil, errors.New("Telegram 搜索响应格式无效")
 	}
 	return results, nil
 }
@@ -208,7 +208,7 @@ func (e *Engine) searchPlugins(ctx context.Context, client *http.Client, setting
 	}
 	results, ok := value.([]SearchResult)
 	if !ok {
-		return nil, errors.New("invalid plugin search response")
+		return nil, errors.New("插件搜索响应格式无效")
 	}
 	return results, nil
 }

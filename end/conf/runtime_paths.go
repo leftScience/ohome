@@ -76,7 +76,7 @@ func locateConfigFile(envBaseDir string, execPathFn func() (string, error), getw
 		if fileExists(configPath) {
 			return baseDir, configPath, nil
 		}
-		return "", "", fmt.Errorf("config file not found: %s", configPath)
+		return "", "", fmt.Errorf("未找到配置文件：%s", configPath)
 	}
 
 	exePath, exeErr := execPathFn()
@@ -96,7 +96,7 @@ func locateConfigFile(envBaseDir string, execPathFn func() (string, error), getw
 		}
 	}
 
-	return "", "", fmt.Errorf("config file not found in executable or current working directory")
+	return "", "", fmt.Errorf("在可执行文件目录和当前工作目录中均未找到配置文件")
 }
 
 func executablePath() (string, error) {

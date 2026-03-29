@@ -109,7 +109,7 @@ func (s *UserMediaHistoryService) Update(updateDTO *dto.UserMediaHistoryUpdateDT
 	var parsed *time.Time
 	if updateDTO.LastPlayedAt != nil {
 		if strings.TrimSpace(*updateDTO.LastPlayedAt) == "" {
-			return errors.New("lastPlayedAt 不能为空")
+			return errors.New("最后播放时间不能为空")
 		}
 
 		lastPlayed, err := parseHistoryTime(*updateDTO.LastPlayedAt)

@@ -121,17 +121,17 @@ func searchTelegramChannel(ctx context.Context, client *http.Client, keyword str
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("telegram channel %s request failed: %w", channel, err)
+		return nil, fmt.Errorf("Telegram 频道 %s 请求失败：%w", channel, err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("telegram channel %s returned status %d", channel, resp.StatusCode)
+		return nil, fmt.Errorf("Telegram 频道 %s 返回状态码 %d", channel, resp.StatusCode)
 	}
 
 	doc, err := goquery.NewDocumentFromReader(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("telegram channel %s parse failed: %w", channel, err)
+		return nil, fmt.Errorf("Telegram 频道 %s 解析失败：%w", channel, err)
 	}
 
 	results := make([]SearchResult, 0, 8)

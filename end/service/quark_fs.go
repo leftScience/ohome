@@ -58,7 +58,7 @@ func (s *QuarkFsService) ListFiles(pathDTO *dto.QuarkPathDTO) ([]dto.QuarkFsInfo
 		}
 		if !entry.IsDir() {
 			logQuarkWarnf("[quarkFs:list] target is not dir application=%s clientPath=%s fid=%s", strings.TrimSpace(pathDTO.Application), clientPath, strings.TrimSpace(entry.Fid))
-			return nil, errors.New("path 不是目录")
+			return nil, errors.New("路径不是目录")
 		}
 		targetEntry = entry
 	}
@@ -181,12 +181,12 @@ func (s *QuarkFsService) GetFileMetadata(pathDTO *dto.QuarkPathDTO) (dto.QuarkFs
 func (s *QuarkFsService) RenameFile(renameDTO *dto.QuarkRenameDTO, userID uint) error {
 	rawPath := strings.TrimSpace(renameDTO.Path)
 	if rawPath == "" || rawPath == "/" {
-		return errors.New("path 不能为空")
+		return errors.New("路径不能为空")
 	}
 
 	newName := strings.TrimSpace(renameDTO.NewName)
 	if newName == "" {
-		return errors.New("newName 不能为空")
+		return errors.New("新名称不能为空")
 	}
 
 	client, err := newManagedQuarkClient()
@@ -236,7 +236,7 @@ func (s *QuarkFsService) RenameFile(renameDTO *dto.QuarkRenameDTO, userID uint) 
 func (s *QuarkFsService) DeleteFile(pathDTO *dto.QuarkPathDTO, userID uint) error {
 	rawPath := strings.TrimSpace(pathDTO.Path)
 	if rawPath == "" || rawPath == "/" {
-		return errors.New("path 不能为空")
+		return errors.New("路径不能为空")
 	}
 
 	client, err := newManagedQuarkClient()
@@ -302,17 +302,17 @@ func (s *QuarkFsService) MoveFile(pathDTO *dto.QuarkPathDTO, userID uint) error 
 
 	targetDir := s.normalizeHistoryPath(s.buildPath("", config.RootPath))
 	if targetDir == "/" {
-		return errors.New("该应用未配置 rootPath，无法执行移动")
+		return errors.New("该应用未配置根目录，无法执行移动")
 	}
 
 	rawPath := strings.TrimSpace(pathDTO.Path)
 	if rawPath == "" || rawPath == "/" {
-		return errors.New("path 不能为空")
+		return errors.New("路径不能为空")
 	}
 
 	sourcePath := s.normalizeAbsoluteSourcePath(rawPath)
 	if sourcePath == "/" {
-		return errors.New("path 不能为空")
+		return errors.New("路径不能为空")
 	}
 	isAppRoot, err := s.isApplicationRootPath(sourcePath)
 	if err != nil {
@@ -506,7 +506,7 @@ func (s *QuarkFsService) resolveFileForRead(pathDTO *dto.QuarkPathDTO) (*quarkCl
 		return nil, quarkDriveFile{}, "", err
 	}
 	if entry.IsDir() {
-		return nil, quarkDriveFile{}, "", errors.New("path 不是文件")
+		return nil, quarkDriveFile{}, "", errors.New("路径不是文件")
 	}
 
 	filename := entry.Name()
@@ -621,7 +621,7 @@ func (s *QuarkFsService) resolveRelativePath(ctx context.Context, client *quarkC
 func (s *QuarkFsService) resolveAbsolutePath(ctx context.Context, client *quarkClient, fullPath string, createDirs bool) (string, quarkDriveFile, error) {
 	normalized := s.normalizeHistoryPath(fullPath)
 	if normalized == "" {
-		return "", quarkDriveFile{}, errors.New("path 不能为空")
+		return "", quarkDriveFile{}, errors.New("路径不能为空")
 	}
 	if normalized == "/" {
 		return "", quarkDriveFile{Fid: "0", FileName: "/", Dir: true}, nil
@@ -653,7 +653,7 @@ func (s *QuarkFsService) traverseSegments(ctx context.Context, client *quarkClie
 		}
 		child.FileName = child.Name()
 		if idx < len(segments)-1 && !child.IsDir() {
-			return "", quarkDriveFile{}, errors.New("path 不是目录")
+			return "", quarkDriveFile{}, errors.New("路径不是目录")
 		}
 		current = child
 	}

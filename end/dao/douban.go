@@ -21,7 +21,7 @@ const doubanBaseURL = "https://m.douban.com/rexxar/api/v2"
 func (d *DoubanDao) GetRecentHot(ctx context.Context, subject string, query url.Values) (dto.DoubanRecentHotResp, error) {
 	subject = strings.TrimSpace(subject)
 	if subject != "movie" && subject != "tv" {
-		return dto.DoubanRecentHotResp{}, errors.New("douban subject 只支持 movie 或 tv")
+		return dto.DoubanRecentHotResp{}, errors.New("豆瓣类型仅支持 movie 或 tv")
 	}
 
 	fullURL := strings.TrimRight(doubanBaseURL, "/") + "/subject/recent_hot/" + subject
@@ -66,7 +66,7 @@ func (d *DoubanDao) GetRecentHot(ctx context.Context, subject string, query url.
 func (d *DoubanDao) FetchImage(ctx context.Context, rawURL string) (dto.DoubanImage, int, error) {
 	rawURL = strings.TrimSpace(rawURL)
 	if rawURL == "" {
-		return dto.DoubanImage{}, 0, errors.New("url不能为空")
+		return dto.DoubanImage{}, 0, errors.New("链接不能为空")
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, rawURL, nil)
@@ -80,11 +80,11 @@ func (d *DoubanDao) FetchImage(ctx context.Context, rawURL string) (dto.DoubanIm
 		Timeout: 30 * time.Second,
 		CheckRedirect: func(nextReq *http.Request, via []*http.Request) error {
 			if len(via) >= 5 {
-				return errors.New("redirect too many times")
+				return errors.New("重定向次数过多")
 			}
 			host := strings.ToLower(strings.TrimSpace(nextReq.URL.Hostname()))
 			if !strings.HasSuffix(host, ".doubanio.com") || !strings.HasPrefix(host, "img") {
-				return errors.New("redirect blocked")
+				return errors.New("重定向被阻止")
 			}
 			applyImageHeaders(nextReq)
 			return nil

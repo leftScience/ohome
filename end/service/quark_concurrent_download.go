@@ -101,7 +101,7 @@ func parseRangeHeader(rangeHeader string, fileSize int64) (start, length int64, 
 		return 0, fileSize, nil
 	}
 	if start >= fileSize {
-		return 0, 0, fmt.Errorf("range start %d >= file size %d", start, fileSize)
+		return 0, 0, fmt.Errorf("分片起始位置 %d 不能大于等于文件大小 %d", start, fileSize)
 	}
 
 	endStr := spec[dashIdx+1:]
@@ -132,7 +132,7 @@ func BuildQuarkProxyResponseMeta(fileSize int64, rangeHeader string) (QuarkProxy
 		return QuarkProxyResponseMeta{}, err
 	}
 	if length <= 0 {
-		return QuarkProxyResponseMeta{}, fmt.Errorf("invalid range: start=%d length=%d fileSize=%d", start, length, fileSize)
+		return QuarkProxyResponseMeta{}, fmt.Errorf("无效的范围参数：起始=%d 长度=%d 文件大小=%d", start, length, fileSize)
 	}
 
 	meta := QuarkProxyResponseMeta{
@@ -194,18 +194,18 @@ func buildQuarkDownloadTasks(start, length, partSize int64) []quarkDownloadTask 
 func parseContentRangeStart(contentRange string) (int64, int64, error) {
 	contentRange = strings.TrimSpace(contentRange)
 	if !strings.HasPrefix(contentRange, "bytes ") {
-		return 0, 0, fmt.Errorf("invalid content-range: %q", contentRange)
+		return 0, 0, fmt.Errorf("无效的 Content-Range：%q", contentRange)
 	}
 
 	rangePart := strings.TrimSpace(strings.TrimPrefix(contentRange, "bytes "))
 	segments := strings.SplitN(rangePart, "/", 2)
 	if len(segments) != 2 {
-		return 0, 0, fmt.Errorf("invalid content-range: %q", contentRange)
+		return 0, 0, fmt.Errorf("无效的 Content-Range：%q", contentRange)
 	}
 
 	bounds := strings.SplitN(strings.TrimSpace(segments[0]), "-", 2)
 	if len(bounds) != 2 {
-		return 0, 0, fmt.Errorf("invalid content-range bounds: %q", contentRange)
+		return 0, 0, fmt.Errorf("Content-Range 边界无效：%q", contentRange)
 	}
 
 	start, err := strconv.ParseInt(strings.TrimSpace(bounds[0]), 10, 64)
@@ -217,26 +217,26 @@ func parseContentRangeStart(contentRange string) (int64, int64, error) {
 		return 0, 0, err
 	}
 	if end < start {
-		return 0, 0, fmt.Errorf("invalid content-range bounds: %q", contentRange)
+		return 0, 0, fmt.Errorf("Content-Range 边界无效：%q", contentRange)
 	}
 	return start, end, nil
 }
 
 func validateQuarkRangeResponse(resp *http.Response, expectedStart, expectedLength int64) error {
 	if resp == nil {
-		return errors.New("nil upstream response")
+		return errors.New("上游响应为空")
 	}
 	if expectedLength <= 0 {
-		return fmt.Errorf("invalid expected length: %d", expectedLength)
+		return fmt.Errorf("期望长度无效：%d", expectedLength)
 	}
 	if resp.StatusCode != http.StatusPartialContent {
-		return fmt.Errorf("upstream did not honor range request: status=%d", resp.StatusCode)
+		return fmt.Errorf("上游未正确处理范围请求：状态码=%d", resp.StatusCode)
 	}
 
 	contentRange := strings.TrimSpace(resp.Header.Get("Content-Range"))
 	if contentRange == "" {
 		if resp.ContentLength > 0 && resp.ContentLength != expectedLength {
-			return fmt.Errorf("unexpected upstream content-length: expected=%d actual=%d", expectedLength, resp.ContentLength)
+			return fmt.Errorf("上游 Content-Length 不符合预期：期望=%d，实际=%d", expectedLength, resp.ContentLength)
 		}
 		return nil
 	}
@@ -246,10 +246,10 @@ func validateQuarkRangeResponse(resp *http.Response, expectedStart, expectedLeng
 		return err
 	}
 	if start != expectedStart {
-		return fmt.Errorf("unexpected upstream range start: expected=%d actual=%d", expectedStart, start)
+		return fmt.Errorf("上游返回的范围起点不符合预期：期望=%d，实际=%d", expectedStart, start)
 	}
 	if end-start+1 != expectedLength {
-		return fmt.Errorf("unexpected upstream range length: expected=%d actual=%d", expectedLength, end-start+1)
+		return fmt.Errorf("上游返回的范围长度不符合预期：期望=%d，实际=%d", expectedLength, end-start+1)
 	}
 	return nil
 }
@@ -317,7 +317,7 @@ func (c *quarkClient) downloadChunkWithRetry(
 			return buf, nil
 		}
 		if attempt >= cfg.ChunkMaxRetries || !isQuarkRangeRetryable(err) {
-			return nil, fmt.Errorf("chunk_%d download failed after %d/%d bytes: %w", task.ID, offset, task.Size, err)
+			return nil, fmt.Errorf("分片 %d 下载失败，已完成 %d/%d 字节：%w", task.ID, offset, task.Size, err)
 		}
 
 		logQuarkWarnf(
@@ -342,7 +342,7 @@ func (c *quarkClient) downloadChunkWithRetry(
 		}
 	}
 
-	return nil, fmt.Errorf("chunk_%d download exhausted retries", task.ID)
+	return nil, fmt.Errorf("分片 %d 下载重试次数已耗尽", task.ID)
 }
 
 func (c *quarkClient) streamDownloadInOrder(
@@ -545,7 +545,7 @@ func (c *quarkClient) openProxyStream(
 		return nil, err
 	}
 	if reqLength <= 0 {
-		return nil, fmt.Errorf("invalid range: start=%d length=%d fileSize=%d", reqStart, reqLength, fileSize)
+		return nil, fmt.Errorf("无效的范围参数：起始=%d 长度=%d 文件大小=%d", reqStart, reqLength, fileSize)
 	}
 
 	isPartial := !(reqStart == 0 && reqLength == fileSize)

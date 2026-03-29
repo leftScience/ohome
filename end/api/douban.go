@@ -281,7 +281,7 @@ func (a *DoubanApi) GetRecentHotLegacy(c *gin.Context) {
 			requestBaseURL(c),
 		)
 	default:
-		utils.FailWithMessage("type参数只支持movie或tv", c)
+		utils.FailWithMessage("类型参数只支持 movie 或 tv", c)
 		return
 	}
 

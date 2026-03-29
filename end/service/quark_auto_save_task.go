@@ -38,15 +38,15 @@ func (s *QuarkAutoSaveTaskService) AddOrUpdate(updateDTO *dto.QuarkAutoSaveTaskU
 	updateDTO.RunWeek = strings.TrimSpace(updateDTO.RunWeek)
 
 	if updateDTO.TaskName == "" || updateDTO.ShareURL == "" || updateDTO.SavePath == "" {
-		return errors.New("taskName/shareUrl/savePath 不能为空")
+		return errors.New("任务名称、分享链接和保存路径不能为空")
 	}
 	if updateDTO.ScheduleType != "daily" && updateDTO.ScheduleType != "weekly" {
-		return fmt.Errorf("scheduleType 仅支持 daily / weekly")
+		return fmt.Errorf("调度类型仅支持按天或按周")
 	}
 
 	h, m, ok := parseHHMM(updateDTO.RunTime)
 	if !ok {
-		return fmt.Errorf("runTime 格式错误，需要 HH:mm（例如 08:30）")
+		return fmt.Errorf("运行时间格式错误，需要 HH:mm（例如 08:30）")
 	}
 	updateDTO.RunTime = fmt.Sprintf("%02d:%02d", h, m)
 
@@ -54,7 +54,7 @@ func (s *QuarkAutoSaveTaskService) AddOrUpdate(updateDTO *dto.QuarkAutoSaveTaskU
 		updateDTO.RunWeek = ""
 	} else {
 		if len(parseRunWeek(updateDTO.RunWeek)) == 0 {
-			return fmt.Errorf("weekly 模式必须选择周几（runWeek，例如 1,3,5）")
+			return fmt.Errorf("按周模式必须选择周几（例如 1,3,5）")
 		}
 	}
 

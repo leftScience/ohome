@@ -29,11 +29,11 @@ func (QuarksooPlugin) Search(ctx context.Context, client *http.Client, keyword s
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("quarksoo request failed: %w", err)
+		return nil, fmt.Errorf("quarksoo 请求失败：%w", err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("quarksoo returned status %d", resp.StatusCode)
+		return nil, fmt.Errorf("quarksoo 返回状态码 %d", resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(resp.Body)

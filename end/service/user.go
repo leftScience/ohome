@@ -31,7 +31,7 @@ func (m *UserService) Login(iUser dto.UserLoginDto) (model.User, string, string,
 
 	// 用户名或密码不正确
 	if err != nil || !isSamePwd {
-		errResult = fmt.Errorf("error: %v", errors.New("Invalid UserName Or Password"))
+		errResult = errors.New("用户名或密码错误")
 	} else if mUser.RoleID == 0 || mUser.Role.Code == "" {
 		errResult = errors.New("用户角色不存在")
 	} else { // 登录成功, 生成token
@@ -40,7 +40,7 @@ func (m *UserService) Login(iUser dto.UserLoginDto) (model.User, string, string,
 		refreshToken, err = utils.GenerateRefreshToken(mUser.ID, mUser.Name)
 
 		if err != nil {
-			errResult = errors.New(fmt.Sprintf("Generate Token Error: %s", err.Error()))
+			errResult = errors.New(fmt.Sprintf("生成令牌失败：%s", err.Error()))
 		}
 	}
 
@@ -108,7 +108,7 @@ func (m *UserService) AddUser(iUserAddDTO *dto.UserAddDTO) error {
 
 func (m *UserService) DeleteUserById(iCommonIDDTO *dto.CommonIDDTO, loginUser model.LoginUser) error {
 	if iCommonIDDTO.ID == 0 {
-		return errors.New("invalid User ID")
+		return errors.New("用户 ID 无效")
 	}
 
 	return global.DB.Transaction(func(tx *gorm.DB) error {
@@ -134,7 +134,7 @@ func (m *UserService) DeleteUserById(iCommonIDDTO *dto.CommonIDDTO, loginUser mo
 
 func (m *UserService) UpdateUser(iUserUpdateDTO *dto.UserUpdateDTO, loginUser model.LoginUser) error {
 	if iUserUpdateDTO.ID == 0 {
-		return errors.New("invalid User ID")
+		return errors.New("用户 ID 无效")
 	}
 
 	return global.DB.Transaction(func(tx *gorm.DB) error {
@@ -216,17 +216,17 @@ func (m *UserService) RefreshToken(iUserRefreshTokenDTO *dto.UserRefreshTokenDTO
 
 	claims, err := utils.ParseRefreshToken(iUserRefreshTokenDTO.Token)
 	if err != nil {
-		errResult = errors.New("token已过期")
+		errResult = errors.New("令牌已过期")
 		return accessToken, refreshToken, errResult
 	}
 	accessToken, err = utils.GenerateAccessToken(claims.ID, claims.Name)
 	if err != nil {
-		errResult = errors.New("Token Generate Error")
+		errResult = errors.New("生成令牌失败")
 		return accessToken, refreshToken, errResult
 	}
 	refreshToken, err = utils.GenerateRefreshToken(claims.ID, claims.Name)
 	if err != nil {
-		errResult = errors.New("Token Generate Error")
+		errResult = errors.New("生成令牌失败")
 		return accessToken, refreshToken, errResult
 	}
 

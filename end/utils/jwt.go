@@ -74,10 +74,10 @@ func ParseToken(tokenStr string, acceptedTypes ...string) (JwtClaims, error) {
 	})
 
 	if err == nil && !token.Valid {
-		err = errors.New("Invalid Token")
+		err = errors.New("无效的令牌")
 	}
 	if err == nil && !iJwtCustClaims.matchesTokenTypes(acceptedTypes...) {
-		err = errors.New("Invalid Token Type")
+		err = errors.New("无效的令牌类型")
 	}
 
 	return iJwtCustClaims, err

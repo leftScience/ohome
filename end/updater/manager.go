@@ -209,7 +209,7 @@ func (m *Manager) runRollbackTask(task *Task) {
 
 func (m *Manager) applyBinary(task *Task, manifest ServerManifest, previousReleasePath string) (applyBinaryResult, error) {
 	if m.controller == nil {
-		return applyBinaryResult{}, fmt.Errorf("launcher 进程控制器未初始化")
+		return applyBinaryResult{}, fmt.Errorf("启动器进程控制器未初始化")
 	}
 	if err := validateRuntimeCompatibility(manifest); err != nil {
 		return applyBinaryResult{}, err
@@ -282,7 +282,7 @@ func (m *Manager) applyBinary(task *Task, manifest ServerManifest, previousRelea
 
 func (m *Manager) rollbackBinary(task *Task, currentReleasePath string, previousReleasePath string) error {
 	if m.controller == nil {
-		return fmt.Errorf("launcher 进程控制器未初始化")
+		return fmt.Errorf("启动器进程控制器未初始化")
 	}
 
 	m.advanceTask(task, StatusInstalling, 50, "切换回滚版本")
@@ -328,7 +328,7 @@ func detectVersionFromHealth(url string) (string, error) {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return "", fmt.Errorf("health status: %s", resp.Status)
+		return "", fmt.Errorf("健康检查状态异常：%s", resp.Status)
 	}
 	var envelope struct {
 		Code int `json:"code"`
@@ -391,7 +391,7 @@ func (m *Manager) failTask(task *Task, err error) {
 
 func selectArtifact(manifest ServerManifest) (string, BinaryArtifact, error) {
 	if runtime.GOOS != "linux" {
-		return "", BinaryArtifact{}, fmt.Errorf("仅支持 Linux 容器内二进制更新")
+		return "", BinaryArtifact{}, fmt.Errorf("仅支持在 Linux 容器内执行二进制更新")
 	}
 	artifactKey := "linux-" + runtime.GOARCH
 	artifact, ok := manifest.Artifacts[artifactKey]
@@ -411,7 +411,7 @@ func validateRuntimeCompatibility(manifest ServerManifest) error {
 	}
 	currentRuntimeVersion := buildinfo.CleanRuntimeVersion()
 	if CompareVersions(currentRuntimeVersion, minRuntimeVersion) < 0 {
-		return fmt.Errorf("当前 runtime 版本 %s 低于最低要求 %s，请先手动升级 Docker 镜像", currentRuntimeVersion, minRuntimeVersion)
+		return fmt.Errorf("当前运行时版本 %s 低于最低要求 %s，请先手动升级 Docker 镜像", currentRuntimeVersion, minRuntimeVersion)
 	}
 	return nil
 }

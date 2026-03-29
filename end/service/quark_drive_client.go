@@ -42,7 +42,7 @@ const (
 	quarkListSortByOldest    = "updated_at:asc,file_name:asc"
 )
 
-var errQuarkEntryNotFound = errors.New("quark entry not found")
+var errQuarkEntryNotFound = errors.New("未找到夸克文件条目")
 
 type quarkDriveFile struct {
 	Fid        string `json:"fid"`
@@ -181,12 +181,12 @@ func loadPrimaryQuarkCookieRecord() (model.Config, int, string, error) {
 	cfg, err := configDao.GetByKey(quarkCookieConfigKey)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return model.Config{}, -1, "", errors.New("未配置 quark_cookies（请在参数管理中新增 key=quark_cookies）")
+			return model.Config{}, -1, "", errors.New("未配置夸克 Cookie（请在参数管理中新增 key=quark_cookies）")
 		}
 		return model.Config{}, -1, "", err
 	}
 	if strings.TrimSpace(cfg.Value) == "" {
-		return cfg, -1, "", errors.New("quark_cookies 为空")
+		return cfg, -1, "", errors.New("夸克 Cookie 配置为空")
 	}
 	lines := splitCookieConfigLines(cfg.Value)
 	for i, line := range lines {
@@ -194,13 +194,13 @@ func loadPrimaryQuarkCookieRecord() (model.Config, int, string, error) {
 			return cfg, i, cookie, nil
 		}
 	}
-	return cfg, -1, "", errors.New("quark_cookies 无有效内容")
+	return cfg, -1, "", errors.New("夸克 Cookie 配置无有效内容")
 }
 
 func updatePrimaryQuarkCookie(cookieLine string) error {
 	cookieLine = strings.TrimSpace(cookieLine)
 	if cookieLine == "" {
-		return errors.New("quark_cookies 无有效内容")
+		return errors.New("夸克 Cookie 配置无有效内容")
 	}
 	cfg, lineIndex, _, err := loadPrimaryQuarkCookieRecord()
 	if err != nil {
@@ -890,7 +890,7 @@ func (c *quarkClient) uploadPre(ctx context.Context, fileName, mimeType string, 
 		return quarkUploadPreResponse{}, err
 	}
 	if strings.TrimSpace(result.Data.TaskID) == "" {
-		return quarkUploadPreResponse{}, errors.New("上传初始化失败: task_id 为空")
+		return quarkUploadPreResponse{}, errors.New("上传初始化失败：任务 ID 为空")
 	}
 	return result, nil
 }
@@ -937,7 +937,7 @@ x-oss-user-agent:aliyun-sdk-js/6.6.1 Chrome 98.0.4758.80 on Windows 10 64-bit
 		return "", err
 	}
 	if strings.TrimSpace(auth.Data.AuthKey) == "" {
-		return "", errors.New("上传分片失败: auth_key 为空")
+		return "", errors.New("上传分片失败：鉴权密钥为空")
 	}
 
 	uploadHost := strings.TrimPrefix(pre.Data.UploadURL, "https://")
@@ -1020,7 +1020,7 @@ x-oss-user-agent:aliyun-sdk-js/6.6.1 Chrome 98.0.4758.80 on Windows 10 64-bit
 		return err
 	}
 	if strings.TrimSpace(auth.Data.AuthKey) == "" {
-		return errors.New("提交上传失败: auth_key 为空")
+		return errors.New("提交上传失败：鉴权密钥为空")
 	}
 
 	uploadHost := strings.TrimPrefix(pre.Data.UploadURL, "https://")

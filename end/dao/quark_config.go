@@ -19,7 +19,7 @@ func (m *QuarkConfigDao) GetByApplication(application string) (model.QuarkConfig
 		return model.QuarkConfig{}, err
 	}
 	if count > 1 {
-		return model.QuarkConfig{}, errors.New("application 存在多条配置，请先清理重复数据")
+		return model.QuarkConfig{}, errors.New("应用标识存在多条配置，请先清理重复数据")
 	}
 
 	var config model.QuarkConfig
@@ -54,7 +54,7 @@ func (m *QuarkConfigDao) Create(createDTO *dto.QuarkConfigCreateDTO) (model.Quar
 		return model.QuarkConfig{}, err
 	}
 	if count > 0 {
-		return model.QuarkConfig{}, errors.New("application 不能重复")
+		return model.QuarkConfig{}, errors.New("应用标识不能重复")
 	}
 
 	err := global.DB.Create(&config).Error
@@ -72,7 +72,7 @@ func (m *QuarkConfigDao) Update(updateDTO *dto.QuarkConfigUpdateDTO) error {
 		return err
 	}
 	if count > 1 {
-		return errors.New("application 存在多条配置，请先清理重复数据")
+		return errors.New("应用标识存在多条配置，请先清理重复数据")
 	}
 
 	if err := global.DB.Where("application = ?", updateDTO.Application).First(&config).Error; err != nil {

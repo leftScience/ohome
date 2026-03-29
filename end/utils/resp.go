@@ -32,7 +32,7 @@ func Result(code int, data interface{}, msg string, c *gin.Context) {
 }
 
 func Ok(c *gin.Context) {
-	Result(SUCCESS, map[string]interface{}{}, "SUCCESS", c)
+	Result(SUCCESS, map[string]interface{}{}, "成功", c)
 }
 
 func OkWithMessage(message string, c *gin.Context) {
@@ -40,7 +40,7 @@ func OkWithMessage(message string, c *gin.Context) {
 }
 
 func OkWithData(data interface{}, c *gin.Context) {
-	Result(SUCCESS, data, "SUCCESS", c)
+	Result(SUCCESS, data, "成功", c)
 }
 
 func OkWithDetailed(data interface{}, message string, c *gin.Context) {
@@ -87,7 +87,7 @@ func ParseValidateErrors(errs error, target any) error {
 			errMsg = field.Tag.Get("massage")
 		}
 		if errMsg == "" {
-			errMsg = fmt.Sprintf("%s:%s Error", fieldErr.Field(), fieldErr.Tag())
+			errMsg = fmt.Sprintf("%s 字段校验失败（规则：%s）", fieldErr.Field(), fieldErr.Tag())
 		}
 		errResult = AppendError(errResult, errors.New(errMsg))
 	}

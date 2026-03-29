@@ -74,7 +74,7 @@ func (s *SystemUpdateService) request(method string, path string, payload any, o
 	client := &http.Client{Timeout: 15 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
-		return fmt.Errorf("连接 updater 失败: %w", err)
+		return fmt.Errorf("连接更新服务失败：%w", err)
 	}
 	defer resp.Body.Close()
 	var envelope struct {
@@ -87,7 +87,7 @@ func (s *SystemUpdateService) request(method string, path string, payload any, o
 	}
 	if envelope.Code != 200 {
 		if strings.TrimSpace(envelope.Msg) == "" {
-			return fmt.Errorf("updater 请求失败")
+			return fmt.Errorf("更新服务请求失败")
 		}
 		return errors.New(envelope.Msg)
 	}

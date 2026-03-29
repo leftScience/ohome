@@ -58,7 +58,7 @@ func (s *QuarkTransferTaskService) SubmitSearchManualTransfer(transferDTO *dto.Q
 	shareURL := strings.TrimSpace(transferDTO.ShareURL)
 	savePath := stripQuarkPrefixForStore(transferDTO.SavePath)
 	if shareURL == "" || savePath == "" {
-		return model.QuarkTransferTask{}, errors.New("shareUrl/savePath 不能为空")
+		return model.QuarkTransferTask{}, errors.New("分享链接和保存路径不能为空")
 	}
 
 	displayName := strings.TrimSpace(transferDTO.ResourceName)
@@ -97,7 +97,7 @@ func (s *QuarkTransferTaskService) submitSyncTask(task model.QuarkAutoSaveTask, 
 	shareURL := strings.TrimSpace(task.ShareURL)
 	savePath := stripQuarkPrefixForStore(task.SavePath)
 	if shareURL == "" || savePath == "" {
-		return model.QuarkTransferTask{}, errors.New("shareUrl/savePath 不能为空")
+		return model.QuarkTransferTask{}, errors.New("分享链接和保存路径不能为空")
 	}
 
 	displayName := strings.TrimSpace(task.TaskName)

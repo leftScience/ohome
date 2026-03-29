@@ -55,11 +55,11 @@ func (QuPanSouPlugin) Search(ctx context.Context, client *http.Client, keyword s
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("qupansou request failed: %w", err)
+		return nil, fmt.Errorf("qupansou 请求失败：%w", err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("qupansou returned status %d", resp.StatusCode)
+		return nil, fmt.Errorf("qupansou 返回状态码 %d", resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(resp.Body)
@@ -69,10 +69,10 @@ func (QuPanSouPlugin) Search(ctx context.Context, client *http.Client, keyword s
 
 	var apiResp quPanSouResponse
 	if err := json.Unmarshal(body, &apiResp); err != nil {
-		return nil, fmt.Errorf("qupansou decode failed: %w", err)
+		return nil, fmt.Errorf("qupansou 响应解析失败：%w", err)
 	}
 	if apiResp.Status != 200 {
-		return nil, fmt.Errorf("qupansou API error: %s", strings.TrimSpace(apiResp.Message))
+		return nil, fmt.Errorf("qupansou 接口错误：%s", strings.TrimSpace(apiResp.Message))
 	}
 
 	results := make([]SearchResult, 0, len(apiResp.Data))

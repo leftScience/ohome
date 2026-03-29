@@ -157,7 +157,7 @@ func readJSON(path string, value any) error {
 		return err
 	}
 	if len(payload) == 0 {
-		return fmt.Errorf("empty json: %s", path)
+		return fmt.Errorf("JSON 内容为空：%s", path)
 	}
 	return json.Unmarshal(payload, value)
 }

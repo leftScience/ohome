@@ -154,10 +154,10 @@ func (c *quarkClient) initAccount(ctx context.Context) error {
 	b, _ := io.ReadAll(resp.Body)
 	var r quarkAPIResponse
 	if err := json.Unmarshal(b, &r); err != nil {
-		return fmt.Errorf("解析 quark account/info 失败: %w", err)
+		return fmt.Errorf("解析夸克账号信息失败：%w", err)
 	}
 	if r.Code != 0 {
-		return fmt.Errorf("quark cookie 无效: %s", r.Message)
+		return fmt.Errorf("夸克登录凭据无效：%s", r.Message)
 	}
 	return nil
 }
@@ -269,7 +269,7 @@ func extractShareParams(raw string) (pwdID string, passcode string, pdirFid stri
 			pwdID = raw
 		}
 		if pwdID == "" {
-			return "", "", "", errors.New("无法从分享链接解析 pwd_id（请粘贴包含 /s/<id> 的链接）")
+			return "", "", "", errors.New("无法从分享链接解析分享标识（请粘贴包含 /s/<id> 的链接）")
 		}
 	}
 
@@ -449,7 +449,7 @@ func (c *quarkClient) getStoken(ctx context.Context, pwdID, passcode string) (st
 		return "", err
 	}
 	if resp.Code != 0 {
-		return "", fmt.Errorf("获取 stoken 失败: %s", resp.Message)
+		return "", fmt.Errorf("获取分享令牌失败：%s", resp.Message)
 	}
 	var data struct {
 		Stoken string `json:"stoken"`
@@ -458,7 +458,7 @@ func (c *quarkClient) getStoken(ctx context.Context, pwdID, passcode string) (st
 		return "", err
 	}
 	if data.Stoken == "" {
-		return "", errors.New("获取 stoken 失败: stoken 为空")
+		return "", errors.New("获取分享令牌失败：返回的分享令牌为空")
 	}
 	return data.Stoken, nil
 }
@@ -561,7 +561,7 @@ func (c *quarkClient) ensurePathFid(ctx context.Context, path string) (string, e
 		return "", err
 	}
 	if data.Fid == "" {
-		return "", errors.New("创建目录失败: fid 为空")
+		return "", errors.New("创建目录失败：目录标识为空")
 	}
 	return data.Fid, nil
 }
@@ -585,7 +585,7 @@ func (c *quarkClient) getFidByPath(ctx context.Context, path string) (string, er
 		return "", err
 	}
 	if resp.Code != 0 {
-		return "", fmt.Errorf("获取目录 fid 失败(%s): %s", path, resp.Message)
+		return "", fmt.Errorf("获取目录标识失败（%s）：%s", path, resp.Message)
 	}
 	var data []struct {
 		Fid string `json:"fid"`
@@ -594,7 +594,7 @@ func (c *quarkClient) getFidByPath(ctx context.Context, path string) (string, er
 		return "", err
 	}
 	if len(data) == 0 {
-		return "", errors.New("not found")
+		return "", errors.New("未找到")
 	}
 	return data[0].Fid, nil
 }
@@ -940,7 +940,7 @@ func (c *quarkClient) saveFile(ctx context.Context, files []quarkShareFile, toPd
 		return "", err
 	}
 	if data.TaskID == "" {
-		return "", errors.New("转存失败: task_id 为空")
+		return "", errors.New("转存失败：任务 ID 为空")
 	}
 	return data.TaskID, nil
 }

@@ -151,7 +151,7 @@ func dropsDaysUntil(now time.Time, target time.Time, loc *time.Location) int {
 
 func computeDropsEventNextOccurrence(event *model.DropsEvent, now time.Time, loc *time.Location) (*time.Time, error) {
 	if event == nil {
-		return nil, errors.New("event 不能为空")
+		return nil, errors.New("事件不能为空")
 	}
 	if loc == nil {
 		loc = now.Location()

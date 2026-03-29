@@ -144,7 +144,7 @@ func (s *DoubanService) GetMovieRankingWithProxy(ctx context.Context, category, 
 		limit = 10
 	}
 	if limit > 100 {
-		return nil, errors.New("limit参数不能超过100")
+		return nil, errors.New("分页数量不能超过 100")
 	}
 
 	cache, err := s.getOrSyncRecentHotCache(ctx, "movie", category, typ)
@@ -207,7 +207,7 @@ func (s *DoubanService) GetTvRankingWithProxy(ctx context.Context, category, typ
 		limit = 10
 	}
 	if limit > 100 {
-		return nil, errors.New("limit参数不能超过100")
+		return nil, errors.New("分页数量不能超过 100")
 	}
 
 	cache, err := s.getOrSyncRecentHotCache(ctx, "tv", category, typ)
@@ -407,24 +407,24 @@ func (s *DoubanService) ProxyImage(ctx context.Context, rawURL string) (dto.Doub
 func sanitizeDoubanImageURL(raw string) (string, error) {
 	raw = strings.TrimSpace(raw)
 	if raw == "" {
-		return "", errors.New("url不能为空")
+		return "", errors.New("链接不能为空")
 	}
 	if strings.HasPrefix(raw, "//") {
 		raw = "https:" + raw
 	}
 	u, err := neturl.Parse(raw)
 	if err != nil {
-		return "", errors.New("url格式不正确")
+		return "", errors.New("链接格式不正确")
 	}
 	if u.Scheme != "http" && u.Scheme != "https" {
 		return "", errors.New("只支持http/https协议")
 	}
 	if u.User != nil {
-		return "", errors.New("url不允许包含用户信息")
+		return "", errors.New("链接不允许包含用户信息")
 	}
 	host := strings.ToLower(strings.TrimSpace(u.Hostname()))
 	if host == "" {
-		return "", errors.New("url缺少host")
+		return "", errors.New("链接缺少主机名")
 	}
 	if !strings.HasSuffix(host, ".doubanio.com") || !strings.HasPrefix(host, "img") {
 		return "", errors.New("只允许代理doubanio图片地址")

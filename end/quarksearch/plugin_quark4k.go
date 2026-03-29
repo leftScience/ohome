@@ -48,11 +48,11 @@ func fetchQuark4KPage(ctx context.Context, client *http.Client, keyword string, 
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, false, fmt.Errorf("quark4k request failed: %w", err)
+		return nil, false, fmt.Errorf("quark4k 请求失败：%w", err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return nil, false, fmt.Errorf("quark4k returned status %d", resp.StatusCode)
+		return nil, false, fmt.Errorf("quark4k 返回状态码 %d", resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(resp.Body)
@@ -62,7 +62,7 @@ func fetchQuark4KPage(ctx context.Context, client *http.Client, keyword string, 
 
 	var apiResp quark4kResponse
 	if err := json.Unmarshal(body, &apiResp); err != nil {
-		return nil, false, fmt.Errorf("quark4k decode failed: %w", err)
+		return nil, false, fmt.Errorf("quark4k 响应解析失败：%w", err)
 	}
 
 	postMap := make(map[string]quark4kPost, len(apiResp.Included))

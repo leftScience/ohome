@@ -26,7 +26,7 @@ func FetchManifest(url string) (ServerManifest, error) {
 		return ServerManifest{}, err
 	}
 	if strings.TrimSpace(manifest.Version) == "" {
-		return ServerManifest{}, fmt.Errorf("更新清单缺少 version")
+		return ServerManifest{}, fmt.Errorf("更新清单缺少版本号")
 	}
 	return manifest, nil
 }
