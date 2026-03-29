@@ -62,6 +62,10 @@ docker run -d --name ohome-server --restart unless-stopped -p 18090:18090 -v /op
 
 ## 客户端
 
+### 下载地址见release
+
+[releases](https://github.com/leftScience/ohome/releases)
+
 ### 客户端适合做什么
 
 客户端是 Flutter 应用，当前主要面向 Android 使用，负责登录、资源浏览、播放、网盘管理、待办和提醒等交互能力。
