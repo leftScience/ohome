@@ -612,9 +612,7 @@ class MusicPlayerController extends GetxController with WidgetsBindingObserver {
     PlaybackProgress? progress;
     try {
       progress = await _progressStorage.readProgress(folder);
-    } catch (error) {
-      Get.log('read playback progress failed: $error');
-    }
+    } catch (_) {}
     if (_routeArgsVersion != version) return;
 
     final storedResumePath = MediaPath.normalize(
@@ -710,9 +708,7 @@ class MusicPlayerController extends GetxController with WidgetsBindingObserver {
       _resumePosition = progress.position > Duration.zero
           ? progress.position
           : null;
-    } catch (error) {
-      Get.log('restore playback target failed: $error');
-    }
+    } catch (_) {}
   }
 
   bool _hasExplicitResumeTarget() {
@@ -732,9 +728,6 @@ class MusicPlayerController extends GetxController with WidgetsBindingObserver {
       await _progressStorage.clearProgress(folder);
       _resumeTrackPath = null;
       _resumePosition = null;
-      Get.log(
-        'stale stored audio resume cleared: folder=$folder target=$targetPath',
-      );
       return true;
     }
 

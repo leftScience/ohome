@@ -18,5 +18,9 @@ migrate_working_dir/
 *.iws
 .idea/
 
+app/.dart_tool/
+app/build/
+app/.flutter-plugins-dependencies
+end/.idea/
 
 

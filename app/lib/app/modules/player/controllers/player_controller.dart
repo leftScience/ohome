@@ -1264,9 +1264,7 @@ class PlayerController extends GetxController {
     PlaybackProgress? progress;
     try {
       progress = await _progressStorage.readProgress(folder);
-    } catch (error) {
-      Get.log('read playback progress failed: $error');
-    }
+    } catch (_) {}
     if (_routeArgsVersion != version) return;
 
     final storedResumePath = MediaPath.normalize(
@@ -1357,9 +1355,7 @@ class PlayerController extends GetxController {
       _resumePosition = progress.position > Duration.zero
           ? progress.position
           : null;
-    } catch (error) {
-      Get.log('restore playback target failed: $error');
-    }
+    } catch (_) {}
   }
 
   bool _hasExplicitResumeTarget() {
@@ -1379,9 +1375,6 @@ class PlayerController extends GetxController {
       await _progressStorage.clearProgress(folder);
       _resumeEpisodePath = null;
       _resumePosition = null;
-      Get.log(
-        'stale stored video resume cleared: folder=$folder target=$targetPath',
-      );
       return true;
     }
 
@@ -1857,8 +1850,7 @@ class PlayerController extends GetxController {
         path: folder,
       );
       _folderEntries = List<WebdavFileEntry>.unmodifiable(files);
-    } catch (error) {
-      Get.log('load folder entries failed: $error');
+    } catch (_) {
       _folderEntries = const <WebdavFileEntry>[];
     }
     return _folderEntries;

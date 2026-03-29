@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"ohome/conf"
 	"ohome/discovery"
 	"ohome/global"
@@ -47,8 +46,4 @@ func Start() {
 	task.StartDropsReminderScheduler()
 
 	router.InitRouter()
-}
-
-func Clear() {
-	fmt.Println("=========clear==========")
 }

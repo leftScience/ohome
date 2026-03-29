@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"ohome/global/constants"
 	"ohome/model"
 	"ohome/service/dto"
@@ -36,7 +35,6 @@ func (user *User) Login(context *gin.Context) {
 	iUser, accessToken, refreshToken, err := userService.Login(userLoginDto)
 
 	if err != nil {
-		fmt.Println(fmt.Errorf("%s", err))
 		utils.FailWithMessage(err.Error(), context)
 		return
 	}

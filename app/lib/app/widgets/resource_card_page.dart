@@ -413,54 +413,52 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
-      child: Container(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          child: Align(
-            alignment: Alignment.centerRight,
-            child: PopupMenuButton<WebdavListSortType>(
-              enabled: !disabled,
-              tooltip: '排序方式',
-              padding: EdgeInsets.zero,
-              color: const Color(0xFF1A1A1A),
-              position: PopupMenuPosition.under,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18),
-              ),
-              itemBuilder: (context) => WebdavListSortType.values
-                  .map(
-                    (option) => PopupMenuItem<WebdavListSortType>(
-                      value: option,
-                      child: Text(
-                        option.label,
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        child: Align(
+          alignment: Alignment.centerRight,
+          child: PopupMenuButton<WebdavListSortType>(
+            enabled: !disabled,
+            tooltip: '排序方式',
+            padding: EdgeInsets.zero,
+            color: const Color(0xFF1A1A1A),
+            position: PopupMenuPosition.under,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+            ),
+            itemBuilder: (context) => WebdavListSortType.values
+                .map(
+                  (option) => PopupMenuItem<WebdavListSortType>(
+                    value: option,
+                    child: Text(
+                      option.label,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                  )
-                  .toList(growable: false),
-              onSelected: (value) {
-                if (value == currentSort) return;
-                widget.controller.changeSort(value);
-              },
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    currentSort.label,
-                    style: TextStyle(
-                      color: labelColor,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
                   ),
-                  const SizedBox(width: 2),
-                  Icon(Icons.keyboard_arrow_down_rounded, color: iconColor),
-                ],
-              ),
+                )
+                .toList(growable: false),
+            onSelected: (value) {
+              if (value == currentSort) return;
+              widget.controller.changeSort(value);
+            },
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  currentSort.label,
+                  style: TextStyle(
+                    color: labelColor,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(width: 2),
+                Icon(Icons.keyboard_arrow_down_rounded, color: iconColor),
+              ],
             ),
           ),
         ),

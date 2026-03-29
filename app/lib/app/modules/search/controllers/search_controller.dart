@@ -207,8 +207,7 @@ class SearchController extends GetxController {
         snackPosition: SnackPosition.TOP,
         duration: const Duration(seconds: 4),
       );
-    } catch (e) {
-      debugPrint('transfer failed: $e');
+    } catch (_) {
       Get.snackbar(
         '转存失败',
         '请稍后重试',
@@ -517,9 +516,7 @@ class SearchController extends GetxController {
     try {
       final values = await _searchHistoryStorage.readAll();
       historyKeywords.assignAll(values.take(_maxHistoryCount));
-    } catch (e) {
-      debugPrint('load search history failed: $e');
-    }
+    } catch (_) {}
   }
 
   Future<void> _recordKeyword(String value) async {
@@ -536,9 +533,7 @@ class SearchController extends GetxController {
     historyKeywords.assignAll(current);
     try {
       await _searchHistoryStorage.writeAll(current);
-    } catch (e) {
-      debugPrint('save search history failed: $e');
-    }
+    } catch (_) {}
   }
 
   @override
