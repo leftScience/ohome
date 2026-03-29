@@ -1,9 +1,6 @@
 # ohome
 
-`ohome` 是一个面向家庭场景的个人/家庭资源管理项目，分为两个部分：
-
-- `end/`：Go + Gin 服务端，负责 API、数据存储、局域网发现和业务处理
-- `app/`：Flutter 客户端，负责家庭影音、网盘和家庭事务等功能入口
+`ohome` 是一个面向家庭场景的个人/家庭资源管理项目，无广告，小而美。
 
 ## 功能概览
 
@@ -13,14 +10,17 @@
 - 媒体播放与播放历史记录
 - 最近观看记录回显
 - 基于夸克网盘文件流的在线播放
+- 基于pansou的网盘资源搜索以及一键转存
+- 影视资源一键投屏
 
 ### 夸克网盘能力
 
 - 夸克登录配置
 - 夸克目录配置管理
 - 网盘文件浏览、重命名、移动、上传、删除、流式播放
+- 支持夸克302播放
 - 夸克资源搜索
-- 自动转存/同步任务
+- 自动转存/同步任务，可以定时同步资源
 - 转存任务列表管理
 
 ### 家庭事务管理
@@ -31,37 +31,14 @@
 - 重要日期提醒
 - 站内消息与提醒中心
 
-### 系统能力
-
-- 用户登录、JWT 鉴权、刷新 token
-- 用户管理、头像上传、密码修改/重置
-- 局域网发现能力（HTTP + mDNS）
+### 消息统一推送中心
+- 可以将临期消息，同步消息统一推送
 
 ## 快速上手
-
 1. 先启动服务端
 2. 再安装 Android 客户端
 3. 在客户端登录页通过局域网发现或手动输入服务端地址完成连接
 
-## 仓库结构
-
-```text
-.
-├── .github/workflows/    # GitHub Actions
-├── app/                  # Flutter 客户端
-│   ├── assets/env/       # dev/prod 环境配置
-│   └── build_prod.sh     # Android 一键打包脚本
-├── end/                  # Go 后端
-│   ├── conf/             # 配置文件
-│   ├── data/             # SQLite 数据库、实例数据
-│   ├── log/              # 日志目录
-│   ├── router/           # 路由定义
-│   ├── service/          # 业务逻辑
-│   ├── sql/              # 初始化 SQL
-│   ├── Dockerfile        # 后端镜像构建文件
-│   └── docker-compose.yml # 本地构建用 compose
-└── scripts/              # 仓库辅助脚本
-```
 
 ## 服务端
 
@@ -72,23 +49,6 @@ mkdir -p /opt/ohome/conf /opt/ohome/data /opt/ohome/log
 
 docker run -d --name ohome-server --restart unless-stopped -p 18090:18090 -v /opt/ohome/conf:/app/conf -v /opt/ohome/data:/app/data -v /opt/ohome/log:/app/log hanlinwang0606/ohome:runtime-v2026.03.29
 ```
-
-### 服务端配置说明
-
-主配置文件是 [`end/conf/config.yaml`](./end/conf/config.yaml)，默认关键配置如下：
-
-- `server.port`：服务端口，默认 `18090`
-- `DB.driver`：默认 `sqlite`
-- `DB.dsn`：默认 `./data/ohome.db`
-- `DB.AutoMigrate`：自动建表
-- `DB.InitData`：启动时导入初始化数据
-- `jwt.signKey`：JWT 签名密钥
-- `config.defaultPassword`：重置密码后的默认密码
-- `drops.itemReminderDays` / `drops.eventReminderDays`：提醒提前天数
-- `update.manifestUrl`：服务端滚动更新清单地址
-- `update.updater.baseUrl`：服务端访问本机 launcher 控制面的地址，默认 `http://127.0.0.1:18091`
-
-
 
 ### 服务端数据持久化
 
@@ -106,7 +66,11 @@ docker run -d --name ohome-server --restart unless-stopped -p 18090:18090 -v /op
 
 客户端是 Flutter 应用，当前主要面向 Android 使用，负责登录、资源浏览、播放、网盘管理、待办和提醒等交互能力。
 
-### 客户端界面预览
+### 默认超级管理员账号密码
+
+```
+admin/123
+```
 
 #### 首页与资源能力
 
