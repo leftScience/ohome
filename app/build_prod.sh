@@ -36,19 +36,16 @@ is_number() {
 }
 
 TAG_BUILD_NAME=""
-TAG_BUILD_NUMBER=""
 
 parse_release_tag() {
   local normalized_tag="$1"
 
-  if [[ "$normalized_tag" =~ ^v?([0-9]+\.[0-9]+\.[0-9]+)(-rc([0-9]+))?$ ]]; then
+  if [[ "$normalized_tag" =~ ^v?([0-9]+\.[0-9]+\.[0-9]+(-rc[0-9]+)?)$ ]]; then
     TAG_BUILD_NAME="${BASH_REMATCH[1]}"
-    TAG_BUILD_NUMBER="${BASH_REMATCH[3]:-}"
     return 0
   fi
 
   TAG_BUILD_NAME=""
-  TAG_BUILD_NUMBER=""
   return 1
 }
 
@@ -101,13 +98,6 @@ if [[ -n "$REQUESTED_BUILD_NUMBER" ]]; then
   fi
   BUILD_NUMBER="$REQUESTED_BUILD_NUMBER"
   BUILD_NUMBER_SOURCE="argument"
-elif [[ -n "$TAG_BUILD_NUMBER" ]]; then
-  if ! is_number "$TAG_BUILD_NUMBER"; then
-    echo "[ERROR] Invalid build number \"$TAG_BUILD_NUMBER\" parsed from release tag."
-    exit 1
-  fi
-  BUILD_NUMBER="$TAG_BUILD_NUMBER"
-  BUILD_NUMBER_SOURCE="release tag"
 elif [[ -n "$CI_BUILD_NUMBER" ]]; then
   if ! is_number "$CI_BUILD_NUMBER"; then
     echo "[ERROR] Invalid CI build number \"$CI_BUILD_NUMBER\"."
