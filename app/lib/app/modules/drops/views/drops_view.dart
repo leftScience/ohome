@@ -22,8 +22,8 @@ class _DropsViewState extends State<DropsView>
 
   late final DropsController _controller;
   late final DropsItemsController _itemsController;
-  late final DropsEventsController _eventsController;
   late final TabController _tabController;
+  DropsEventsController? _eventsController;
 
   @override
   void initState() {
@@ -35,14 +35,50 @@ class _DropsViewState extends State<DropsView>
         : Get.put(DropsItemsController(), tag: _itemsTag);
     _eventsController = Get.isRegistered<DropsEventsController>(tag: _eventsTag)
         ? Get.find<DropsEventsController>(tag: _eventsTag)
-        : Get.put(DropsEventsController(), tag: _eventsTag);
+        : null;
     _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(_handleInnerTabChange);
   }
 
   @override
   void dispose() {
+    _tabController.removeListener(_handleInnerTabChange);
     _tabController.dispose();
     super.dispose();
+  }
+
+  void _handleInnerTabChange() {
+    if (_tabController.index == 1) {
+      _ensureEventsController();
+    }
+  }
+
+  void _ensureEventsController() {
+    if (_eventsController != null) return;
+
+    final controller = Get.isRegistered<DropsEventsController>(tag: _eventsTag)
+        ? Get.find<DropsEventsController>(tag: _eventsTag)
+        : Get.put(DropsEventsController(), tag: _eventsTag);
+
+    if (!mounted) {
+      _eventsController = controller;
+      return;
+    }
+    setState(() {
+      _eventsController = controller;
+    });
+  }
+
+  Widget _buildEventsPanel(double bottomInset) {
+    final controller = _eventsController;
+    if (controller == null) {
+      return const SizedBox.shrink();
+    }
+    return DropsEventsPanel(
+      controller: controller,
+      filterPadding: EdgeInsets.fromLTRB(14.w, 0, 14.w, 12.h),
+      listPadding: EdgeInsets.fromLTRB(14.w, 0, 14.w, bottomInset),
+    );
   }
 
   Future<void> _handleCreate() async {
@@ -63,7 +99,8 @@ class _DropsViewState extends State<DropsView>
       await _itemsController.loadItems(refresh: true);
       return;
     }
-    await _eventsController.loadEvents(refresh: true);
+    _ensureEventsController();
+    await _eventsController?.loadEvents(refresh: true);
   }
 
   @override
@@ -153,6 +190,11 @@ class _DropsViewState extends State<DropsView>
                           ),
                           child: TabBar(
                             controller: _tabController,
+                            onTap: (value) {
+                              if (value == 1) {
+                                _ensureEventsController();
+                              }
+                            },
                             isScrollable: false,
                             dividerColor: Colors.transparent,
                             indicatorSize: TabBarIndicatorSize.tab,
@@ -219,21 +261,7 @@ class _DropsViewState extends State<DropsView>
                                 bottomInset,
                               ),
                             ),
-                            DropsEventsPanel(
-                              controller: _eventsController,
-                              filterPadding: EdgeInsets.fromLTRB(
-                                14.w,
-                                0,
-                                14.w,
-                                12.h,
-                              ),
-                              listPadding: EdgeInsets.fromLTRB(
-                                14.w,
-                                0,
-                                14.w,
-                                bottomInset,
-                              ),
-                            ),
+                            _buildEventsPanel(bottomInset),
                           ],
                         ),
                       ),

@@ -15,6 +15,7 @@ class MainController extends GetxController {
   DropsController get _dropsController => Get.find<DropsController>();
 
   void setIndex(int value) {
+    final wasLoaded = loadedIndexes.contains(value);
     loadedIndexes.add(value);
     index.value = value;
     if (value == 0) {
@@ -22,7 +23,7 @@ class MainController extends GetxController {
       unawaited(
         _messagesController.loadMessages(refresh: true, showErrorToast: false),
       );
-    } else if (value == 1) {
+    } else if (value == 1 && wasLoaded) {
       _dropsController.refreshOverview();
     }
   }

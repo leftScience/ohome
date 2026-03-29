@@ -72,6 +72,8 @@ class DropsEventsController extends GetxController {
       if (hasMore.value) {
         _page += 1;
       }
+    } catch (_) {
+      return;
     } finally {
       if (token == _token) {
         if (refresh) {

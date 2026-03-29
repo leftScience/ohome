@@ -175,6 +175,7 @@ class SearchController extends GetxController {
     final url = item.url.trim();
     if (url.isEmpty || transferringUrls.contains(url)) return;
     try {
+      await _settleFocusBeforeTransferSheet();
       await ensureQuarkSavePathLoaded();
 
       final selected = await Get.bottomSheet<_QuarkTransferSelection?>(
@@ -221,6 +222,14 @@ class SearchController extends GetxController {
 
   void openTransferTasks() {
     Get.toNamed(Routes.QUARK_TRANSFER_TASKS);
+  }
+
+  Future<void> _settleFocusBeforeTransferSheet() async {
+    final currentFocus = FocusManager.instance.primaryFocus;
+    if (currentFocus == null || !currentFocus.hasFocus) return;
+
+    currentFocus.unfocus();
+    await WidgetsBinding.instance.endOfFrame;
   }
 
   static String _stripQuarkPrefixForStore(String path) {
@@ -777,139 +786,135 @@ class _QuarkTransferSheet extends StatelessWidget {
 
     return SizedBox(
       width: double.infinity,
-      child: TextButton(
-        onPressed: onSelect,
-        style: TextButton.styleFrom(
-          padding: EdgeInsets.zero,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20.r),
-          ),
-          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        ),
-        child: Ink(
-          width: double.infinity,
-          padding: EdgeInsets.all(16.w),
-          decoration: BoxDecoration(
-            color: enabled
-                ? Colors.white.withValues(alpha: 0.05)
-                : Colors.white.withValues(alpha: 0.025),
-            borderRadius: BorderRadius.circular(20.r),
-            border: Border.all(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onSelect,
+          borderRadius: BorderRadius.circular(20.r),
+          child: Ink(
+            width: double.infinity,
+            padding: EdgeInsets.all(16.w),
+            decoration: BoxDecoration(
               color: enabled
-                  ? accent.withValues(alpha: 0.32)
-                  : Colors.white.withValues(alpha: 0.06),
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 44.w,
-                height: 44.w,
-                decoration: BoxDecoration(
-                  color: enabled
-                      ? accent.withValues(alpha: 0.16)
-                      : Colors.white.withValues(alpha: 0.06),
-                  borderRadius: BorderRadius.circular(14.r),
-                ),
-                child: Icon(
-                  icon,
-                  color: enabled ? accent : Colors.white38,
-                  size: 22.w,
-                ),
+                  ? Colors.white.withValues(alpha: 0.05)
+                  : Colors.white.withValues(alpha: 0.025),
+              borderRadius: BorderRadius.circular(20.r),
+              border: Border.all(
+                color: enabled
+                    ? accent.withValues(alpha: 0.32)
+                    : Colors.white.withValues(alpha: 0.06),
               ),
-              SizedBox(width: 14.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            target.label,
-                            style: TextStyle(
-                              color: enabled ? Colors.white : Colors.white38,
-                              fontSize: 15.sp,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 8.w,
-                            vertical: 5.h,
-                          ),
-                          decoration: BoxDecoration(
-                            color: enabled
-                                ? accent.withValues(alpha: 0.14)
-                                : Colors.white.withValues(alpha: 0.05),
-                            borderRadius: BorderRadius.circular(999.r),
-                          ),
-                          child: Text(
-                            enabled ? '可转存' : '未配置',
-                            style: TextStyle(
-                              color: enabled ? accent : Colors.white38,
-                              fontSize: 10.sp,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 8.h),
-                    Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 10.w,
-                        vertical: 9.h,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.20),
-                        borderRadius: BorderRadius.circular(14.r),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.05),
-                        ),
-                      ),
-                      child: Row(
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 44.w,
+                  height: 44.w,
+                  decoration: BoxDecoration(
+                    color: enabled
+                        ? accent.withValues(alpha: 0.16)
+                        : Colors.white.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(14.r),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: enabled ? accent : Colors.white38,
+                    size: 22.w,
+                  ),
+                ),
+                SizedBox(width: 14.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
                         children: [
-                          Icon(
-                            enabled
-                                ? Icons.drive_folder_upload_rounded
-                                : Icons.block_rounded,
-                            color: enabled ? Colors.white70 : Colors.white30,
-                            size: 16.w,
-                          ),
-                          SizedBox(width: 8.w),
                           Expanded(
                             child: Text(
-                              enabled ? savePath : '请先配置 rootPath 后再使用',
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
+                              target.label,
                               style: TextStyle(
-                                color: enabled
-                                    ? Colors.white70
-                                    : Colors.white30,
-                                fontSize: 11.sp,
-                                height: 1.35,
+                                color: enabled ? Colors.white : Colors.white38,
+                                fontSize: 15.sp,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 8.w,
+                              vertical: 5.h,
+                            ),
+                            decoration: BoxDecoration(
+                              color: enabled
+                                  ? accent.withValues(alpha: 0.14)
+                                  : Colors.white.withValues(alpha: 0.05),
+                              borderRadius: BorderRadius.circular(999.r),
+                            ),
+                            child: Text(
+                              enabled ? '可转存' : '未配置',
+                              style: TextStyle(
+                                color: enabled ? accent : Colors.white38,
+                                fontSize: 10.sp,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                           ),
                         ],
                       ),
-                    ),
-                  ],
+                      SizedBox(height: 8.h),
+                      Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 10.w,
+                          vertical: 9.h,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.20),
+                          borderRadius: BorderRadius.circular(14.r),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.05),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              enabled
+                                  ? Icons.drive_folder_upload_rounded
+                                  : Icons.block_rounded,
+                              color: enabled ? Colors.white70 : Colors.white30,
+                              size: 16.w,
+                            ),
+                            SizedBox(width: 8.w),
+                            Expanded(
+                              child: Text(
+                                enabled ? savePath : '请先配置 rootPath 后再使用',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: enabled
+                                      ? Colors.white70
+                                      : Colors.white30,
+                                  fontSize: 11.sp,
+                                  height: 1.35,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              SizedBox(width: 10.w),
-              Icon(
-                enabled
-                    ? Icons.arrow_forward_ios_rounded
-                    : Icons.remove_rounded,
-                color: enabled ? Colors.white38 : Colors.white24,
-                size: enabled ? 16.w : 20.w,
-              ),
-            ],
+                SizedBox(width: 10.w),
+                Icon(
+                  enabled
+                      ? Icons.arrow_forward_ios_rounded
+                      : Icons.remove_rounded,
+                  color: enabled ? Colors.white38 : Colors.white24,
+                  size: enabled ? 16.w : 20.w,
+                ),
+              ],
+            ),
           ),
         ),
       ),
