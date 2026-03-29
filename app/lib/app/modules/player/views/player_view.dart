@@ -1223,9 +1223,9 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
       return Obx(() {
         return _buildStandardBottomSheet(
           context: ctx,
-          title: '当前视频播放模式',
+          title: '当前播放模式',
           subtitle:
-              '切换后会重载当前视频 · 当前：${controller.effectivePlaybackProxyModeLabel}',
+              '切换后会重载当前视频，并对后续选集生效 · 当前：${controller.effectivePlaybackProxyModeLabel}',
           child: buildBody(ctx),
         );
       });
@@ -1237,9 +1237,9 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
         childBuilder: (ctx) => _buildFullscreenDrawerContainer(
           child: Obx(() {
             return _buildFullscreenDrawerSection(
-              title: '当前视频播放模式',
+              title: '当前播放模式',
               subtitle:
-                  '切换后会重载当前视频 · 当前：${controller.effectivePlaybackProxyModeLabel}',
+                  '切换后会重载当前视频，并对后续选集生效 · 当前：${controller.effectivePlaybackProxyModeLabel}',
               child: buildBody(ctx),
             );
           }),

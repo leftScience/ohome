@@ -901,9 +901,6 @@ class PlayerController extends GetxController {
 
     final episode = episodes[index];
     final episodePath = episode.path?.trim();
-    if (!_isSameEpisodeSelection(index, episodePath)) {
-      currentPlaybackProxyModeOverride.value = null;
-    }
     final url = _episodeUrl(episode);
     if (url == null) {
       Get.snackbar('提示', '登录已过期，请重新登录');
@@ -1693,15 +1690,6 @@ class PlayerController extends GetxController {
     final url = episode.url?.trim();
     if (url == null || url.isEmpty) return false;
     return _isLocalProxyStreamUrl(url);
-  }
-
-  bool _isSameEpisodeSelection(int index, String? episodePath) {
-    final normalizedPath = MediaPath.normalize(episodePath);
-    if (normalizedPath.isNotEmpty) {
-      return MediaPath.equals(_currentEpisodePath, normalizedPath) ||
-          MediaPath.equals(_openingEpisodePath, normalizedPath);
-    }
-    return currentIndex.value == index;
   }
 
   String? _buildStreamUrl(
