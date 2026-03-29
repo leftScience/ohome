@@ -5,6 +5,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
 import '../../../theme/app_theme.dart';
+import '../../../utils/app_env.dart';
+import '../../../widgets/backend_address_badge.dart';
 import '../../../widgets/server_settings_sheet.dart';
 import '../controllers/register_controller.dart';
 
@@ -103,7 +105,21 @@ class RegisterView extends GetView<RegisterController> {
                 Positioned(
                   top: 16.h,
                   right: 24.w,
-                  child: const _SettingsIconButton(),
+                  child: ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: controller.apiBaseUrlController,
+                    builder: (context, value, _) {
+                      final address = value.text.trim().isEmpty
+                          ? AppEnv.instance.apiBaseUrlInputValue
+                          : value.text.trim();
+                      return Row(
+                        children: [
+                          BackendAddressBadge(address: address),
+                          SizedBox(width: 12.w),
+                          const _SettingsIconButton(),
+                        ],
+                      );
+                    },
+                  ),
                 ),
               ],
             ),

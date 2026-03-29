@@ -31,6 +31,7 @@ class ServerSettingsSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+    final isAutoSearchMode = !isManualEntryMode;
 
     return Container(
       padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 20.h + bottomInset),
@@ -71,7 +72,7 @@ class ServerSettingsSheet extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        '手动输入',
+                        '自动搜索',
                         style: TextStyle(
                           fontSize: 14.sp,
                           fontWeight: FontWeight.w600,
@@ -80,12 +81,13 @@ class ServerSettingsSheet extends StatelessWidget {
                       ),
                       SizedBox(width: 8.w),
                       Switch.adaptive(
-                        value: isManualEntryMode,
+                        value: isAutoSearchMode,
                         activeThumbColor: AppThemeColors.primary,
                         activeTrackColor: AppThemeColors.primary.withValues(
                           alpha: 0.45,
                         ),
-                        onChanged: onToggleManualEntryMode,
+                        onChanged: (enabled) =>
+                            onToggleManualEntryMode(!enabled),
                       ),
                     ],
                   ),
