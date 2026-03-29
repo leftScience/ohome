@@ -44,16 +44,6 @@ class ServerUpdateApi {
     );
   }
 
-  Future<ServerUpdateApplyResult> rollback({String? taskId}) {
-    return _httpClient.post<ServerUpdateApplyResult>(
-      '/system/update/rollback',
-      data: <String, dynamic>{
-        if (taskId != null && taskId.trim().isNotEmpty) 'taskId': taskId.trim(),
-      },
-      decoder: _decodeApply,
-    );
-  }
-
   static ServerUpdateInfo _decodeInfo(dynamic data) {
     if (data is Map<String, dynamic>) {
       return ServerUpdateInfo.fromJson(data);

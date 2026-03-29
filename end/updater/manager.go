@@ -48,7 +48,7 @@ func (m *Manager) Info() (InfoResponse, error) {
 	var currentTask *Task
 	if state.CurrentTask != nil {
 		copyTask := *state.CurrentTask
-		copyTask.CanRollback = m.canRollback(&copyTask, state)
+		copyTask.CanRollback = false
 		currentTask = &copyTask
 	}
 	return InfoResponse{
@@ -117,44 +117,7 @@ func (m *Manager) Apply(req ApplyRequest) (ApplyResponse, error) {
 }
 
 func (m *Manager) Rollback(req RollbackRequest) (ApplyResponse, error) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	state, err := m.store.LoadState()
-	if err != nil {
-		return ApplyResponse{}, err
-	}
-	if state.CurrentTask != nil && !state.CurrentTask.Terminal() {
-		return ApplyResponse{}, fmt.Errorf("已有更新任务正在执行")
-	}
-	if strings.TrimSpace(state.PreviousVersion) == "" || strings.TrimSpace(state.PreviousReleasePath) == "" {
-		return ApplyResponse{}, fmt.Errorf("没有可回滚的上一个稳定版本")
-	}
-
-	mode := DetectDeployMode()
-	currentVersion := m.detectCurrentVersion(mode)
-	task := &Task{
-		ID:              fmt.Sprintf("rollback-%d", time.Now().UnixNano()),
-		Status:          StatusQueued,
-		Step:            "已排队",
-		Progress:        0,
-		StartedAt:       time.Now(),
-		CurrentVersion:  currentVersion,
-		TargetVersion:   state.PreviousVersion,
-		PreviousVersion: state.CurrentVersion,
-		DeployMode:      mode,
-	}
-	state.ActiveTaskID = task.ID
-	state.LastTaskID = task.ID
-	state.CurrentTask = task
-	if err := m.store.SaveTask(task); err != nil {
-		return ApplyResponse{}, err
-	}
-	if err := m.store.SaveState(state); err != nil {
-		return ApplyResponse{}, err
-	}
-	go m.runRollbackTask(task)
-	return ApplyResponse{TaskID: task.ID, Status: task.Status}, nil
+	return ApplyResponse{}, fmt.Errorf("当前版本暂不支持手动回滚")
 }
 
 func (m *Manager) Task(taskID string) (*Task, error) {
@@ -204,7 +167,7 @@ func (m *Manager) runApplyTask(task *Task, req ApplyRequest) {
 		return
 	}
 
-	m.completeTask(task, StatusSuccess, 100, "更新完成", strings.TrimSpace(previousReleasePath) != "")
+	m.completeTask(task, StatusSuccess, 100, "更新完成", false)
 	state.CurrentVersion = result.targetVersion
 	state.PreviousVersion = previousVersion
 	state.CurrentReleasePath = result.releasePath
@@ -424,15 +387,6 @@ func (m *Manager) failTask(task *Task, err error) {
 	state.RuntimeVersion = buildinfo.CleanRuntimeVersion()
 	state.DeployMode = DetectDeployMode()
 	_ = m.store.SaveState(state)
-}
-
-func (m *Manager) canRollback(task *Task, state *State) bool {
-	if task == nil || state == nil {
-		return false
-	}
-	return strings.TrimSpace(state.PreviousVersion) != "" &&
-		strings.TrimSpace(state.PreviousReleasePath) != "" &&
-		task.Terminal()
 }
 
 func selectArtifact(manifest ServerManifest) (string, BinaryArtifact, error) {

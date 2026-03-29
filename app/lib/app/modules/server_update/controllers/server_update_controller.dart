@@ -25,7 +25,6 @@ class ServerUpdateController extends GetxController {
   final loading = false.obs;
   final checking = false.obs;
   final applying = false.obs;
-  final rollingBack = false.obs;
   final reconnecting = false.obs;
 
   final appUpdateChecking = false.obs;
@@ -44,6 +43,39 @@ class ServerUpdateController extends GetxController {
 
   bool get hasActiveTask =>
       currentTask.value != null && !(currentTask.value?.isTerminal ?? true);
+
+  String get serverTaskStatusLabel {
+    final task = currentTask.value;
+    if (task == null) return '空闲';
+    switch (task.status) {
+      case 'queued':
+        return '已排队';
+      case 'checking':
+        return '检查中';
+      case 'downloading':
+        return '下载中';
+      case 'installing':
+        return '安装中';
+      case 'health_check':
+        return '健康检查';
+      case 'success':
+        return '更新成功';
+      case 'failed':
+        return '更新失败';
+      case 'rolled_back':
+        return '已自动回退';
+      default:
+        return task.status.isNotEmpty ? task.status : '处理中';
+    }
+  }
+
+  String get serverTaskMessage {
+    final task = currentTask.value;
+    if (task == null) return '';
+    if (task.message.isNotEmpty) return task.message;
+    if (task.step.isNotEmpty) return task.step;
+    return '';
+  }
 
   String get appCurrentVersion =>
       appUpdateResult.value?.currentVersion.trim().isNotEmpty == true
@@ -237,24 +269,6 @@ class ServerUpdateController extends GetxController {
       Get.snackbar('提示', '发起服务端更新失败：$error');
     } finally {
       applying.value = false;
-    }
-  }
-
-  Future<void> rollback() async {
-    if (!isSuperAdmin || rollingBack.value || hasActiveTask) return;
-    rollingBack.value = true;
-    try {
-      final result = await _serverUpdateApi.rollback(
-        taskId: currentTask.value?.id,
-      );
-      _activeTaskId = result.taskId;
-      await _fetchTask();
-      _ensurePolling();
-      Get.snackbar('提示', '已发起回滚任务');
-    } catch (error) {
-      Get.snackbar('提示', '发起回滚失败：$error');
-    } finally {
-      rollingBack.value = false;
     }
   }
 

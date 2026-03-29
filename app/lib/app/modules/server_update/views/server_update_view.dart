@@ -172,98 +172,48 @@ class ServerUpdateView extends GetView<ServerUpdateController> {
                                       : const Icon(Icons.refresh_rounded),
                                   label: const Text('检查更新'),
                                 ),
-                                OutlinedButton.icon(
-                                  onPressed:
-                                      (task?.canRollback == true &&
-                                          !controller.rollingBack.value &&
-                                          !controller.hasActiveTask)
-                                      ? controller.rollback
-                                      : null,
-                                  icon: controller.rollingBack.value
-                                      ? SizedBox(
-                                          width: 14.w,
-                                          height: 14.w,
-                                          child:
-                                              const CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                              ),
-                                        )
-                                      : const Icon(Icons.undo_rounded),
-                                  label: const Text('回滚'),
-                                ),
                               ],
                             ),
-                            if (task != null) ...[
+                            if (controller.hasActiveTask && task != null) ...[
                               SizedBox(height: 16.h),
-                              Container(
-                                padding: EdgeInsets.all(14.w),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.04),
-                                  borderRadius: BorderRadius.circular(16.r),
-                                  border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.05),
+                              Text(
+                                controller.serverTaskStatusLabel,
+                                style: TextStyle(
+                                  fontSize: 13.sp,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              if (controller.serverTaskMessage.isNotEmpty) ...[
+                                SizedBox(height: 6.h),
+                                Text(
+                                  controller.serverTaskMessage,
+                                  style: TextStyle(
+                                    fontSize: 12.sp,
+                                    color: Colors.white70,
+                                    height: 1.5,
                                   ),
                                 ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      '任务进度',
-                                      style: TextStyle(
-                                        fontSize: 14.sp,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    SizedBox(height: 12.h),
-                                    _InfoRow(label: '任务ID', value: task.id),
-                                    _InfoRow(label: '状态', value: task.status),
-                                    _InfoRow(
-                                      label: '步骤',
-                                      value: task.step.isNotEmpty
-                                          ? task.step
-                                          : '--',
-                                    ),
-                                    _InfoRow(
-                                      label: '目标版本',
-                                      value: task.targetVersion.isNotEmpty
-                                          ? task.targetVersion
-                                          : '--',
-                                    ),
-                                    if (task.message.isNotEmpty) ...[
-                                      SizedBox(height: 4.h),
-                                      Text(
-                                        task.message,
-                                        style: TextStyle(
-                                          fontSize: 12.sp,
-                                          color: Colors.white70,
-                                        ),
-                                      ),
-                                    ],
-                                    SizedBox(height: 12.h),
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(
-                                        999.r,
-                                      ),
-                                      child: LinearProgressIndicator(
-                                        value:
-                                            (task.progress <= 0 ||
-                                                    task.progress >= 100) &&
-                                                !task.isTerminal
-                                            ? null
-                                            : task.progress / 100,
-                                        minHeight: 8.h,
-                                      ),
-                                    ),
-                                    SizedBox(height: 8.h),
-                                    Text(
-                                      '${task.progress}%',
-                                      style: TextStyle(
-                                        fontSize: 12.sp,
-                                        color: Colors.white60,
-                                      ),
-                                    ),
-                                  ],
+                              ],
+                              SizedBox(height: 10.h),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(999.r),
+                                child: LinearProgressIndicator(
+                                  value:
+                                      (task.progress <= 0 ||
+                                              task.progress >= 100) &&
+                                          !task.isTerminal
+                                      ? null
+                                      : task.progress / 100,
+                                  minHeight: 8.h,
+                                ),
+                              ),
+                              SizedBox(height: 8.h),
+                              Text(
+                                '${task.progress}%',
+                                style: TextStyle(
+                                  fontSize: 12.sp,
+                                  color: Colors.white60,
                                 ),
                               ),
                             ],
