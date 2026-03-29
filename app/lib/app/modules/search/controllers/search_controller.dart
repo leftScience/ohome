@@ -768,21 +768,27 @@ class _QuarkTransferSheet extends StatelessWidget {
   }) {
     final accent = _targetAccent(target.application);
     final icon = _targetIcon(target.application);
+    final selection = _QuarkTransferSelection(
+      label: target.label,
+      application: target.application,
+      savePath: savePath,
+    );
+    final onSelect = enabled ? () => Get.back(result: selection) : null;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: !enabled
-            ? null
-            : () => Get.back(
-                result: _QuarkTransferSelection(
-                  label: target.label,
-                  application: target.application,
-                  savePath: savePath,
-                ),
-              ),
-        borderRadius: BorderRadius.circular(20.r),
+    return SizedBox(
+      width: double.infinity,
+      child: TextButton(
+        onPressed: onSelect,
+        style: TextButton.styleFrom(
+          padding: EdgeInsets.zero,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.r),
+          ),
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
         child: Ink(
+          width: double.infinity,
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
             color: enabled
