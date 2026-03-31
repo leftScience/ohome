@@ -147,85 +147,88 @@ class HomeView extends GetView<HomeController> {
   Widget _buildMessageButton() {
     return Obx(() {
       final unreadCount = controller.unreadMessageCount;
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(20.r),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-          child: Material(
-            color: Colors.white.withValues(alpha: 0.05),
+      return Stack(
+        clipBehavior: Clip.none,
+        children: [
+          ClipRRect(
             borderRadius: BorderRadius.circular(20.r),
-            child: InkWell(
-              onTap: controller.openMessages,
-              borderRadius: BorderRadius.circular(20.r),
-              child: Ink(
-                width: 48.w,
-                height: 48.w,
-                decoration: BoxDecoration(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+              child: Material(
+                color: Colors.white.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(20.r),
+                child: InkWell(
+                  onTap: controller.openMessages,
                   borderRadius: BorderRadius.circular(20.r),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.12),
-                  ),
-                ),
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Center(
+                  child: Ink(
+                    width: 48.w,
+                    height: 48.w,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20.r),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.12),
+                      ),
+                    ),
+                    child: Center(
                       child: Icon(
                         Icons.notifications_none_rounded,
                         color: Colors.white.withValues(alpha: 0.85),
                         size: 24.w,
                       ),
                     ),
-                    if (unreadCount > 0)
-                      Positioned(
-                        right: -2.w,
-                        top: -2.h,
-                        child: Container(
-                          constraints: BoxConstraints(
-                            minWidth: 18.w,
-                            minHeight: 18.h,
-                          ),
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 5.w,
-                            vertical: 2.h,
-                          ),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFFFF5252), Color(0xFFD32F2F)],
-                            ),
-                            borderRadius: BorderRadius.circular(999.r),
-                            border: Border.all(
-                              color: const Color(0xFF121212),
-                              width: 1.5,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(
-                                  0xFFFF5252,
-                                ).withValues(alpha: 0.4),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Center(
-                            child: Text(
-                              unreadCount > 99 ? '99+' : '$unreadCount',
-                              style: TextStyle(
-                                fontSize: 9.sp,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
+          if (unreadCount > 0)
+            Positioned(
+              right: -2.w,
+              top: -2.h,
+              child: Container(
+                constraints: BoxConstraints(
+                  minWidth: 18.w,
+                  minHeight: 18.h,
+                ),
+                padding: EdgeInsets.symmetric(
+                  horizontal: 6.w,
+                  vertical: 1.h,
+                ),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFFF5252), Color(0xFFD32F2F)],
+                  ),
+                  borderRadius: BorderRadius.circular(999.r),
+                  border: Border.all(
+                    color: const Color(0xFF121212),
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFFF5252).withValues(alpha: 0.4),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: 0.5.h),
+                    child: Text(
+                      unreadCount > 99 ? '99+' : '$unreadCount',
+                      style: TextStyle(
+                        fontSize: 8.5.sp,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        height: 1.0,
+                        leadingDistribution: TextLeadingDistribution.even,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
       );
     });
   }

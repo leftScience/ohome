@@ -189,9 +189,9 @@ class DropsItemCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -354,9 +354,9 @@ class DropsEventCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -507,36 +507,59 @@ class DropsDropdownField extends StatelessWidget {
     final effectiveValue = items.containsKey(value)
         ? value
         : (items.isNotEmpty ? items.keys.first : null);
-    return DropdownButtonFormField<String>(
-      initialValue: effectiveValue,
-      isExpanded: true,
-      dropdownColor: const Color(0xFF1A1A1A),
-      style: TextStyle(color: Colors.white, fontSize: 13.sp),
-      icon: Icon(
-        Icons.keyboard_arrow_down_rounded,
-        color: Colors.white54,
-        size: 18.w,
-      ),
-      decoration: InputDecoration(
-        isDense: true,
-        contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
-        filled: true,
-        fillColor: const Color(0xFF101113),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18.r),
-          borderSide: BorderSide.none,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24.r),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+        child: DropdownButtonFormField<String>(
+          initialValue: effectiveValue,
+          isExpanded: true,
+          dropdownColor: const Color(0xFF1A1A1A),
+          style: TextStyle(color: Colors.white, fontSize: 13.5.sp),
+          icon: Icon(
+            Icons.keyboard_arrow_down_rounded,
+            color: Colors.white54,
+            size: 20.w,
+          ),
+          decoration: InputDecoration(
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+            filled: true,
+            fillColor: Colors.white.withValues(alpha: 0.05),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(24.r),
+              borderSide: BorderSide(
+                color: Colors.white.withValues(alpha: 0.12),
+                width: 1.2,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(24.r),
+              borderSide: BorderSide(
+                color: Colors.white.withValues(alpha: 0.12),
+                width: 1.2,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(24.r),
+              borderSide: BorderSide(
+                color: const Color(0xFF2B78FF).withValues(alpha: 0.5),
+                width: 1.2,
+              ),
+            ),
+          ),
+          items: items.entries
+              .map(
+                (entry) => DropdownMenuItem<String>(
+                  value: entry.key,
+                  child: Text(entry.value, overflow: TextOverflow.ellipsis),
+                ),
+              )
+              .toList(growable: false),
+          onChanged: (value) => onChanged(value ?? ''),
+          hint: hintText == null ? null : Text(hintText!),
         ),
       ),
-      items: items.entries
-          .map(
-            (entry) => DropdownMenuItem<String>(
-              value: entry.key,
-              child: Text(entry.value, overflow: TextOverflow.ellipsis),
-            ),
-          )
-          .toList(growable: false),
-      onChanged: (value) => onChanged(value ?? ''),
-      hint: hintText == null ? null : Text(hintText!),
     );
   }
 }
@@ -549,44 +572,48 @@ class _DropsItemsFilterCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dropsController = Get.find<DropsController>();
-    return _FilterSurface(
-      child: Column(
-        children: [
-          TextField(
-            controller: controller.keywordController,
-            onSubmitted: (_) => controller.search(),
-            decoration: _searchDecoration('搜索名称、位置、备注'),
+    return Column(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(24.r),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+            child: TextField(
+              controller: controller.keywordController,
+              onSubmitted: (_) => controller.search(),
+              decoration: _searchDecoration('搜索名称、位置、备注'),
+            ),
           ),
-          SizedBox(height: 12.h),
-          Row(
-            children: [
-              Expanded(
-                child: Obx(() {
-                  final _ = dropsController.dictVersion.value;
-                  return DropsDropdownField(
-                    value: controller.scopeType.value,
-                    hintText: '范围',
-                    items: {'': '全部范围', ...dropsController.scopeLabels},
-                    onChanged: controller.updateScope,
-                  );
-                }),
-              ),
-              SizedBox(width: 8.w),
-              Expanded(
-                child: Obx(() {
-                  final _ = dropsController.dictVersion.value;
-                  return DropsDropdownField(
-                    value: controller.category.value,
-                    hintText: '分类',
-                    items: {'': '全部分类', ...dropsController.categoryLabels},
-                    onChanged: controller.updateCategory,
-                  );
-                }),
-              ),
-            ],
-          ),
-        ],
-      ),
+        ),
+        SizedBox(height: 12.h),
+        Row(
+          children: [
+            Expanded(
+              child: Obx(() {
+                final _ = dropsController.dictVersion.value;
+                return DropsDropdownField(
+                  value: controller.scopeType.value,
+                  hintText: '范围',
+                  items: {'': '全部范围', ...dropsController.scopeLabels},
+                  onChanged: controller.updateScope,
+                );
+              }),
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Obx(() {
+                final _ = dropsController.dictVersion.value;
+                return DropsDropdownField(
+                  value: controller.category.value,
+                  hintText: '分类',
+                  items: {'': '全部分类', ...dropsController.categoryLabels},
+                  onChanged: controller.updateCategory,
+                );
+              }),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -599,42 +626,46 @@ class _DropsEventsFilterCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dropsController = Get.find<DropsController>();
-    return _FilterSurface(
-      child: Column(
-        children: [
-          TextField(
-            controller: controller.keywordController,
-            onSubmitted: (_) => controller.search(),
-            decoration: _searchDecoration('搜索标题或备注'),
+    return Column(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(24.r),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+            child: TextField(
+              controller: controller.keywordController,
+              onSubmitted: (_) => controller.search(),
+              decoration: _searchDecoration('搜索标题或备注'),
+            ),
           ),
-          SizedBox(height: 12.h),
-          Row(
-            children: [
-              Expanded(
-                child: Obx(() {
-                  final _ = dropsController.dictVersion.value;
-                  return DropsDropdownField(
-                    value: controller.scopeType.value,
-                    items: {'': '全部范围', ...dropsController.scopeLabels},
-                    onChanged: controller.updateScope,
-                  );
-                }),
-              ),
-              SizedBox(width: 8.w),
-              Expanded(
-                child: Obx(() {
-                  final _ = dropsController.dictVersion.value;
-                  return DropsDropdownField(
-                    value: controller.eventType.value,
-                    items: {'': '全部类型', ...dropsController.eventTypeLabels},
-                    onChanged: controller.updateType,
-                  );
-                }),
-              ),
-            ],
-          ),
-        ],
-      ),
+        ),
+        SizedBox(height: 12.h),
+        Row(
+          children: [
+            Expanded(
+              child: Obx(() {
+                final _ = dropsController.dictVersion.value;
+                return DropsDropdownField(
+                  value: controller.scopeType.value,
+                  items: {'': '全部范围', ...dropsController.scopeLabels},
+                  onChanged: controller.updateScope,
+                );
+              }),
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Obx(() {
+                final _ = dropsController.dictVersion.value;
+                return DropsDropdownField(
+                  value: controller.eventType.value,
+                  items: {'': '全部类型', ...dropsController.eventTypeLabels},
+                  onChanged: controller.updateType,
+                );
+              }),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -642,41 +673,33 @@ class _DropsEventsFilterCard extends StatelessWidget {
 InputDecoration _searchDecoration(String hintText) {
   return InputDecoration(
     hintText: hintText,
-    hintStyle: TextStyle(color: Colors.white38, fontSize: 14.sp),
-    prefixIcon: const Icon(Icons.search_rounded, color: Colors.white54),
+    hintStyle: TextStyle(color: Colors.white54, fontSize: 14.5.sp, letterSpacing: 0.3),
+    prefixIcon: Icon(Icons.search_rounded, color: Colors.white54, size: 22.w),
     filled: true,
-    fillColor: const Color(0xFF101113),
+    fillColor: Colors.white.withValues(alpha: 0.05),
     contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
     border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(18.r),
-      borderSide: BorderSide.none,
+      borderRadius: BorderRadius.circular(24.r),
+      borderSide: BorderSide(
+        color: Colors.white.withValues(alpha: 0.12),
+        width: 1.2,
+      ),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(24.r),
+      borderSide: BorderSide(
+        color: Colors.white.withValues(alpha: 0.12),
+        width: 1.2,
+      ),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(24.r),
+      borderSide: BorderSide(
+        color: const Color(0xFF2B78FF).withValues(alpha: 0.5),
+        width: 1.2,
+      ),
     ),
   );
-}
-
-class _FilterSurface extends StatelessWidget {
-  const _FilterSurface({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(22.r),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-        child: Container(
-          padding: EdgeInsets.fromLTRB(14.w, 8.h, 14.w, 14.h),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.04),
-            borderRadius: BorderRadius.circular(22.r),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-          ),
-          child: child,
-        ),
-      ),
-    );
-  }
 }
 
 class _DropsTag extends StatelessWidget {
