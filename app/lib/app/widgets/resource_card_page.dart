@@ -83,7 +83,9 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
   bool _movingSelected = false;
   final Set<String> _selectedPaths = <String>{};
   final ScrollController _scrollController = ScrollController();
+  final TextEditingController _searchController = TextEditingController();
   final GlobalKey _loadMoreSentinelKey = GlobalKey();
+  String _searchQuery = '';
 
   bool get _operationInProgress =>
       _renaming || _deletingSelected || _movingSelected;
@@ -124,14 +126,28 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
   void initState() {
     super.initState();
     _scrollController.addListener(_handleScroll);
+    _searchController.addListener(_handleSearchChanged);
   }
 
   @override
   void dispose() {
+    _searchController
+      ..removeListener(_handleSearchChanged)
+      ..dispose();
     _scrollController
       ..removeListener(_handleScroll)
       ..dispose();
     super.dispose();
+  }
+
+  void _handleSearchChanged() {
+    final nextQuery = _searchController.text.trim();
+    if (nextQuery == _searchQuery) return;
+    setState(() {
+      _searchQuery = nextQuery;
+      _cardActionsVisible = false;
+      _selectedPaths.clear();
+    });
   }
 
   void _handleScroll() {
@@ -196,7 +212,8 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
   Widget build(BuildContext context) {
     return Obx(() {
       final path = widget.controller.currentPath.value;
-      final entries = widget.controller.entries.toList(growable: false);
+      final allEntries = widget.controller.entries.toList(growable: false);
+      final entries = _filterEntries(allEntries);
       final loading = widget.controller.loading.value;
       final loadingMore = widget.controller.loadingMore.value;
       final hasMore = widget.controller.hasMore.value;
@@ -243,7 +260,7 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
                 onPressed:
                     entries.isEmpty || actionDisabled || selectedCount == 0
                     ? null
-                    : _confirmDeleteSelected,
+                    : () => _confirmDeleteSelected(entries),
                 child: const Text('删除'),
               ),
             if (widget.enableMove && idleCardActionsVisible)
@@ -252,7 +269,7 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
                 onPressed:
                     entries.isEmpty || actionDisabled || selectedCount == 0
                     ? null
-                    : _confirmMoveSelected,
+                    : () => _confirmMoveSelected(entries),
                 child: const Text('移动'),
               ),
             if (idleCardActionsVisible)
@@ -272,6 +289,7 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
         body: _buildBody(
           currentPath: path,
           entries: entries,
+          hasSourceEntries: allEntries.isNotEmpty,
           loading: loading,
           loadingMore: loadingMore,
           hasMore: hasMore,
@@ -287,6 +305,7 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
   Widget _buildBody({
     required String currentPath,
     required List<WebdavFileEntry> entries,
+    required bool hasSourceEntries,
     required bool loading,
     required bool loadingMore,
     required bool hasMore,
@@ -326,15 +345,37 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
     if (entries.isEmpty) {
       _resetAutoStatus(currentPath);
       _entriesReadyPath = null;
+      if (_searchQuery.isNotEmpty || hasSourceEntries) {
+        return CustomScrollView(
+          controller: _scrollController,
+          slivers: [
+            SliverToBoxAdapter(
+              child: _buildSortToolbar(
+                currentSort: currentSort,
+                disabled: sortDisabled,
+              ),
+            ),
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(
+                child: Text(
+                  _searchQuery.isEmpty ? widget.emptyText : '未找到匹配的资源',
+                  style: const TextStyle(color: Colors.white70),
+                ),
+              ),
+            ),
+          ],
+        );
+      }
       return Center(
         child: Text(
-          widget.emptyText,
+          _searchQuery.isEmpty ? widget.emptyText : '未找到匹配的资源',
           style: const TextStyle(color: Colors.white70),
         ),
       );
     }
 
-    if (widget.onEntriesReady != null) {
+    if (_searchQuery.isEmpty && widget.onEntriesReady != null) {
       _scheduleEntriesReady(
         path: currentPath,
         entries: entries,
@@ -345,6 +386,7 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
     }
 
     final shouldAutoOpen =
+        _searchQuery.isEmpty &&
         widget.shouldAutoOpen != null &&
         widget.onAutoOpen != null &&
         widget.shouldAutoOpen!(entries, currentPath);
@@ -413,55 +455,102 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
     final iconColor = disabled ? Colors.white30 : Colors.white54;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+      padding: const EdgeInsets.fromLTRB(0, 5, 12, 0),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        child: Align(
-          alignment: Alignment.centerRight,
-          child: PopupMenuButton<WebdavListSortType>(
-            enabled: !disabled,
-            tooltip: '排序方式',
-            padding: EdgeInsets.zero,
-            color: const Color(0xFF1A1A1A),
-            position: PopupMenuPosition.under,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(18),
-            ),
-            itemBuilder: (context) => WebdavListSortType.values
-                .map(
-                  (option) => PopupMenuItem<WebdavListSortType>(
-                    value: option,
-                    child: Text(
-                      option.label,
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
+        child: Row(
+          children: [
+            Expanded(child: _buildSearchField(disabled: disabled)),
+            const SizedBox(width: 12),
+            PopupMenuButton<WebdavListSortType>(
+              enabled: !disabled,
+              tooltip: '排序方式',
+              padding: EdgeInsets.zero,
+              color: const Color(0xFF1A1A1A),
+              position: PopupMenuPosition.under,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18),
+              ),
+              itemBuilder: (context) => WebdavListSortType.values
+                  .map(
+                    (option) => PopupMenuItem<WebdavListSortType>(
+                      value: option,
+                      child: Text(
+                        option.label,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
+                  )
+                  .toList(growable: false),
+              onSelected: (value) {
+                if (value == currentSort) return;
+                widget.controller.changeSort(value);
+              },
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    currentSort.label,
+                    style: TextStyle(
+                      color: labelColor,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(width: 2),
+                  Icon(Icons.keyboard_arrow_down_rounded, color: iconColor),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchField({required bool disabled}) {
+    final hasKeyword = _searchQuery.isNotEmpty;
+    return Container(
+      height: 38,
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A1A1A),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: TextField(
+        controller: _searchController,
+        enabled: !disabled,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+        ),
+        decoration: InputDecoration(
+          isDense: true,
+          border: InputBorder.none,
+          hintText: '搜索资源',
+          hintStyle: const TextStyle(color: Colors.white38, fontSize: 13),
+          prefixIcon: const Icon(
+            Icons.search_rounded,
+            color: Colors.white54,
+            size: 18,
+          ),
+          suffixIcon: hasKeyword
+              ? IconButton(
+                  tooltip: '清空搜索',
+                  onPressed: disabled ? null : _searchController.clear,
+                  icon: const Icon(
+                    Icons.close_rounded,
+                    color: Colors.white54,
+                    size: 18,
                   ),
                 )
-                .toList(growable: false),
-            onSelected: (value) {
-              if (value == currentSort) return;
-              widget.controller.changeSort(value);
-            },
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  currentSort.label,
-                  style: TextStyle(
-                    color: labelColor,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(width: 2),
-                Icon(Icons.keyboard_arrow_down_rounded, color: iconColor),
-              ],
-            ),
-          ),
+              : null,
+          contentPadding: const EdgeInsets.symmetric(vertical: 10),
         ),
       ),
     );
@@ -637,10 +726,20 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
     return trimmed;
   }
 
-  Future<void> _confirmDeleteSelected() async {
-    if (_operationInProgress) return;
+  List<WebdavFileEntry> _filterEntries(List<WebdavFileEntry> entries) {
+    final query = _searchQuery.trim().toLowerCase();
+    if (query.isEmpty) return entries;
+    return entries
+        .where((entry) {
+          final name = entry.name.trim().toLowerCase();
+          final path = entry.path.trim().toLowerCase();
+          return name.contains(query) || path.contains(query);
+        })
+        .toList(growable: false);
+  }
 
-    final entries = widget.controller.entries.toList(growable: false);
+  Future<void> _confirmDeleteSelected(List<WebdavFileEntry> entries) async {
+    if (_operationInProgress) return;
     final selectedPaths = _visibleSelectedPaths(
       entries,
     ).toList(growable: false);
@@ -701,10 +800,8 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
     });
   }
 
-  Future<void> _confirmMoveSelected() async {
+  Future<void> _confirmMoveSelected(List<WebdavFileEntry> entries) async {
     if (_operationInProgress) return;
-
-    final entries = widget.controller.entries.toList(growable: false);
     final selectedPaths = _visibleSelectedPaths(
       entries,
     ).toList(growable: false);
