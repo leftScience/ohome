@@ -41,7 +41,7 @@
 
 
 ## 演示视频
-<video src="http://999576.xyz:19000/share/%E8%A7%86%E9%A2%91%E4%BB%8B%E7%BB%8D.mp4" width="800px" height="600px" controls="controls"></video>
+[![点击观看视频](./.github/assets/首页.jpg)](https://www.bilibili.com/video/BV1BGXRB7Exc/?share_source=copy_web&vd_source=d89bee5685527bb00d6328b67f985401)
 
 ## 服务端
 
