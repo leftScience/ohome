@@ -178,14 +178,7 @@ class SearchController extends GetxController {
       await _settleFocusBeforeTransferSheet();
       await ensureQuarkSavePathLoaded();
 
-      final selected = await Get.bottomSheet<_QuarkTransferSelection?>(
-        _QuarkTransferSheet(
-          targets: _quarkTargets,
-          savePathMap: quarkSavePathMap,
-        ),
-        isScrollControlled: true,
-        backgroundColor: Colors.transparent,
-      );
+      final selected = await _showQuarkTransferSheet();
       if (selected == null) return;
 
       transferringUrls.add(url);
@@ -230,6 +223,51 @@ class SearchController extends GetxController {
 
     currentFocus.unfocus();
     await WidgetsBinding.instance.endOfFrame;
+  }
+
+  Future<_QuarkTransferSelection?> _showQuarkTransferSheet() {
+    final context = Get.overlayContext ?? Get.context;
+    if (context == null) return Future.value(null);
+
+    return showGeneralDialog<_QuarkTransferSelection?>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+      barrierColor: Colors.black54,
+      transitionDuration: const Duration(milliseconds: 220),
+      pageBuilder: (_, _, _) {
+        return Material(
+          type: MaterialType.transparency,
+          child: Align(
+            alignment: Alignment.bottomCenter,
+            child: _QuarkTransferSheet(
+              targets: _quarkTargets,
+              savePathMap: quarkSavePathMap,
+            ),
+          ),
+        );
+      },
+      transitionBuilder: (_, animation, _, child) {
+        final curve = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+          reverseCurve: Curves.easeInCubic,
+        );
+        return FadeTransition(
+          opacity: animation,
+          child: AnimatedBuilder(
+            animation: curve,
+            child: child,
+            builder: (context, child) {
+              return Transform.translate(
+                offset: Offset(0, 36.h * (1 - curve.value)),
+                child: child,
+              );
+            },
+          ),
+        );
+      },
+    );
   }
 
   static String _stripQuarkPrefixForStore(String path) {
@@ -586,12 +624,10 @@ class _QuarkTarget {
 
 class _QuarkTransferSelection {
   const _QuarkTransferSelection({
-    required this.label,
     required this.application,
     required this.savePath,
   });
 
-  final String label;
   final String application;
   final String savePath;
 }
@@ -604,10 +640,9 @@ class _QuarkTransferSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final available = targets
+    final availableCount = targets
         .where((t) => (savePathMap[t.application] ?? '').trim().isNotEmpty)
-        .toList(growable: false);
-    final availableCount = available.length;
+        .length;
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
     final screenHeight = MediaQuery.sizeOf(context).height;
     final maxHeight = math.min(screenHeight * 0.78, 620.h);
@@ -661,24 +696,34 @@ class _QuarkTransferSheet extends StatelessWidget {
               ),
               SizedBox(height: 14.h),
               Expanded(
-                child: available.isEmpty
-                    ? _buildEmptyState(context)
-                    : ListView.separated(
-                        physics: const BouncingScrollPhysics(),
-                        itemCount: targets.length,
-                        separatorBuilder: (_, _) => SizedBox(height: 10.h),
-                        itemBuilder: (context, index) {
-                          final target = targets[index];
-                          final savePath =
-                              (savePathMap[target.application] ?? '').trim();
-                          final enabled = savePath.isNotEmpty;
-                          return _buildTargetTile(
-                            context,
-                            target: target,
-                            savePath: savePath,
-                            enabled: enabled,
-                          );
-                        },
+                child: availableCount == 0
+                    ? _buildEmptyState()
+                    : Column(
+                        children: [
+                          for (
+                            var index = 0;
+                            index < targets.length;
+                            index++
+                          ) ...[
+                            if (index > 0) SizedBox(height: 10.h),
+                            Builder(
+                              builder: (context) {
+                                final target = targets[index];
+                                final savePath =
+                                    (savePathMap[target.application] ?? '')
+                                        .trim();
+                                final enabled = savePath.isNotEmpty;
+                                return _buildTargetTile(
+                                  context,
+                                  target: target,
+                                  savePath: savePath,
+                                  enabled: enabled,
+                                );
+                              },
+                            ),
+                          ],
+                          const Spacer(),
+                        ],
                       ),
               ),
             ],
@@ -718,7 +763,7 @@ class _QuarkTransferSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState(BuildContext context) {
+  Widget _buildEmptyState() {
     return Center(
       child: Container(
         width: double.infinity,
@@ -778,142 +823,149 @@ class _QuarkTransferSheet extends StatelessWidget {
     final accent = _targetAccent(target.application);
     final icon = _targetIcon(target.application);
     final selection = _QuarkTransferSelection(
-      label: target.label,
       application: target.application,
       savePath: savePath,
     );
-    final onSelect = enabled ? () => Get.back(result: selection) : null;
+    final onPointerDown = enabled
+        ? (PointerDownEvent _) => Navigator.of(context).pop(selection)
+        : null;
 
     return SizedBox(
       width: double.infinity,
       child: Material(
         color: Colors.transparent,
-        child: InkWell(
-          onTap: onSelect,
-          borderRadius: BorderRadius.circular(20.r),
-          child: Ink(
-            width: double.infinity,
-            padding: EdgeInsets.all(16.w),
-            decoration: BoxDecoration(
+        child: Ink(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: enabled
+                ? Colors.white.withValues(alpha: 0.05)
+                : Colors.white.withValues(alpha: 0.025),
+            borderRadius: BorderRadius.circular(20.r),
+            border: Border.all(
               color: enabled
-                  ? Colors.white.withValues(alpha: 0.05)
-                  : Colors.white.withValues(alpha: 0.025),
-              borderRadius: BorderRadius.circular(20.r),
-              border: Border.all(
-                color: enabled
-                    ? accent.withValues(alpha: 0.32)
-                    : Colors.white.withValues(alpha: 0.06),
-              ),
+                  ? accent.withValues(alpha: 0.32)
+                  : Colors.white.withValues(alpha: 0.06),
             ),
-            child: Row(
-              children: [
-                Container(
-                  width: 44.w,
-                  height: 44.w,
-                  decoration: BoxDecoration(
-                    color: enabled
-                        ? accent.withValues(alpha: 0.16)
-                        : Colors.white.withValues(alpha: 0.06),
-                    borderRadius: BorderRadius.circular(14.r),
+          ),
+          child: Listener(
+            behavior: HitTestBehavior.opaque,
+            onPointerDown: onPointerDown,
+            child: Padding(
+              padding: EdgeInsets.all(16.w),
+              child: Row(
+                children: [
+                  Container(
+                    width: 44.w,
+                    height: 44.w,
+                    decoration: BoxDecoration(
+                      color: enabled
+                          ? accent.withValues(alpha: 0.16)
+                          : Colors.white.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(14.r),
+                    ),
+                    child: Icon(
+                      icon,
+                      color: enabled ? accent : Colors.white38,
+                      size: 22.w,
+                    ),
                   ),
-                  child: Icon(
-                    icon,
-                    color: enabled ? accent : Colors.white38,
-                    size: 22.w,
-                  ),
-                ),
-                SizedBox(width: 14.w),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              target.label,
-                              style: TextStyle(
-                                color: enabled ? Colors.white : Colors.white38,
-                                fontSize: 15.sp,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 8.w,
-                              vertical: 5.h,
-                            ),
-                            decoration: BoxDecoration(
-                              color: enabled
-                                  ? accent.withValues(alpha: 0.14)
-                                  : Colors.white.withValues(alpha: 0.05),
-                              borderRadius: BorderRadius.circular(999.r),
-                            ),
-                            child: Text(
-                              enabled ? '可转存' : '未配置',
-                              style: TextStyle(
-                                color: enabled ? accent : Colors.white38,
-                                fontSize: 10.sp,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 8.h),
-                      Container(
-                        width: double.infinity,
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 10.w,
-                          vertical: 9.h,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.20),
-                          borderRadius: BorderRadius.circular(14.r),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.05),
-                          ),
-                        ),
-                        child: Row(
+                  SizedBox(width: 14.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
                           children: [
-                            Icon(
-                              enabled
-                                  ? Icons.drive_folder_upload_rounded
-                                  : Icons.block_rounded,
-                              color: enabled ? Colors.white70 : Colors.white30,
-                              size: 16.w,
-                            ),
-                            SizedBox(width: 8.w),
                             Expanded(
                               child: Text(
-                                enabled ? savePath : '请先配置 rootPath 后再使用',
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
+                                target.label,
                                 style: TextStyle(
                                   color: enabled
-                                      ? Colors.white70
-                                      : Colors.white30,
-                                  fontSize: 11.sp,
-                                  height: 1.35,
+                                      ? Colors.white
+                                      : Colors.white38,
+                                  fontSize: 15.sp,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 8.w,
+                                vertical: 5.h,
+                              ),
+                              decoration: BoxDecoration(
+                                color: enabled
+                                    ? accent.withValues(alpha: 0.14)
+                                    : Colors.white.withValues(alpha: 0.05),
+                                borderRadius: BorderRadius.circular(999.r),
+                              ),
+                              child: Text(
+                                enabled ? '可转存' : '未配置',
+                                style: TextStyle(
+                                  color: enabled ? accent : Colors.white38,
+                                  fontSize: 10.sp,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
                             ),
                           ],
                         ),
-                      ),
-                    ],
+                        SizedBox(height: 8.h),
+                        Container(
+                          width: double.infinity,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 10.w,
+                            vertical: 9.h,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.20),
+                            borderRadius: BorderRadius.circular(14.r),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.05),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                enabled
+                                    ? Icons.drive_folder_upload_rounded
+                                    : Icons.block_rounded,
+                                color: enabled
+                                    ? Colors.white70
+                                    : Colors.white30,
+                                size: 16.w,
+                              ),
+                              SizedBox(width: 8.w),
+                              Expanded(
+                                child: Text(
+                                  enabled ? savePath : '请先配置 rootPath 后再使用',
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: enabled
+                                        ? Colors.white70
+                                        : Colors.white30,
+                                    fontSize: 11.sp,
+                                    height: 1.35,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                SizedBox(width: 10.w),
-                Icon(
-                  enabled
-                      ? Icons.arrow_forward_ios_rounded
-                      : Icons.remove_rounded,
-                  color: enabled ? Colors.white38 : Colors.white24,
-                  size: enabled ? 16.w : 20.w,
-                ),
-              ],
+                  SizedBox(width: 10.w),
+                  Icon(
+                    enabled
+                        ? Icons.arrow_forward_ios_rounded
+                        : Icons.remove_rounded,
+                    color: enabled ? Colors.white38 : Colors.white24,
+                    size: enabled ? 16.w : 20.w,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
