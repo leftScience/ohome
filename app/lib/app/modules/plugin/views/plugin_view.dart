@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -15,27 +16,10 @@ class PluginView extends GetView<PluginController> {
     final bottomInset = MediaQuery.of(context).padding.bottom + 108.h;
 
     return SafeArea(
+      bottom: false,
       child: Stack(
         children: [
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 220.h,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    AppThemeColors.primary.withValues(alpha: 0.32),
-                    AppThemeColors.secondary.withValues(alpha: 0.18),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
+          const _PluginBackdrop(),
           ListView(
             padding: EdgeInsets.fromLTRB(20.w, 28.h, 20.w, bottomInset),
             children: [
@@ -151,120 +135,132 @@ class PluginView extends GetView<PluginController> {
           : 'SZ';
 
       return Container(
-        padding: EdgeInsets.all(18.w),
         decoration: BoxDecoration(
-          color: const Color(0xFF1A1A1A),
           borderRadius: BorderRadius.circular(22.r),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
-        ),
-        child: Row(
-          children: [
-            GestureDetector(
-              onTap: uploading ? null : controller.uploadAvatar,
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  CircleAvatar(
-                    radius: 28.r,
-                    backgroundColor: AppThemeColors.primary.withValues(
-                      alpha: 0.16,
-                    ),
-                    backgroundImage: avatarUrl.isNotEmpty
-                        ? NetworkImage(avatarUrl)
-                        : null,
-                    child: avatarUrl.isEmpty
-                        ? Text(
-                            avatarText,
-                            style: TextStyle(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
-                          )
-                        : null,
-                  ),
-                  Positioned(
-                    right: -2.w,
-                    bottom: -2.h,
-                    child: Container(
-                      width: 22.w,
-                      height: 22.w,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF2A2A2A),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.12),
-                        ),
-                      ),
-                      child: Center(
-                        child: uploading
-                            ? SizedBox(
-                                width: 10.w,
-                                height: 10.w,
-                                child: const CircularProgressIndicator(
-                                  strokeWidth: 1.6,
-                                ),
-                              )
-                            : Icon(
-                                Icons.camera_alt_rounded,
-                                size: 12.w,
-                                color: Colors.white70,
-                              ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
             ),
-            SizedBox(width: 14.w),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(22.r),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+            child: Container(
+              padding: EdgeInsets.all(18.w),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.04),
+                borderRadius: BorderRadius.circular(22.r),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+              ),
+              child: Row(
                 children: [
-                  Text(
-                    name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                  GestureDetector(
+                    onTap: uploading ? null : controller.uploadAvatar,
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        CircleAvatar(
+                          radius: 28.r,
+                          backgroundColor: AppThemeColors.primary.withValues(alpha: 0.16),
+                          backgroundImage: avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
+                          child: avatarUrl.isEmpty
+                              ? Text(
+                                  avatarText,
+                                  style: TextStyle(
+                                    fontSize: 16.sp,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : null,
+                        ),
+                        Positioned(
+                          right: -2.w,
+                          bottom: -2.h,
+                          child: Container(
+                            width: 22.w,
+                            height: 22.w,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF2A2A2A),
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.12),
+                              ),
+                            ),
+                            child: Center(
+                              child: uploading
+                                  ? SizedBox(
+                                      width: 10.w,
+                                      height: 10.w,
+                                      child: const CircularProgressIndicator(strokeWidth: 1.6),
+                                    )
+                                  : Icon(
+                                      Icons.camera_alt_rounded,
+                                      size: 12.w,
+                                      color: Colors.white70,
+                                    ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    subTitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 12.sp, color: Colors.white54),
+                  SizedBox(width: 14.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(height: 4.h),
+                        Text(
+                          subTitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 12.sp, color: Colors.white54),
+                        ),
+                        if (user != null) ...[
+                          SizedBox(height: 6.h),
+                          Text(
+                            '点击更换头像',
+                            style: TextStyle(fontSize: 11.sp, color: Colors.white38),
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
                   if (user != null) ...[
-                    SizedBox(height: 6.h),
-                    Text(
-                      '点击更换头像',
-                      style: TextStyle(fontSize: 11.sp, color: Colors.white38),
+                    SizedBox(width: 12.w),
+                    _ProfileEditButton(
+                      loading: controller.profileUpdating.value,
+                      onTap: controller.profileUpdating.value
+                          ? null
+                          : () => Get.bottomSheet<void>(
+                              _EditProfileSheet(
+                                controller: controller,
+                                initialUser: user,
+                              ),
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                            ),
                     ),
                   ],
                 ],
               ),
             ),
-            if (user != null) ...[
-              SizedBox(width: 12.w),
-              _ProfileEditButton(
-                loading: controller.profileUpdating.value,
-                onTap: controller.profileUpdating.value
-                    ? null
-                    : () => Get.bottomSheet<void>(
-                        _EditProfileSheet(
-                          controller: controller,
-                          initialUser: user,
-                        ),
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                      ),
-              ),
-            ],
-          ],
+          ),
         ),
       );
     });
@@ -288,20 +284,33 @@ class _QuarkAdminMenuCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: const Color(0xFF1A1A1A),
-      borderRadius: BorderRadius.circular(22.r),
-      child: InkWell(
-        onTap: onTap,
+    return Container(
+      decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22.r),
-        child: Ink(
-          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22.r),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
           ),
-          child: Column(
-            children: [
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(22.r),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+          child: Material(
+            color: Colors.white.withValues(alpha: 0.04),
+            child: InkWell(
+              onTap: onTap,
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(22.r),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+                ),
+                child: Column(
+                  children: [
               Row(
                 children: [
                   Container(
@@ -399,8 +408,11 @@ class _QuarkAdminMenuCard extends StatelessWidget {
               ),
             ],
           ),
+         ),
         ),
+       ),
       ),
+     ),
     );
   }
 
@@ -501,7 +513,7 @@ class _ProfileEditButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(999.r),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -852,57 +864,150 @@ class _SettingsMenuCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: const Color(0xFF1A1A1A),
-      borderRadius: BorderRadius.circular(22.r),
-      child: InkWell(
-        onTap: onTap,
+    return Container(
+      decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22.r),
-        child: Ink(
-          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22.r),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
           ),
-          child: Row(
-            children: [
-              Container(
-                width: 40.w,
-                height: 40.w,
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(22.r),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+          child: Material(
+            color: Colors.white.withValues(alpha: 0.04),
+            child: InkWell(
+              onTap: onTap,
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
                 decoration: BoxDecoration(
-                  color: iconColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(14.r),
+                  borderRadius: BorderRadius.circular(22.r),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
                 ),
-                child: Icon(icon, color: iconColor, size: 22.w),
-              ),
-              SizedBox(width: 14.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 15.sp,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                    Container(
+                      width: 40.w,
+                      height: 40.w,
+                      decoration: BoxDecoration(
+                        color: iconColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(14.r),
+                      ),
+                      child: Icon(icon, color: iconColor, size: 22.w),
+                    ),
+                    SizedBox(width: 14.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: TextStyle(
+                              fontSize: 15.sp,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(height: 4.h),
+                          Text(
+                            subtitle,
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              color: Colors.white54,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      subtitle,
-                      style: TextStyle(fontSize: 12.sp, color: Colors.white54),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      size: 20.w,
+                      color: Colors.white38,
                     ),
                   ],
                 ),
               ),
-              Icon(
-                Icons.chevron_right_rounded,
-                size: 20.w,
-                color: Colors.white38,
-              ),
-            ],
+            ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PluginBackdrop extends StatelessWidget {
+  const _PluginBackdrop();
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: DecoratedBox(
+        decoration: const BoxDecoration(
+          color: Color(0xFF131521),
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 400.h,
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      const Color(0xFF1B1E34).withValues(alpha: 0.5),
+                      const Color(0xFF131521).withValues(alpha: 0.0),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              top: -80.h,
+              left: -60.w,
+              child: _BackdropGlow(
+                size: 380.w,
+                color: const Color(0xFFE57373).withValues(alpha: 0.14),
+              ),
+            ),
+            Positioned(
+              top: 300.h,
+              right: -80.w,
+              child: _BackdropGlow(
+                size: 300.w,
+                color: const Color(0xFF448AFF).withValues(alpha: 0.10),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _BackdropGlow extends StatelessWidget {
+  const _BackdropGlow({required this.size, required this.color});
+
+  final double size;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: RadialGradient(colors: [color, color.withValues(alpha: 0)]),
         ),
       ),
     );
