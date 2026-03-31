@@ -67,6 +67,12 @@ func (s *RuntimeSupervisor) BootstrapCurrentRelease(defaultVersion string) (stri
 	if err := s.seedEmbeddedRelease(releasePath, runtimeChanged); err != nil {
 		return "", "", err
 	}
+	if runtimeChanged {
+		if err := setCurrentReleaseLink(s.store.CurrentReleaseLink(), releasePath); err != nil {
+			return "", "", err
+		}
+		return version, releasePath, nil
+	}
 
 	if releasePath, err := resolveCurrentReleasePath(s.store.CurrentReleaseLink()); err == nil {
 		serverPath := filepath.Join(releasePath, ServerExecutableName())
