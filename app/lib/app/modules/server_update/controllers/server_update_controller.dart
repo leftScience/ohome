@@ -244,7 +244,7 @@ class ServerUpdateController extends GetxController {
       final result = await _serverUpdateApi.check();
       checkResult.value = result;
       if (result.available) {
-        await _showServerUpdateDialog(result);
+        Get.snackbar('提示', '发现服务端新版本，请手动点击“开始更新”触发升级');
       } else {
         Get.snackbar('提示', '当前后端已是最新版本（${result.currentVersion}）');
       }
@@ -253,6 +253,19 @@ class ServerUpdateController extends GetxController {
     } finally {
       checking.value = false;
     }
+  }
+
+  Future<void> confirmApplyUpdate() async {
+    final result = checkResult.value;
+    if (result == null) {
+      Get.snackbar('提示', '请先检查更新');
+      return;
+    }
+    if (!result.available) {
+      Get.snackbar('提示', '当前没有可用的服务端更新');
+      return;
+    }
+    await _showServerUpdateDialog(result);
   }
 
   Future<void> applyUpdate() async {
