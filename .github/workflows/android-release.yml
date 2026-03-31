@@ -71,13 +71,15 @@ jobs:
           if [[ -z "${MINIO_PUBLIC_BASE_URL}" ]]; then
             MINIO_PUBLIC_BASE_URL="${MINIO_ENDPOINT}/${MINIO_BUCKET}"
           fi
-          APP_UPDATE_MANIFEST_URL="${MINIO_PUBLIC_BASE_URL}/android/android.json"
+          GITHUB_ANDROID_MANIFEST_URL="https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/android.json"
+          APP_UPDATE_MANIFEST_URL="${MINIO_PUBLIC_BASE_URL}/android/android.json,${GITHUB_ANDROID_MANIFEST_URL}"
           RELEASE_PREFIX="android/releases/${GITHUB_REF_NAME}"
 
           {
             echo "MINIO_ENDPOINT=${MINIO_ENDPOINT}"
             echo "MINIO_BUCKET=${MINIO_BUCKET}"
             echo "MINIO_PUBLIC_BASE_URL=${MINIO_PUBLIC_BASE_URL}"
+            echo "GITHUB_ANDROID_MANIFEST_URL=${GITHUB_ANDROID_MANIFEST_URL}"
             echo "APP_UPDATE_MANIFEST_URL=${APP_UPDATE_MANIFEST_URL}"
             echo "RELEASE_PREFIX=${RELEASE_PREFIX}"
           } >> "$GITHUB_ENV"
@@ -106,6 +108,7 @@ jobs:
           SOURCE_APK="app/${APK_RELATIVE_PATH}"
           RELEASE_APK="${OUTPUT_DIR}/ohome-release-arm64-v8a.apk"
           VERSIONED_APK_URL="${MINIO_PUBLIC_BASE_URL}/${RELEASE_PREFIX}/ohome-release-${ABI}.apk"
+          GITHUB_APK_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/ohome-release-arm64-v8a.apk"
 
           cp "$SOURCE_APK" "$RELEASE_APK"
           APK_SHA256=$(shasum -a 256 "$RELEASE_APK" | awk '{print $1}')
@@ -116,11 +119,13 @@ jobs:
             "versionName": "${BUILD_NAME}",
             "versionCode": ${BUILD_NUMBER},
             "apkUrl": "${VERSIONED_APK_URL}",
+            "apkUrls": ["${VERSIONED_APK_URL}", "${GITHUB_APK_URL}"],
             "sha256": "${APK_SHA256}",
             "releaseNotes": "Release ${GITHUB_REF_NAME}",
             "artifacts": {
               "${ABI}": {
                 "apkUrl": "${VERSIONED_APK_URL}",
+                "apkUrls": ["${VERSIONED_APK_URL}", "${GITHUB_APK_URL}"],
                 "sha256": "${APK_SHA256}"
               }
             }

@@ -100,16 +100,36 @@ class AppUpdateService extends GetxService {
     }
 
     isUpdating.value = true;
-    progress.value = null;
-    statusText.value = '准备下载更新...';
+    try {
+      final attempts = info.apkUrls.isEmpty
+          ? <String>[info.apkUrl]
+          : info.apkUrls;
+      Object? lastError;
+      for (var index = 0; index < attempts.length; index++) {
+        final url = attempts[index];
+        progress.value = null;
+        statusText.value = index == 0 ? '准备下载更新...' : '主下载地址失败，正在尝试备用地址...';
+        try {
+          await _executeOta(info, url);
+          return;
+        } catch (error) {
+          lastError = error;
+          if (index == attempts.length - 1) rethrow;
+        }
+      }
+      throw ApiException('更新失败：$lastError');
+    } finally {
+      isUpdating.value = false;
+    }
+  }
 
+  Future<void> _executeOta(AppUpdateInfo info, String downloadUrl) async {
     final completer = Completer<void>();
     StreamSubscription<OtaEvent>? subscription;
-
     try {
       subscription = OtaUpdate()
           .execute(
-            info.apkUrl,
+            downloadUrl,
             destinationFilename: info.buildDestinationFilename(),
             sha256checksum: info.sha256checksum,
             usePackageInstaller: AppEnv.instance.appUpdateUsePackageInstaller,
@@ -134,7 +154,6 @@ class AppUpdateService extends GetxService {
       );
     } finally {
       await subscription?.cancel();
-      isUpdating.value = false;
     }
   }
 

@@ -53,7 +53,7 @@ jobs:
             MINIO_PUBLIC_BASE_URL="${MINIO_ENDPOINT}/${MINIO_BUCKET}"
           fi
 
-          echo "DEFAULT_UPDATE_MANIFEST_URL=${GITHUB_MANIFEST_URL},${MINIO_PUBLIC_BASE_URL}/server/server.json" >> "$GITHUB_ENV"
+          echo "DEFAULT_UPDATE_MANIFEST_URL=${MINIO_PUBLIC_BASE_URL}/server/server.json,${GITHUB_MANIFEST_URL}" >> "$GITHUB_ENV"
 
       - name: Derive image names
         id: images

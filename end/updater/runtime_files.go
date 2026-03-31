@@ -12,10 +12,11 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strings"
 )
 
-func downloadArtifact(tempDir string, taskID string, url string) (string, error) {
+func downloadArtifact(tempDir string, taskID string, urls ...string) (string, error) {
 	if err := os.MkdirAll(tempDir, 0o755); err != nil {
 		return "", err
 	}
@@ -25,18 +26,56 @@ func downloadArtifact(tempDir string, taskID string, url string) (string, error)
 	}
 	defer tmpFile.Close()
 
-	resp, err := http.Get(strings.TrimSpace(url))
-	if err != nil {
-		return "", err
+	candidates := normalizeDownloadURLs(urls...)
+	if len(candidates) == 0 {
+		return "", fmt.Errorf("缺少更新包下载地址")
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return "", fmt.Errorf("下载更新包失败: %s", resp.Status)
+
+	failures := make([]string, 0, len(candidates))
+	for _, candidate := range candidates {
+		if _, err := tmpFile.Seek(0, io.SeekStart); err != nil {
+			return "", err
+		}
+		if err := tmpFile.Truncate(0); err != nil {
+			return "", err
+		}
+
+		resp, err := http.Get(candidate)
+		if err != nil {
+			failures = append(failures, fmt.Sprintf("%s -> %v", candidate, err))
+			continue
+		}
+
+		if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+			failures = append(failures, fmt.Sprintf("%s -> 下载更新包失败: %s", candidate, resp.Status))
+			resp.Body.Close()
+			continue
+		}
+
+		_, copyErr := io.Copy(tmpFile, resp.Body)
+		resp.Body.Close()
+		if copyErr != nil {
+			failures = append(failures, fmt.Sprintf("%s -> %v", candidate, copyErr))
+			continue
+		}
+		return tmpFile.Name(), nil
 	}
-	if _, err := io.Copy(tmpFile, resp.Body); err != nil {
-		return "", err
+
+	return "", fmt.Errorf("下载更新包失败，已尝试 %d 个地址：%s", len(candidates), strings.Join(failures, " | "))
+}
+
+func normalizeDownloadURLs(urls ...string) []string {
+	result := make([]string, 0, len(urls))
+	for _, raw := range urls {
+		for _, candidate := range strings.Split(raw, ",") {
+			trimmed := strings.TrimSpace(candidate)
+			if trimmed == "" || slices.Contains(result, trimmed) {
+				continue
+			}
+			result = append(result, trimmed)
+		}
 	}
-	return tmpFile.Name(), nil
+	return result
 }
 
 func verifySHA256File(path string, expected string) error {

@@ -12,34 +12,37 @@ class AppUpdateApi {
   final HttpClient _httpClient;
 
   Future<AppUpdateInfo> fetchManifest({required String manifestUrl}) async {
-    final Map<String, dynamic>? data = await _httpClient.get(
-      manifestUrl,
-      decoder: _asMap,
-    );
-    if (data == null) {
-      throw ApiException('更新配置格式错误');
+    final candidates = _splitCandidateUrls(manifestUrl);
+    if (candidates.isEmpty) {
+      throw ApiException('未配置更新地址');
     }
+    Object? lastError;
+    for (final candidate in candidates) {
+      try {
+        final Map<String, dynamic>? data = await _httpClient.get(
+          candidate,
+          decoder: _asMap,
+        );
+        if (data == null) {
+          throw ApiException('更新配置格式错误');
+        }
+        return await _parseManifest(data);
+      } catch (error) {
+        lastError = error;
+      }
+    }
+    throw ApiException('拉取更新配置失败：$lastError');
+  }
+
+  Future<AppUpdateInfo> _parseManifest(Map<String, dynamic> data) async {
     final payload = _pickPlatformPayload(data);
     final selectedArtifact = await _pickBestAndroidArtifact(payload);
     final sourcePayload = selectedArtifact?.payload ?? payload;
-    final apkUrl =
-        _readFirstNonEmptyString(sourcePayload, const [
-          'apkUrl',
-          'apk_url',
-          'downloadUrl',
-          'download_url',
-          'url',
-        ]) ??
-        _readFirstNonEmptyString(payload, const [
-          'apkUrl',
-          'apk_url',
-          'downloadUrl',
-          'download_url',
-          'url',
-        ]);
-    if (apkUrl == null) {
+    final apkUrls = _readDownloadUrls(sourcePayload, payload);
+    if (apkUrls.isEmpty) {
       throw ApiException('更新配置缺少 apkUrl');
     }
+    final apkUrl = apkUrls.first;
 
     final versionName =
         _readFirstNonEmptyString(sourcePayload, const [
@@ -106,6 +109,7 @@ class AppUpdateApi {
 
     return AppUpdateInfo(
       apkUrl: apkUrl,
+      apkUrls: apkUrls,
       versionName: versionName,
       versionCode: versionCode,
       sha256checksum: sha256,
@@ -215,14 +219,116 @@ class AppUpdateApi {
   }
 
   static bool _hasDownloadUrl(Map<String, dynamic> payload) {
-    return _readFirstNonEmptyString(payload, const [
-          'apkUrl',
-          'apk_url',
-          'downloadUrl',
-          'download_url',
-          'url',
-        ]) !=
-        null;
+    return _readUrlsFromPayload(payload, const [
+          'apkUrls',
+          'apk_urls',
+          'downloadUrls',
+          'download_urls',
+          'urls',
+        ]).isNotEmpty ||
+        _readFirstNonEmptyString(payload, const [
+              'apkUrl',
+              'apk_url',
+              'downloadUrl',
+              'download_url',
+              'url',
+            ]) !=
+            null;
+  }
+
+  static List<String> _readDownloadUrls(
+    Map<String, dynamic> sourcePayload,
+    Map<String, dynamic> rootPayload,
+  ) {
+    final result = <String>[];
+    void appendAll(Iterable<String> values) {
+      for (final value in values) {
+        final text = value.trim();
+        if (text.isEmpty || result.contains(text)) continue;
+        result.add(text);
+      }
+    }
+
+    appendAll(
+      _readUrlsFromPayload(sourcePayload, const [
+        'apkUrls',
+        'apk_urls',
+        'downloadUrls',
+        'download_urls',
+        'urls',
+      ]),
+    );
+    final sourcePrimary = _readFirstNonEmptyString(sourcePayload, const [
+      'apkUrl',
+      'apk_url',
+      'downloadUrl',
+      'download_url',
+      'url',
+    ]);
+    if (sourcePrimary != null) appendAll([sourcePrimary]);
+
+    appendAll(
+      _readUrlsFromPayload(rootPayload, const [
+        'apkUrls',
+        'apk_urls',
+        'downloadUrls',
+        'download_urls',
+        'urls',
+      ]),
+    );
+    final rootPrimary = _readFirstNonEmptyString(rootPayload, const [
+      'apkUrl',
+      'apk_url',
+      'downloadUrl',
+      'download_url',
+      'url',
+    ]);
+    if (rootPrimary != null) appendAll([rootPrimary]);
+
+    return result;
+  }
+
+  static List<String> _readUrlsFromPayload(
+    Map<String, dynamic> value,
+    List<String> keys,
+  ) {
+    final result = <String>[];
+    void append(String? raw) {
+      final text = raw?.trim();
+      if (text == null || text.isEmpty || result.contains(text)) return;
+      result.add(text);
+    }
+
+    for (final key in keys) {
+      final raw = value[key];
+      if (raw is String) {
+        for (final item in _splitCandidateUrls(raw)) {
+          append(item);
+        }
+        continue;
+      }
+      if (raw is List) {
+        for (final item in raw) {
+          if (item is String) append(item);
+        }
+      }
+    }
+    return result;
+  }
+
+  static List<String> _splitCandidateUrls(String raw) {
+    final normalized = raw
+        .replaceAll('\r\n', '\n')
+        .replaceAll('\r', '\n')
+        .replaceAll(';', ',')
+        .replaceAll('\n', ',');
+    final result = <String>[];
+    for (final part in normalized.split(',')) {
+      final candidate = part.trim();
+      if (candidate.isEmpty || result.contains(candidate)) continue;
+      result.add(candidate);
+    }
+    return result;
   }
 
   static Map<String, dynamic>? _asMap(dynamic value) {

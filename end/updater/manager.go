@@ -221,7 +221,7 @@ func (m *Manager) applyBinary(task *Task, manifest ServerManifest, previousRelea
 	}
 
 	m.advanceTask(task, StatusDownloading, 20, "下载服务端二进制")
-	archivePath, err := downloadArtifact(m.store.TempDir(), task.ID, artifact.URL)
+	archivePath, err := downloadArtifact(m.store.TempDir(), task.ID, artifact.CandidateURLs()...)
 	if err != nil {
 		return applyBinaryResult{}, err
 	}
@@ -402,9 +402,10 @@ func selectArtifactForPlatform(manifest ServerManifest, goos string, goarch stri
 	if !ok {
 		return "", BinaryArtifact{}, fmt.Errorf("更新清单缺少 %s 对应的二进制产物", artifactKey)
 	}
-	if strings.TrimSpace(artifact.URL) == "" || strings.TrimSpace(artifact.SHA256) == "" {
+	if len(artifact.CandidateURLs()) == 0 || strings.TrimSpace(artifact.SHA256) == "" {
 		return "", BinaryArtifact{}, fmt.Errorf("%s 对应的二进制产物信息不完整", artifactKey)
 	}
+	artifact.URL = artifact.PrimaryURL()
 	artifact.Format = normalizeArtifactFormat(artifact.Format, artifact.URL)
 	return artifactKey, artifact, nil
 }

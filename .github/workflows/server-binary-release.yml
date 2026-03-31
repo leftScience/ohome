@@ -85,9 +85,9 @@ jobs:
           MINIO_PUBLIC_BASE_URL="${MINIO_PUBLIC_BASE_URL%/}"
 
           if [[ -n "${MINIO_PUBLIC_BASE_URL}" ]]; then
-            PACKAGED_UPDATE_MANIFEST_URLS="${GITHUB_MANIFEST_URL},${MINIO_PUBLIC_BASE_URL}/server/server.json"
+            PACKAGED_UPDATE_MANIFEST_URLS="${MINIO_PUBLIC_BASE_URL}/server/server.json,${GITHUB_MANIFEST_URL}"
           elif [[ -n "${MINIO_ENDPOINT}" && -n "${MINIO_BUCKET}" ]]; then
-            PACKAGED_UPDATE_MANIFEST_URLS="${GITHUB_MANIFEST_URL},${MINIO_ENDPOINT}/${MINIO_BUCKET}/server/server.json"
+            PACKAGED_UPDATE_MANIFEST_URLS="${MINIO_ENDPOINT}/${MINIO_BUCKET}/server/server.json,${GITHUB_MANIFEST_URL}"
           else
             PACKAGED_UPDATE_MANIFEST_URLS="${GITHUB_MANIFEST_URL}"
           fi
@@ -225,9 +225,22 @@ jobs:
 
           OUTPUT_DIR="dist/server-release"
           REPO_RELEASE_BASE="https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}"
+          MINIO_ENDPOINT="${{ secrets.MINIO_ENDPOINT }}"
+          MINIO_ENDPOINT="${MINIO_ENDPOINT%/}"
+          MINIO_BUCKET="${{ secrets.MINIO_BUCKET }}"
+          MINIO_PUBLIC_BASE_URL="${{ secrets.MINIO_PUBLIC_BASE_URL }}"
+          MINIO_PUBLIC_BASE_URL="${MINIO_PUBLIC_BASE_URL%/}"
           VERSIONED_MANIFEST="${OUTPUT_DIR}/server-${GITHUB_REF_NAME}.json"
           ROLLING_MANIFEST="${OUTPUT_DIR}/server.json"
           BUILD_TIME="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+
+          if [[ -n "${MINIO_PUBLIC_BASE_URL}" ]]; then
+            MINIO_RELEASE_BASE="${MINIO_PUBLIC_BASE_URL}/server/releases/${GITHUB_REF_NAME}"
+          elif [[ -n "${MINIO_ENDPOINT}" && -n "${MINIO_BUCKET}" ]]; then
+            MINIO_RELEASE_BASE="${MINIO_ENDPOINT}/${MINIO_BUCKET}/server/releases/${GITHUB_REF_NAME}"
+          else
+            MINIO_RELEASE_BASE=""
+          fi
 
           LINUX_AMD64_SHA256="$(awk '{print $1}' "${OUTPUT_DIR}/ohome-linux-amd64.tar.gz.sha256")"
           LINUX_ARM64_SHA256="$(awk '{print $1}' "${OUTPUT_DIR}/ohome-linux-arm64.tar.gz.sha256")"
@@ -249,19 +262,24 @@ jobs:
           RELEASE_NOTES="Release ${GITHUB_REF_NAME}" \
           MIN_RUNTIME_VERSION="${MIN_RUNTIME_VERSION}" \
           RECOMMENDED_RUNTIME_VERSION="${RECOMMENDED_RUNTIME_VERSION}" \
-          LINUX_AMD64_URL="${REPO_RELEASE_BASE}/ohome-linux-amd64.tar.gz" \
+          LINUX_AMD64_URL="${MINIO_RELEASE_BASE:+${MINIO_RELEASE_BASE}/ohome-linux-amd64.tar.gz}" \
+          LINUX_AMD64_URLS="${MINIO_RELEASE_BASE:+${MINIO_RELEASE_BASE}/ohome-linux-amd64.tar.gz,}${REPO_RELEASE_BASE}/ohome-linux-amd64.tar.gz" \
           LINUX_AMD64_SHA256="${LINUX_AMD64_SHA256}" \
           LINUX_AMD64_FORMAT="tar.gz" \
-          LINUX_ARM64_URL="${REPO_RELEASE_BASE}/ohome-linux-arm64.tar.gz" \
+          LINUX_ARM64_URL="${MINIO_RELEASE_BASE:+${MINIO_RELEASE_BASE}/ohome-linux-arm64.tar.gz}" \
+          LINUX_ARM64_URLS="${MINIO_RELEASE_BASE:+${MINIO_RELEASE_BASE}/ohome-linux-arm64.tar.gz,}${REPO_RELEASE_BASE}/ohome-linux-arm64.tar.gz" \
           LINUX_ARM64_SHA256="${LINUX_ARM64_SHA256}" \
           LINUX_ARM64_FORMAT="tar.gz" \
-          WINDOWS_AMD64_URL="${REPO_RELEASE_BASE}/ohome-windows-amd64.zip" \
+          WINDOWS_AMD64_URL="${MINIO_RELEASE_BASE:+${MINIO_RELEASE_BASE}/ohome-windows-amd64.zip}" \
+          WINDOWS_AMD64_URLS="${MINIO_RELEASE_BASE:+${MINIO_RELEASE_BASE}/ohome-windows-amd64.zip,}${REPO_RELEASE_BASE}/ohome-windows-amd64.zip" \
           WINDOWS_AMD64_SHA256="${WINDOWS_AMD64_SHA256}" \
           WINDOWS_AMD64_FORMAT="zip" \
-          DARWIN_AMD64_URL="${REPO_RELEASE_BASE}/ohome-darwin-amd64.tar.gz" \
+          DARWIN_AMD64_URL="${MINIO_RELEASE_BASE:+${MINIO_RELEASE_BASE}/ohome-darwin-amd64.tar.gz}" \
+          DARWIN_AMD64_URLS="${MINIO_RELEASE_BASE:+${MINIO_RELEASE_BASE}/ohome-darwin-amd64.tar.gz,}${REPO_RELEASE_BASE}/ohome-darwin-amd64.tar.gz" \
           DARWIN_AMD64_SHA256="${DARWIN_AMD64_SHA256}" \
           DARWIN_AMD64_FORMAT="tar.gz" \
-          DARWIN_ARM64_URL="${REPO_RELEASE_BASE}/ohome-darwin-arm64.tar.gz" \
+          DARWIN_ARM64_URL="${MINIO_RELEASE_BASE:+${MINIO_RELEASE_BASE}/ohome-darwin-arm64.tar.gz}" \
+          DARWIN_ARM64_URLS="${MINIO_RELEASE_BASE:+${MINIO_RELEASE_BASE}/ohome-darwin-arm64.tar.gz,}${REPO_RELEASE_BASE}/ohome-darwin-arm64.tar.gz" \
           DARWIN_ARM64_SHA256="${DARWIN_ARM64_SHA256}" \
           DARWIN_ARM64_FORMAT="tar.gz" \
           bash scripts/generate-server-binary-manifest.sh "${VERSIONED_MANIFEST}"

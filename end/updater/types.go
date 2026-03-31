@@ -1,6 +1,10 @@
 package updater
 
-import "time"
+import (
+	"slices"
+	"strings"
+	"time"
+)
 
 type DeployMode string
 
@@ -28,9 +32,34 @@ type DockerRelease struct {
 }
 
 type BinaryArtifact struct {
-	URL    string `json:"url"`
-	SHA256 string `json:"sha256"`
-	Format string `json:"format,omitempty"`
+	URL    string   `json:"url"`
+	URLs   []string `json:"urls,omitempty"`
+	SHA256 string   `json:"sha256"`
+	Format string   `json:"format,omitempty"`
+}
+
+func (a BinaryArtifact) CandidateURLs() []string {
+	result := make([]string, 0, len(a.URLs)+1)
+	appendURL := func(raw string) {
+		trimmed := strings.TrimSpace(raw)
+		if trimmed == "" || slices.Contains(result, trimmed) {
+			return
+		}
+		result = append(result, trimmed)
+	}
+	appendURL(a.URL)
+	for _, raw := range a.URLs {
+		appendURL(raw)
+	}
+	return result
+}
+
+func (a BinaryArtifact) PrimaryURL() string {
+	urls := a.CandidateURLs()
+	if len(urls) == 0 {
+		return ""
+	}
+	return urls[0]
 }
 
 type ServerManifest struct {
