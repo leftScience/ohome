@@ -1,8 +1,5 @@
 import 'dart:async';
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
 import '../../../data/models/douban_models.dart';
@@ -12,8 +9,8 @@ import '../../../data/api/pansou.dart';
 import '../../../data/api/quark_transfer.dart';
 import '../../../data/storage/search_history_storage.dart';
 import '../../../routes/app_pages.dart';
-import '../../../theme/app_theme.dart';
 import '../../../utils/http_client.dart';
+import '../../../widgets/selection_bottom_sheet.dart';
 
 class SearchController extends GetxController {
   SearchController({
@@ -80,12 +77,7 @@ class SearchController extends GetxController {
     _RecommendTabSpec(isMovie: false, group: '最近热门剧集', sub: '国产剧'),
   ];
 
-  static const _quarkTargets = <_QuarkTarget>[
-    _QuarkTarget(label: '影视', application: 'tv'),
-    _QuarkTarget(label: '短剧', application: 'playlet'),
-    _QuarkTarget(label: '音乐', application: 'music'),
-    _QuarkTarget(label: '有声小说', application: 'xiaoshuo'),
-  ];
+  static const _quarkTargets = <String>['tv', 'playlet', 'music', 'xiaoshuo'];
 
   @override
   void onInit() {
@@ -151,13 +143,11 @@ class SearchController extends GetxController {
       final results = await Future.wait(
         _quarkTargets.map((t) async {
           try {
-            final rootPath = await _quarkTransferRepository.getQuarkRootPath(
-              t.application,
-            );
+            final rootPath = await _quarkTransferRepository.getQuarkRootPath(t);
             final savePath = _stripQuarkPrefixForStore(rootPath);
-            return MapEntry(t.application, savePath);
+            return MapEntry(t, savePath);
           } catch (_) {
-            return MapEntry(t.application, '');
+            return MapEntry(t, '');
           }
         }),
       );
@@ -229,44 +219,40 @@ class SearchController extends GetxController {
     final context = Get.overlayContext ?? Get.context;
     if (context == null) return Future.value(null);
 
-    return showGeneralDialog<_QuarkTransferSelection?>(
+    final availableCount = _quarkTargets
+        .where((app) => (quarkSavePathMap[app] ?? '').trim().isNotEmpty)
+        .length;
+
+    return showSelectionBottomSheet<_QuarkTransferSelection>(
       context: context,
-      barrierDismissible: true,
-      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-      barrierColor: Colors.black54,
-      transitionDuration: const Duration(milliseconds: 220),
-      pageBuilder: (_, _, _) {
-        return Material(
-          type: MaterialType.transparency,
-          child: Align(
-            alignment: Alignment.bottomCenter,
-            child: _QuarkTransferSheet(
-              targets: _quarkTargets,
-              savePathMap: quarkSavePathMap,
-            ),
-          ),
-        );
-      },
-      transitionBuilder: (_, animation, _, child) {
-        final curve = CurvedAnimation(
-          parent: animation,
-          curve: Curves.easeOutCubic,
-          reverseCurve: Curves.easeInCubic,
-        );
-        return FadeTransition(
-          opacity: animation,
-          child: AnimatedBuilder(
-            animation: curve,
-            child: child,
-            builder: (context, child) {
-              return Transform.translate(
-                offset: Offset(0, 36.h * (1 - curve.value)),
-                child: child,
-              );
-            },
-          ),
-        );
-      },
+      meta: SelectionBottomSheetMeta(
+        icon: Icons.check_circle_rounded,
+        label: '已配置 $availableCount / ${_quarkTargets.length}',
+        accent: availableCount > 0
+            ? const Color(0xFF34D399)
+            : const Color(0xFFF59E0B),
+      ),
+      helperText: '点击可用分类即可开始转存',
+      emptyTitle: '暂无可用分类',
+      emptyDescription: '未找到可用的 WebDAV 配置，请先在后台为对应应用配置 rootPath。',
+      options: _quarkTargets
+          .map((application) {
+            final savePath = (quarkSavePathMap[application] ?? '').trim();
+            final enabled = savePath.isNotEmpty;
+            return SelectionBottomSheetOption<_QuarkTransferSelection>(
+              value: _QuarkTransferSelection(
+                application: application,
+                savePath: savePath,
+              ),
+              title: quarkApplicationLabel(application),
+              subtitle: enabled ? savePath : '请先配置 rootPath 后再使用',
+              icon: quarkApplicationIcon(application),
+              accent: quarkApplicationAccent(application),
+              statusText: enabled ? '可转存' : '未配置',
+              enabled: enabled,
+            );
+          })
+          .toList(growable: false),
     );
   }
 
@@ -615,13 +601,6 @@ class _ResolvedRecommendTab {
   final String type;
 }
 
-class _QuarkTarget {
-  const _QuarkTarget({required this.label, required this.application});
-
-  final String label;
-  final String application;
-}
-
 class _QuarkTransferSelection {
   const _QuarkTransferSelection({
     required this.application,
@@ -630,374 +609,4 @@ class _QuarkTransferSelection {
 
   final String application;
   final String savePath;
-}
-
-class _QuarkTransferSheet extends StatelessWidget {
-  const _QuarkTransferSheet({required this.targets, required this.savePathMap});
-
-  final List<_QuarkTarget> targets;
-  final Map<String, String> savePathMap;
-
-  @override
-  Widget build(BuildContext context) {
-    final availableCount = targets
-        .where((t) => (savePathMap[t.application] ?? '').trim().isNotEmpty)
-        .length;
-    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
-    final screenHeight = MediaQuery.sizeOf(context).height;
-    final maxHeight = math.min(screenHeight * 0.78, 620.h);
-
-    return Container(
-      height: maxHeight,
-      decoration: BoxDecoration(
-        color: const Color(0xFF111111),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(30.r)),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(20.w, 14.h, 20.w, 18.h + bottomInset),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 42.w,
-                  height: 4.h,
-                  decoration: BoxDecoration(
-                    color: Colors.white24,
-                    borderRadius: BorderRadius.circular(999.r),
-                  ),
-                ),
-              ),
-              SizedBox(height: 14.h),
-              Row(
-                children: [
-                  _buildMetaChip(
-                    icon: Icons.check_circle_rounded,
-                    label: '已配置 $availableCount / ${targets.length}',
-                    accent: availableCount > 0
-                        ? const Color(0xFF34D399)
-                        : const Color(0xFFF59E0B),
-                  ),
-                  SizedBox(width: 8.w),
-                  Expanded(
-                    child: Text(
-                      '点击可用分类即可开始转存',
-                      textAlign: TextAlign.right,
-                      style: TextStyle(
-                        color: Colors.white54,
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 14.h),
-              Expanded(
-                child: availableCount == 0
-                    ? _buildEmptyState()
-                    : Column(
-                        children: [
-                          for (
-                            var index = 0;
-                            index < targets.length;
-                            index++
-                          ) ...[
-                            if (index > 0) SizedBox(height: 10.h),
-                            Builder(
-                              builder: (context) {
-                                final target = targets[index];
-                                final savePath =
-                                    (savePathMap[target.application] ?? '')
-                                        .trim();
-                                final enabled = savePath.isNotEmpty;
-                                return _buildTargetTile(
-                                  context,
-                                  target: target,
-                                  savePath: savePath,
-                                  enabled: enabled,
-                                );
-                              },
-                            ),
-                          ],
-                          const Spacer(),
-                        ],
-                      ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMetaChip({
-    required IconData icon,
-    required String label,
-    required Color accent,
-  }) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 7.h),
-      decoration: BoxDecoration(
-        color: accent.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(999.r),
-        border: Border.all(color: accent.withValues(alpha: 0.28)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: accent, size: 14.w),
-          SizedBox(width: 6.w),
-          Text(
-            label,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 11.sp,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Container(
-        width: double.infinity,
-        padding: EdgeInsets.all(20.w),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.04),
-          borderRadius: BorderRadius.circular(22.r),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 52.w,
-              height: 52.w,
-              decoration: BoxDecoration(
-                color: const Color(0xFFF59E0B).withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(18.r),
-              ),
-              child: Icon(
-                Icons.folder_off_rounded,
-                color: const Color(0xFFF59E0B),
-                size: 26.w,
-              ),
-            ),
-            SizedBox(height: 14.h),
-            Text(
-              '暂无可用分类',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16.sp,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            SizedBox(height: 6.h),
-            Text(
-              '未找到可用的 WebDAV 配置，请先在后台为对应应用配置 rootPath。',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white60,
-                fontSize: 12.sp,
-                height: 1.45,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTargetTile(
-    BuildContext context, {
-    required _QuarkTarget target,
-    required String savePath,
-    required bool enabled,
-  }) {
-    final accent = _targetAccent(target.application);
-    final icon = _targetIcon(target.application);
-    final selection = _QuarkTransferSelection(
-      application: target.application,
-      savePath: savePath,
-    );
-    final onPointerDown = enabled
-        ? (PointerDownEvent _) => Navigator.of(context).pop(selection)
-        : null;
-
-    return SizedBox(
-      width: double.infinity,
-      child: Material(
-        color: Colors.transparent,
-        child: Ink(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: enabled
-                ? Colors.white.withValues(alpha: 0.05)
-                : Colors.white.withValues(alpha: 0.025),
-            borderRadius: BorderRadius.circular(20.r),
-            border: Border.all(
-              color: enabled
-                  ? accent.withValues(alpha: 0.32)
-                  : Colors.white.withValues(alpha: 0.06),
-            ),
-          ),
-          child: Listener(
-            behavior: HitTestBehavior.opaque,
-            onPointerDown: onPointerDown,
-            child: Padding(
-              padding: EdgeInsets.all(16.w),
-              child: Row(
-                children: [
-                  Container(
-                    width: 44.w,
-                    height: 44.w,
-                    decoration: BoxDecoration(
-                      color: enabled
-                          ? accent.withValues(alpha: 0.16)
-                          : Colors.white.withValues(alpha: 0.06),
-                      borderRadius: BorderRadius.circular(14.r),
-                    ),
-                    child: Icon(
-                      icon,
-                      color: enabled ? accent : Colors.white38,
-                      size: 22.w,
-                    ),
-                  ),
-                  SizedBox(width: 14.w),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                target.label,
-                                style: TextStyle(
-                                  color: enabled
-                                      ? Colors.white
-                                      : Colors.white38,
-                                  fontSize: 15.sp,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 8.w,
-                                vertical: 5.h,
-                              ),
-                              decoration: BoxDecoration(
-                                color: enabled
-                                    ? accent.withValues(alpha: 0.14)
-                                    : Colors.white.withValues(alpha: 0.05),
-                                borderRadius: BorderRadius.circular(999.r),
-                              ),
-                              child: Text(
-                                enabled ? '可转存' : '未配置',
-                                style: TextStyle(
-                                  color: enabled ? accent : Colors.white38,
-                                  fontSize: 10.sp,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 8.h),
-                        Container(
-                          width: double.infinity,
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 10.w,
-                            vertical: 9.h,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.20),
-                            borderRadius: BorderRadius.circular(14.r),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.05),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                enabled
-                                    ? Icons.drive_folder_upload_rounded
-                                    : Icons.block_rounded,
-                                color: enabled
-                                    ? Colors.white70
-                                    : Colors.white30,
-                                size: 16.w,
-                              ),
-                              SizedBox(width: 8.w),
-                              Expanded(
-                                child: Text(
-                                  enabled ? savePath : '请先配置 rootPath 后再使用',
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    color: enabled
-                                        ? Colors.white70
-                                        : Colors.white30,
-                                    fontSize: 11.sp,
-                                    height: 1.35,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(width: 10.w),
-                  Icon(
-                    enabled
-                        ? Icons.arrow_forward_ios_rounded
-                        : Icons.remove_rounded,
-                    color: enabled ? Colors.white38 : Colors.white24,
-                    size: enabled ? 16.w : 20.w,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  IconData _targetIcon(String application) {
-    switch (application) {
-      case 'playlet':
-        return Icons.movie_filter_rounded;
-      case 'music':
-        return Icons.queue_music_rounded;
-      case 'xiaoshuo':
-        return Icons.headphones_rounded;
-      case 'tv':
-      default:
-        return Icons.live_tv_rounded;
-    }
-  }
-
-  Color _targetAccent(String application) {
-    switch (application) {
-      case 'playlet':
-        return const Color(0xFFFB7185);
-      case 'music':
-        return const Color(0xFF22C55E);
-      case 'xiaoshuo':
-        return const Color(0xFFF59E0B);
-      case 'tv':
-      default:
-        return AppThemeColors.primary;
-    }
-  }
 }

@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import '../data/api/quark.dart';
 import '../data/models/quark_file_entry.dart';
 import '../modules/common/controllers/quark_folder_controller.dart';
+import 'selection_bottom_sheet.dart';
 
 const List<String> _kDefaultEntryBlacklist = <String>[''];
 
@@ -804,61 +805,37 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
   Future<String?> _selectMoveTargetApplication(
     List<QuarkConfigOption> targets,
   ) async {
-    var selected = widget.controller.applicationType.trim();
-    if (targets.every((t) => t.application != selected)) {
-      selected = targets.first.application;
-    }
+    final sourceApp = widget.controller.applicationType.trim();
 
-    return showDialog<String>(
+    return showSelectionBottomSheet<String>(
       context: context,
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (ctx, setLocalState) {
-            return AlertDialog(
-              title: const Text('选择移动目标'),
-              content: SizedBox(
-                width: 360,
-                child: SingleChildScrollView(
-                  child: RadioGroup<String>(
-                    groupValue: selected,
-                    onChanged: (value) {
-                      if (value == null) return;
-                      setLocalState(() {
-                        selected = value;
-                      });
-                    },
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: targets
-                          .map((target) {
-                            final app = target.application;
-                            final sub = target.rootPath.trim();
-                            final label = target.remark.trim();
-                            return RadioListTile<String>(
-                              value: app,
-                              title: Text(label.isEmpty ? app : label),
-                              subtitle: sub.isEmpty ? null : Text(sub),
-                            );
-                          })
-                          .toList(growable: false),
-                    ),
-                  ),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(),
-                  child: const Text('取消'),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(selected),
-                  child: const Text('确定'),
-                ),
-              ],
+      meta: SelectionBottomSheetMeta(
+        icon: Icons.drive_file_move_rounded,
+        label: '可选 ${targets.length} 个目标',
+        accent: const Color(0xFF34D399),
+      ),
+      helperText: '点击目标分类即可移动已选资源',
+      emptyTitle: '暂无可用目标',
+      emptyDescription: '未找到可用移动目标，请先配置对应应用的 rootPath。',
+      options: targets
+          .map((target) {
+            final application = target.application.trim();
+            final fallbackLabel = quarkApplicationLabel(application);
+            final remark = target.remark.trim();
+            final title = remark.isEmpty
+                ? fallbackLabel
+                : '$fallbackLabel · $remark';
+            final isCurrent = application == sourceApp;
+            return SelectionBottomSheetOption<String>(
+              value: application,
+              title: title,
+              subtitle: target.rootPath.trim(),
+              icon: quarkApplicationIcon(application),
+              accent: quarkApplicationAccent(application),
+              statusText: isCurrent ? '当前分类' : '可移动',
             );
-          },
-        );
-      },
+          })
+          .toList(growable: false),
     );
   }
 
