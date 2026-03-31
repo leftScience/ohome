@@ -8,14 +8,14 @@ import '../controllers/home_controller.dart';
 class HomeTodoPanel extends StatelessWidget {
   const HomeTodoPanel({super.key});
 
-  static const Color _panelAccent = Color(0xFF9F82FF);
-  static const Color _panelBackground = Color(0xFF15161B);
-  static const Color _panelBackgroundSoft = Color(0xFF1A1B22);
-  static const Color _panelBorder = Color(0xFF2B2D35);
-  static const Color _tileBackgroundSoft = Color(0xFF1B1D23);
-  static const Color _tilePendingStart = Color(0xFF31254E);
-  static const Color _tilePendingMiddle = Color(0xFF242B3F);
-  static const Color _tilePendingEnd = Color(0xFF1C2434);
+  static const Color _panelAccent = Color(0xFF6C63FF);
+  static const Color _panelBackground = Color(0xFF13141F);
+  static const Color _panelBackgroundSoft = Color(0xFF1A1C29);
+  static const Color _panelBorder = Color(0xFF2E3045);
+  static const Color _tileBackgroundSoft = Color(0xFF1F2131);
+  static const Color _tilePendingStart = Color(0xFF33206B);
+  static const Color _tilePendingMiddle = Color(0xFF272A42);
+  static const Color _tilePendingEnd = Color(0xFF1C1E30);
   static const Color _textMuted = Color(0xFF8E919A);
 
   HomeController get controller => Get.find<HomeController>();

@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -61,28 +62,22 @@ class HomeHistoryBanner extends GetView<HomeController> {
       return GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: onBannerTap,
-        child: Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14.r),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                const Color(0xFF7C4DFF).withValues(alpha: 0.4),
-                const Color(0xFF448AFF).withValues(alpha: 0.2),
-                const Color(0xFF7C4DFF).withValues(alpha: 0.1),
-              ],
-            ),
-          ),
-          padding: const EdgeInsets.all(1.2),
-          child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1A1A1A),
-              borderRadius: BorderRadius.circular(13.r),
-            ),
-            child: Row(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20.r),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+            child: Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(20.r),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.12),
+                  width: 1.2,
+                ),
+              ),
+              child: Row(
               children: [
                 Expanded(
                   child: GestureDetector(
@@ -190,6 +185,7 @@ class HomeHistoryBanner extends GetView<HomeController> {
               ],
             ),
           ),
+        ),
         ),
       );
     });

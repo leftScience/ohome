@@ -111,12 +111,12 @@ class PluginView extends GetView<PluginController> {
               SizedBox(height: 12.h),
               Obx(
                 () => _SettingsMenuCard(
-                  icon: Icons.system_update_alt_rounded,
+                  icon: Icons.info_outline_rounded,
                   iconColor: const Color(0xFF64B5F6),
-                  title: '更新管理',
+                  title: '关于 oHome',
                   subtitle: controller.isSuperAdmin
-                      ? '统一管理 App 与服务端更新'
-                      : '检查当前是否有可用新版本',
+                      ? '项目介绍、联系方式与 App / 服务端更新'
+                      : '项目介绍、联系方式与 App 更新',
                   onTap: controller.openServerUpdate,
                 ),
               ),
