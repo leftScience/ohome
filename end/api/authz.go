@@ -22,13 +22,17 @@ func getLoginUser(c *gin.Context) (model.LoginUser, error) {
 }
 
 func requireSuperAdmin(c *gin.Context) (model.LoginUser, bool) {
+	return requireSuperAdminWithMessage(c, "无权限访问")
+}
+
+func requireSuperAdminWithMessage(c *gin.Context, message string) (model.LoginUser, bool) {
 	loginUser, err := getLoginUser(c)
 	if err != nil {
 		utils.FailWithMessage(err.Error(), c)
 		return model.LoginUser{}, false
 	}
 	if !loginUser.IsSuperAdmin() {
-		utils.PermissionFail("无权限访问", c)
+		utils.PermissionFail(message, c)
 		return model.LoginUser{}, false
 	}
 	return loginUser, true

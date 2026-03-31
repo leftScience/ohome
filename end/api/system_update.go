@@ -19,7 +19,7 @@ func NewSystemUpdateApi() SystemUpdate {
 }
 
 func (a *SystemUpdate) Info(c *gin.Context) {
-	if _, ok := requireSuperAdmin(c); !ok {
+	if _, ok := requireSuperAdminWithMessage(c, "没有服务端更新权限，请联系管理员"); !ok {
 		return
 	}
 	if !ensureSystemUpdateEnabled(c) {
@@ -34,7 +34,7 @@ func (a *SystemUpdate) Info(c *gin.Context) {
 }
 
 func (a *SystemUpdate) Check(c *gin.Context) {
-	if _, ok := requireSuperAdmin(c); !ok {
+	if _, ok := requireSuperAdminWithMessage(c, "没有服务端更新权限，请联系管理员"); !ok {
 		return
 	}
 	if !ensureSystemUpdateEnabled(c) {
@@ -54,7 +54,7 @@ func (a *SystemUpdate) Check(c *gin.Context) {
 }
 
 func (a *SystemUpdate) Apply(c *gin.Context) {
-	if _, ok := requireSuperAdmin(c); !ok {
+	if _, ok := requireSuperAdminWithMessage(c, "没有服务端更新权限，请联系管理员"); !ok {
 		return
 	}
 	if !ensureSystemUpdateEnabled(c) {
@@ -74,7 +74,7 @@ func (a *SystemUpdate) Apply(c *gin.Context) {
 }
 
 func (a *SystemUpdate) Task(c *gin.Context) {
-	if _, ok := requireSuperAdmin(c); !ok {
+	if _, ok := requireSuperAdminWithMessage(c, "没有服务端更新权限，请联系管理员"); !ok {
 		return
 	}
 	if !ensureSystemUpdateEnabled(c) {
@@ -89,7 +89,7 @@ func (a *SystemUpdate) Task(c *gin.Context) {
 }
 
 func (a *SystemUpdate) Rollback(c *gin.Context) {
-	if _, ok := requireSuperAdmin(c); !ok {
+	if _, ok := requireSuperAdminWithMessage(c, "没有服务端更新权限，请联系管理员"); !ok {
 		return
 	}
 	if !ensureSystemUpdateEnabled(c) {
