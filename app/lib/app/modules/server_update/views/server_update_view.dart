@@ -77,7 +77,7 @@ class ServerUpdateView extends GetView<ServerUpdateController> {
                       qqNumber: _qqNumber,
                       onCopyGithub: () =>
                           _copyText(label: 'GitHub 地址', value: _githubUrl),
-                      onCopyQq: () => _copyText(label: 'QQ群', value: _qqNumber),
+                      onCopyQq: () => _copyText(label: 'QQ', value: _qqNumber),
                     ),
                     SizedBox(height: 10.h),
                     _SectionCard(
@@ -399,7 +399,7 @@ class _AboutHeroCard extends StatelessWidget {
                     child: _CompactContactTile(
                       icon: Icons.forum_rounded,
                       iconColor: const Color(0xFF64B5F6),
-                      title: '复制 QQ群',
+                      title: '复制 QQ',
                       onTap: onCopyQq,
                     ),
                   ),
