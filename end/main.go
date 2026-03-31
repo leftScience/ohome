@@ -6,7 +6,7 @@ import (
 	"ohome/cmd"
 )
 
-
+// ohome main
 func main() {
 	fmt.Printf("ohome server version=%s commit=%s buildTime=%s channel=%s\n", buildinfo.CleanVersion(), buildinfo.Commit, buildinfo.BuildTime, buildinfo.CleanChannel())
 	cmd.Start()
