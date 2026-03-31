@@ -41,7 +41,9 @@
 
 
 ## 演示视频
-<iframe src="//player.bilibili.com/player.html?isOutside=true&aid=116315197020284&bvid=BV1BGXRB7Exc&cid=37083352313&p=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>
+
+- B站视频：[我开发了一款家庭专用播放以及物资管理软件](https://www.bilibili.com/video/BV1BGXRB7Exc/?share_source=copy_web&vd_source=d89bee5685527bb00d6328b67f985401)
+
 
 ## 服务端
 
