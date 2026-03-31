@@ -2,6 +2,7 @@ package updater
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -17,11 +18,37 @@ func DetectDeployMode() DeployMode {
 }
 
 func ManifestURL() string {
+	urls := ManifestURLs()
+	if len(urls) == 0 {
+		return ""
+	}
+	return urls[0]
+}
+
+func ManifestURLs() []string {
 	value := strings.TrimSpace(viper.GetString("update.manifestUrl"))
 	if value == "" {
-		return defaultManifestURL
+		return []string{defaultManifestURL}
 	}
-	return value
+	urls := splitManifestURLs(value)
+	if len(urls) == 0 {
+		return []string{defaultManifestURL}
+	}
+	return urls
+}
+
+func splitManifestURLs(value string) []string {
+	replacer := strings.NewReplacer("\r\n", "\n", "\r", "\n", ";", ",", "\n", ",")
+	parts := strings.Split(replacer.Replace(value), ",")
+	urls := make([]string, 0, len(parts))
+	for _, part := range parts {
+		candidate := strings.TrimSpace(part)
+		if candidate == "" || slices.Contains(urls, candidate) {
+			continue
+		}
+		urls = append(urls, candidate)
+	}
+	return urls
 }
 
 func DefaultChannel() string {

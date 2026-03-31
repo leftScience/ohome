@@ -74,9 +74,10 @@ jobs:
             echo "RECOMMENDED_RUNTIME_VERSION=${RUNTIME_VERSION}"
           } >> "$GITHUB_ENV"
 
-      - name: Derive packaged manifest URL
+      - name: Derive packaged manifest URLs
         shell: bash
         run: |
+          GITHUB_MANIFEST_URL="https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/server.json"
           MINIO_ENDPOINT="${{ secrets.MINIO_ENDPOINT }}"
           MINIO_ENDPOINT="${MINIO_ENDPOINT%/}"
           MINIO_BUCKET="${{ secrets.MINIO_BUCKET }}"
@@ -84,14 +85,14 @@ jobs:
           MINIO_PUBLIC_BASE_URL="${MINIO_PUBLIC_BASE_URL%/}"
 
           if [[ -n "${MINIO_PUBLIC_BASE_URL}" ]]; then
-            PACKAGED_UPDATE_MANIFEST_URL="${MINIO_PUBLIC_BASE_URL}/server/server.json"
+            PACKAGED_UPDATE_MANIFEST_URLS="${GITHUB_MANIFEST_URL},${MINIO_PUBLIC_BASE_URL}/server/server.json"
           elif [[ -n "${MINIO_ENDPOINT}" && -n "${MINIO_BUCKET}" ]]; then
-            PACKAGED_UPDATE_MANIFEST_URL="${MINIO_ENDPOINT}/${MINIO_BUCKET}/server/server.json"
+            PACKAGED_UPDATE_MANIFEST_URLS="${GITHUB_MANIFEST_URL},${MINIO_ENDPOINT}/${MINIO_BUCKET}/server/server.json"
           else
-            PACKAGED_UPDATE_MANIFEST_URL="https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/server.json"
+            PACKAGED_UPDATE_MANIFEST_URLS="${GITHUB_MANIFEST_URL}"
           fi
 
-          echo "PACKAGED_UPDATE_MANIFEST_URL=${PACKAGED_UPDATE_MANIFEST_URL}" >> "$GITHUB_ENV"
+          echo "PACKAGED_UPDATE_MANIFEST_URLS=${PACKAGED_UPDATE_MANIFEST_URLS}" >> "$GITHUB_ENV"
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -141,7 +142,7 @@ jobs:
           from pathlib import Path
 
           config_path = Path(os.environ["CONF_DIR"]) / "config.yaml"
-          manifest_url = os.environ["PACKAGED_UPDATE_MANIFEST_URL"].strip()
+          manifest_url = os.environ["PACKAGED_UPDATE_MANIFEST_URLS"].strip()
           original = config_path.read_text(encoding="utf-8")
           target = '  manifestUrl: ""'
           if target not in original:

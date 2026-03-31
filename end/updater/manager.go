@@ -61,7 +61,7 @@ func (m *Manager) Info() (InfoResponse, error) {
 
 func (m *Manager) Check(req CheckRequest) (CheckResponse, error) {
 	mode := DetectDeployMode()
-	manifest, err := FetchManifest(ManifestURL())
+	manifest, err := FetchManifestWithFallback(ManifestURLs())
 	if err != nil {
 		return CheckResponse{}, err
 	}
@@ -125,7 +125,7 @@ func (m *Manager) Task(taskID string) (*Task, error) {
 }
 
 func (m *Manager) runApplyTask(task *Task, req ApplyRequest) {
-	manifest, err := FetchManifest(ManifestURL())
+	manifest, err := FetchManifestWithFallback(ManifestURLs())
 	if err != nil {
 		m.failTask(task, err)
 		return

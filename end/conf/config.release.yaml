@@ -43,7 +43,7 @@ quark:
 
 update:
   channel: stable
-  manifestUrl: ""
+  manifestUrl: "" # 支持单个地址，或多个地址逗号分隔，按顺序回退
   updater:
     token: ohome-local-updater
     listenAddr: 127.0.0.1:18091
