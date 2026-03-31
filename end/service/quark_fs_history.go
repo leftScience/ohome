@@ -194,19 +194,26 @@ func (s *QuarkFsService) rollbackDeletedHistory(records []model.UserMediaHistory
 	})
 }
 
-func (s *QuarkFsService) resolveSourceApplicationAndHistoryPath(sourcePath, fallbackApplication, fallbackRootPath string) (string, string, error) {
+func (s *QuarkFsService) resolveSourceApplicationAndHistoryPath(sourcePath, fallbackApplication, fallbackRootPath string, userID uint) (string, string, error) {
+	configs, err := s.listAllQuarkConfigs()
+	if err != nil {
+		return "", "", err
+	}
+	return s.resolveSourceApplicationAndHistoryPathWithConfigs(sourcePath, fallbackApplication, fallbackRootPath, userID, configs)
+}
+
+func (s *QuarkFsService) resolveSourceApplicationAndHistoryPathWithConfigs(
+	sourcePath, fallbackApplication, fallbackRootPath string,
+	userID uint,
+	configs []model.QuarkConfig,
+) (string, string, error) {
 	fullPath := s.normalizeHistoryPath(sourcePath)
 	if fullPath == "" || fullPath == "/" {
 		return "", "", errors.New("移动源路径不能为空")
 	}
 
-	configs, err := s.listAllQuarkConfigs()
-	if err != nil {
-		return "", "", err
-	}
-
 	matchedApp := strings.TrimSpace(fallbackApplication)
-	matchedRoot := s.normalizeConfiguredRootPath(fallbackRootPath)
+	matchedRoot := resolveQuarkRootPathForUser(fallbackApplication, fallbackRootPath, userID)
 	matchedLen := -1
 
 	for i := range configs {
@@ -214,7 +221,7 @@ func (s *QuarkFsService) resolveSourceApplicationAndHistoryPath(sourcePath, fall
 		if app == "" {
 			continue
 		}
-		root := s.normalizeConfiguredRootPath(configs[i].RootPath)
+		root := resolveQuarkRootPathForUser(app, configs[i].RootPath, userID)
 		if root == "/" {
 			continue
 		}
@@ -249,17 +256,25 @@ func (s *QuarkFsService) isApplicationRootPath(sourcePath string) (bool, error) 
 	if err != nil {
 		return false, err
 	}
-	return s.isApplicationRootPathWithConfigs(sourcePath, configs), nil
+	return s.isApplicationRootPathWithConfigs(sourcePath, configs, 0), nil
 }
 
-func (s *QuarkFsService) isApplicationRootPathWithConfigs(sourcePath string, configs []model.QuarkConfig) bool {
+func (s *QuarkFsService) isApplicationRootPathForUser(sourcePath string, userID uint) (bool, error) {
+	configs, err := s.listAllQuarkConfigs()
+	if err != nil {
+		return false, err
+	}
+	return s.isApplicationRootPathWithConfigs(sourcePath, configs, userID), nil
+}
+
+func (s *QuarkFsService) isApplicationRootPathWithConfigs(sourcePath string, configs []model.QuarkConfig, userID uint) bool {
 	normalizedSource := s.normalizeAbsoluteSourcePath(sourcePath)
 	if normalizedSource == "" || normalizedSource == "/" {
 		return false
 	}
 
 	for i := range configs {
-		root := s.normalizeConfiguredRootPath(configs[i].RootPath)
+		root := resolveQuarkRootPathForUser(configs[i].Application, configs[i].RootPath, userID)
 		if root == "" || root == "/" {
 			continue
 		}

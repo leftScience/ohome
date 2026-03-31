@@ -8,10 +8,14 @@ class ConfigApi {
 
   final HttpClient _httpClient;
 
-  Future<ConfigModel?> findConfigByKey(String key) async {
+  Future<ConfigModel?> findConfigByKey(
+    String key, {
+    bool showErrorToast = true,
+  }) async {
     final response = await _httpClient.post<Map<String, dynamic>?>(
       '/config/list',
       data: <String, dynamic>{'key': key, 'page': 1, 'limit': 200},
+      showErrorToast: showErrorToast,
       decoder: (data) {
         if (data is Map<String, dynamic>) return data;
         if (data is Map) return data.cast<String, dynamic>();
@@ -32,7 +36,10 @@ class ConfigApi {
     return null;
   }
 
-  Future<Map<String, ConfigModel>> findConfigsByKeys(List<String> keys) async {
+  Future<Map<String, ConfigModel>> findConfigsByKeys(
+    List<String> keys, {
+    bool showErrorToast = true,
+  }) async {
     final normalized = keys
         .map((e) => e.trim())
         .where((e) => e.isNotEmpty)
@@ -49,6 +56,7 @@ class ConfigApi {
         'page': 1,
         'limit': normalized.length,
       },
+      showErrorToast: showErrorToast,
       decoder: (data) {
         if (data is Map<String, dynamic>) return data;
         if (data is Map) return data.cast<String, dynamic>();

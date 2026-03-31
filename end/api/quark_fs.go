@@ -30,12 +30,17 @@ func NewQuarkFsApi() QuarkFs {
 }
 
 func (a *QuarkFs) GetQuarkFileList(c *gin.Context) {
+	userID, err := a.getLoginUserID(c)
+	if err != nil {
+		utils.FailWithMessage(err.Error(), c)
+		return
+	}
 	var pathDTO dto.QuarkPathDTO
 	if err := a.Request(RequestOptions{Ctx: c, DTO: &pathDTO}).GetErrors(); err != nil {
 		return
 	}
 
-	files, err := quarkFsService.ListFiles(&pathDTO)
+	files, err := quarkFsService.ListFiles(&pathDTO, userID)
 	if err != nil {
 		utils.FailWithMessage(err.Error(), c)
 		return
@@ -45,12 +50,17 @@ func (a *QuarkFs) GetQuarkFileList(c *gin.Context) {
 }
 
 func (a *QuarkFs) GetQuarkFileMetadata(c *gin.Context) {
+	userID, err := a.getLoginUserID(c)
+	if err != nil {
+		utils.FailWithMessage(err.Error(), c)
+		return
+	}
 	var pathDTO dto.QuarkPathDTO
 	if err := a.Request(RequestOptions{Ctx: c, DTO: &pathDTO}).GetErrors(); err != nil {
 		return
 	}
 
-	meta, err := quarkFsService.GetFileMetadata(&pathDTO)
+	meta, err := quarkFsService.GetFileMetadata(&pathDTO, userID)
 	if err != nil {
 		utils.FailWithMessage(err.Error(), c)
 		return
@@ -60,6 +70,11 @@ func (a *QuarkFs) GetQuarkFileMetadata(c *gin.Context) {
 }
 
 func (a *QuarkFs) StreamQuarkFile(c *gin.Context) {
+	userID, err := a.getLoginUserID(c)
+	if err != nil {
+		utils.FailWithMessage(err.Error(), c)
+		return
+	}
 	var pathDTO dto.QuarkPathDTO
 	if err := a.Request(RequestOptions{Ctx: c, DTO: &pathDTO}).GetErrors(); err != nil {
 		return
@@ -68,7 +83,7 @@ func (a *QuarkFs) StreamQuarkFile(c *gin.Context) {
 	isCast := c.Query("cast") == "true"
 	rangeHeader := c.GetHeader("Range")
 	if !isCast && shouldRedirectQuarkStream(c) {
-		directURL, _, err := quarkFsService.GetDirectFileLink(c.Request.Context(), &pathDTO)
+		directURL, _, err := quarkFsService.GetDirectFileLink(c.Request.Context(), &pathDTO, userID)
 		if err != nil {
 			utils.FailWithMessage(err.Error(), c)
 			return
@@ -82,7 +97,7 @@ func (a *QuarkFs) StreamQuarkFile(c *gin.Context) {
 	}
 
 	if c.Request.Method == http.MethodHead {
-		meta, err := quarkFsService.DescribeFile(&pathDTO)
+		meta, err := quarkFsService.DescribeFile(&pathDTO, userID)
 		if err != nil {
 			utils.FailWithMessage(err.Error(), c)
 			return
@@ -97,7 +112,7 @@ func (a *QuarkFs) StreamQuarkFile(c *gin.Context) {
 		return
 	}
 
-	result, meta, err := quarkFsService.StreamFile(c.Request.Context(), &pathDTO, rangeHeader)
+	result, meta, err := quarkFsService.StreamFile(c.Request.Context(), &pathDTO, rangeHeader, userID)
 	if err != nil {
 		utils.FailWithMessage(err.Error(), c)
 		return
@@ -236,6 +251,11 @@ func (a *QuarkFs) DeleteQuarkFile(c *gin.Context) {
 }
 
 func (a *QuarkFs) UploadQuarkFile(c *gin.Context) {
+	userID, err := a.getLoginUserID(c)
+	if err != nil {
+		utils.FailWithMessage(err.Error(), c)
+		return
+	}
 	var pathDTO dto.QuarkPathDTO
 	if err := a.Request(RequestOptions{Ctx: c, DTO: &pathDTO}).GetErrors(); err != nil {
 		return
@@ -247,7 +267,7 @@ func (a *QuarkFs) UploadQuarkFile(c *gin.Context) {
 		return
 	}
 
-	if err := quarkFsService.UploadFile(&pathDTO, fileHeader); err != nil {
+	if err := quarkFsService.UploadFile(&pathDTO, fileHeader, userID); err != nil {
 		utils.FailWithMessage(err.Error(), c)
 		return
 	}

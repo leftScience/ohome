@@ -56,6 +56,7 @@ func (s *QuarkTransferTaskService) RecoverInterruptedTasks() error {
 
 func (s *QuarkTransferTaskService) SubmitSearchManualTransfer(transferDTO *dto.QuarkAutoSaveTransferDTO, ownerUserID uint) (model.QuarkTransferTask, error) {
 	shareURL := strings.TrimSpace(transferDTO.ShareURL)
+	application := strings.TrimSpace(transferDTO.Application)
 	savePath := stripQuarkPrefixForStore(transferDTO.SavePath)
 	if shareURL == "" || savePath == "" {
 		return model.QuarkTransferTask{}, errors.New("分享链接和保存路径不能为空")
@@ -78,7 +79,7 @@ func (s *QuarkTransferTaskService) SubmitSearchManualTransfer(transferDTO *dto.Q
 		displayName: displayName,
 		shareURL:    shareURL,
 		savePath:    savePath,
-		application: strings.TrimSpace(transferDTO.Application),
+		application: application,
 		sourceType:  model.QuarkTransferTaskSourceSearchManual,
 		renameTo:    displayName,
 		ownerUserID: ownerUserID,

@@ -18,12 +18,17 @@ func NewQuarkConfigApi() QuarkConfig {
 }
 
 func (a *QuarkConfig) GetQuarkConfigList(c *gin.Context) {
+	loginUser, err := getLoginUser(c)
+	if err != nil {
+		utils.FailWithMessage(err.Error(), c)
+		return
+	}
 	var listDTO dto.QuarkConfigListDTO
 	if err := a.Request(RequestOptions{Ctx: c, DTO: &listDTO}).GetErrors(); err != nil {
 		return
 	}
 
-	configs, total, err := quarkConfigService.GetQuarkConfigList(&listDTO)
+	configs, total, err := quarkConfigService.GetQuarkConfigList(&listDTO, loginUser.ID)
 	if err != nil {
 		utils.FailWithMessage(err.Error(), c)
 		return
@@ -36,12 +41,17 @@ func (a *QuarkConfig) GetQuarkConfigList(c *gin.Context) {
 }
 
 func (a *QuarkConfig) GetQuarkConfigByApplication(c *gin.Context) {
+	loginUser, err := getLoginUser(c)
+	if err != nil {
+		utils.FailWithMessage(err.Error(), c)
+		return
+	}
 	var applicationDTO dto.QuarkApplicationDTO
 	if err := a.Request(RequestOptions{Ctx: c, DTO: &applicationDTO}).GetErrors(); err != nil {
 		return
 	}
 
-	config, err := quarkConfigService.GetQuarkConfigByApplication(&applicationDTO)
+	config, err := quarkConfigService.GetQuarkConfigByApplication(&applicationDTO, loginUser.ID)
 	if err != nil {
 		utils.FailWithMessage(err.Error(), c)
 		return

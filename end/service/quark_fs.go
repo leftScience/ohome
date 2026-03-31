@@ -23,7 +23,7 @@ type QuarkProxyMeta struct {
 	UpdatedAt int64
 }
 
-func (s *QuarkFsService) ListFiles(pathDTO *dto.QuarkPathDTO) ([]dto.QuarkFsInfo, error) {
+func (s *QuarkFsService) ListFiles(pathDTO *dto.QuarkPathDTO, userID uint) ([]dto.QuarkFsInfo, error) {
 	logQuarkWarnf("[quarkFs:list] start application=%s rawPath=%q", strings.TrimSpace(pathDTO.Application), strings.TrimSpace(pathDTO.Path))
 	client, err := newManagedQuarkClient()
 	if err != nil {
@@ -32,7 +32,7 @@ func (s *QuarkFsService) ListFiles(pathDTO *dto.QuarkPathDTO) ([]dto.QuarkFsInfo
 	}
 	ctx := context.Background()
 
-	_, rootEntry, rootPath, err := s.resolveApplicationRoot(ctx, client, pathDTO.Application, true)
+	_, rootEntry, rootPath, err := s.resolveApplicationRoot(ctx, client, pathDTO.Application, userID, true)
 	if err != nil {
 		if errors.Is(err, errQuarkEntryNotFound) {
 			logQuarkWarnf("[quarkFs:list] application root not found application=%s rootPath=%s", strings.TrimSpace(pathDTO.Application), rootPath)
@@ -127,14 +127,14 @@ func (s *QuarkFsService) resolveListSortExpr(pathDTO *dto.QuarkPathDTO, clientPa
 	}
 }
 
-func (s *QuarkFsService) GetFileMetadata(pathDTO *dto.QuarkPathDTO) (dto.QuarkFsMetaInfo, error) {
+func (s *QuarkFsService) GetFileMetadata(pathDTO *dto.QuarkPathDTO, userID uint) (dto.QuarkFsMetaInfo, error) {
 	client, err := newManagedQuarkClient()
 	if err != nil {
 		return dto.QuarkFsMetaInfo{}, err
 	}
 	ctx := context.Background()
 
-	_, rootEntry, rootPath, err := s.resolveApplicationRoot(ctx, client, pathDTO.Application, false)
+	_, rootEntry, rootPath, err := s.resolveApplicationRoot(ctx, client, pathDTO.Application, userID, false)
 	if err != nil {
 		if errors.Is(err, errQuarkEntryNotFound) {
 			return dto.QuarkFsMetaInfo{}, errors.New("文件不存在")
@@ -195,7 +195,7 @@ func (s *QuarkFsService) RenameFile(renameDTO *dto.QuarkRenameDTO, userID uint) 
 	}
 	ctx := context.Background()
 
-	config, rootEntry, _, err := s.resolveApplicationRoot(ctx, client, renameDTO.Application, false)
+	config, rootEntry, _, err := s.resolveApplicationRoot(ctx, client, renameDTO.Application, userID, false)
 	if err != nil {
 		if errors.Is(err, errQuarkEntryNotFound) {
 			return errors.New("文件不存在")
@@ -245,7 +245,7 @@ func (s *QuarkFsService) DeleteFile(pathDTO *dto.QuarkPathDTO, userID uint) erro
 	}
 	ctx := context.Background()
 
-	config, rootEntry, _, err := s.resolveApplicationRoot(ctx, client, pathDTO.Application, false)
+	config, rootEntry, _, err := s.resolveApplicationRoot(ctx, client, pathDTO.Application, userID, false)
 	if err != nil {
 		if errors.Is(err, errQuarkEntryNotFound) {
 			return errors.New("文件不存在")
@@ -298,7 +298,8 @@ func (s *QuarkFsService) MoveFile(pathDTO *dto.QuarkPathDTO, userID uint) error 
 	if err != nil {
 		return err
 	}
-	config.RootPath = s.normalizeConfiguredRootPath(config.RootPath)
+	rawRootPath := config.RootPath
+	config.RootPath = resolveQuarkRootPathForUser(config.Application, rawRootPath, userID)
 
 	targetDir := s.normalizeHistoryPath(s.buildPath("", config.RootPath))
 	if targetDir == "/" {
@@ -314,7 +315,7 @@ func (s *QuarkFsService) MoveFile(pathDTO *dto.QuarkPathDTO, userID uint) error 
 	if sourcePath == "/" {
 		return errors.New("路径不能为空")
 	}
-	isAppRoot, err := s.isApplicationRootPath(sourcePath)
+	isAppRoot, err := s.isApplicationRootPathForUser(sourcePath, userID)
 	if err != nil {
 		return err
 	}
@@ -362,7 +363,8 @@ func (s *QuarkFsService) MoveFile(pathDTO *dto.QuarkPathDTO, userID uint) error 
 	sourceApplication, sourceHistoryPath, err := s.resolveSourceApplicationAndHistoryPath(
 		sourcePath,
 		pathDTO.Application,
-		config.RootPath,
+		rawRootPath,
+		userID,
 	)
 	if err != nil {
 		rollbackErr := client.move(ctx, sourceEntry.Fid, sourceParentFid)
@@ -390,12 +392,12 @@ func (s *QuarkFsService) MoveFile(pathDTO *dto.QuarkPathDTO, userID uint) error 
 	return nil
 }
 
-func (s *QuarkFsService) UploadFile(pathDTO *dto.QuarkPathDTO, fileHeader *multipart.FileHeader) error {
-	return s.uploadFileToTarget(context.Background(), pathDTO.Application, pathDTO.Path, fileHeader, "")
+func (s *QuarkFsService) UploadFile(pathDTO *dto.QuarkPathDTO, fileHeader *multipart.FileHeader, userID uint) error {
+	return s.uploadFileToTarget(context.Background(), pathDTO.Application, pathDTO.Path, fileHeader, "", userID)
 }
 
-func (s *QuarkFsService) StreamFile(ctx context.Context, pathDTO *dto.QuarkPathDTO, rangeHeader string) (*QuarkStreamResult, QuarkProxyMeta, error) {
-	client, entry, filename, err := s.resolveFileForRead(pathDTO)
+func (s *QuarkFsService) StreamFile(ctx context.Context, pathDTO *dto.QuarkPathDTO, rangeHeader string, userID uint) (*QuarkStreamResult, QuarkProxyMeta, error) {
+	client, entry, filename, err := s.resolveFileForRead(pathDTO, userID)
 	if err != nil {
 		return nil, QuarkProxyMeta{}, err
 	}
@@ -417,8 +419,8 @@ func (s *QuarkFsService) StreamFile(ctx context.Context, pathDTO *dto.QuarkPathD
 	}, nil
 }
 
-func (s *QuarkFsService) GetDirectFileLink(ctx context.Context, pathDTO *dto.QuarkPathDTO) (string, QuarkProxyMeta, error) {
-	client, entry, filename, err := s.resolveFileForRead(pathDTO)
+func (s *QuarkFsService) GetDirectFileLink(ctx context.Context, pathDTO *dto.QuarkPathDTO, userID uint) (string, QuarkProxyMeta, error) {
+	client, entry, filename, err := s.resolveFileForRead(pathDTO, userID)
 	if err != nil {
 		return "", QuarkProxyMeta{}, err
 	}
@@ -471,8 +473,8 @@ func resolveQuarkDirectLinkForEntry(
 	return resolveDownload()
 }
 
-func (s *QuarkFsService) DescribeFile(pathDTO *dto.QuarkPathDTO) (QuarkProxyMeta, error) {
-	_, entry, filename, err := s.resolveFileForRead(pathDTO)
+func (s *QuarkFsService) DescribeFile(pathDTO *dto.QuarkPathDTO, userID uint) (QuarkProxyMeta, error) {
+	_, entry, filename, err := s.resolveFileForRead(pathDTO, userID)
 	if err != nil {
 		return QuarkProxyMeta{}, err
 	}
@@ -483,14 +485,14 @@ func (s *QuarkFsService) DescribeFile(pathDTO *dto.QuarkPathDTO) (QuarkProxyMeta
 	}, nil
 }
 
-func (s *QuarkFsService) resolveFileForRead(pathDTO *dto.QuarkPathDTO) (*quarkClient, quarkDriveFile, string, error) {
+func (s *QuarkFsService) resolveFileForRead(pathDTO *dto.QuarkPathDTO, userID uint) (*quarkClient, quarkDriveFile, string, error) {
 	client, err := newManagedQuarkClient()
 	if err != nil {
 		return nil, quarkDriveFile{}, "", err
 	}
 	ctx := context.Background()
 
-	_, rootEntry, _, err := s.resolveApplicationRoot(ctx, client, pathDTO.Application, false)
+	_, rootEntry, _, err := s.resolveApplicationRoot(ctx, client, pathDTO.Application, userID, false)
 	if err != nil {
 		if errors.Is(err, errQuarkEntryNotFound) {
 			return nil, quarkDriveFile{}, "", errors.New("文件不存在")
@@ -520,12 +522,12 @@ func (s *QuarkFsService) resolveFileForRead(pathDTO *dto.QuarkPathDTO) (*quarkCl
 	return client, entry, filename, nil
 }
 
-func (s *QuarkFsService) uploadFileToTarget(ctx context.Context, application, targetPath string, fileHeader *multipart.FileHeader, overrideName string) error {
+func (s *QuarkFsService) uploadFileToTarget(ctx context.Context, application, targetPath string, fileHeader *multipart.FileHeader, overrideName string, userID uint) error {
 	config, err := quarkConfigDao.GetByApplication(application)
 	if err != nil {
 		return err
 	}
-	config.RootPath = s.normalizeConfiguredRootPath(config.RootPath)
+	config.RootPath = resolveQuarkRootPathForUser(application, config.RootPath, userID)
 	client, err := newManagedQuarkClient()
 	if err != nil {
 		return err
@@ -581,12 +583,12 @@ func (s *QuarkFsService) uploadFileToTarget(ctx context.Context, application, ta
 	return client.uploadMultipartFile(ctx, dirEntry.Fid, fileHeader, fileName)
 }
 
-func (s *QuarkFsService) resolveApplicationRoot(ctx context.Context, client *quarkClient, application string, create bool) (model.QuarkConfig, quarkDriveFile, string, error) {
+func (s *QuarkFsService) resolveApplicationRoot(ctx context.Context, client *quarkClient, application string, userID uint, create bool) (model.QuarkConfig, quarkDriveFile, string, error) {
 	config, err := quarkConfigDao.GetByApplication(application)
 	if err != nil {
 		return model.QuarkConfig{}, quarkDriveFile{}, "", err
 	}
-	config.RootPath = s.normalizeConfiguredRootPath(config.RootPath)
+	config.RootPath = resolveQuarkRootPathForUser(config.Application, config.RootPath, userID)
 
 	rootPath := config.RootPath
 	if rootPath == "" {
@@ -604,6 +606,54 @@ func (s *QuarkFsService) resolveApplicationRoot(ctx context.Context, client *qua
 		return config, quarkDriveFile{}, rootPath, errors.New("应用根目录不是文件夹")
 	}
 	return config, entry, rootPath, nil
+}
+
+func (s *QuarkFsService) DeleteUserScopedRoots(userID uint) error {
+	if userID == 0 {
+		return nil
+	}
+
+	configs, err := s.listAllQuarkConfigs()
+	if err != nil {
+		return err
+	}
+
+	client, err := newManagedQuarkClient()
+	if err != nil {
+		return err
+	}
+	ctx := context.Background()
+	seen := make(map[string]struct{}, len(configs))
+
+	for i := range configs {
+		if !shouldUseUserScopedQuarkRoot(configs[i].Application) {
+			continue
+		}
+		rootPath := resolveQuarkRootPathForUser(configs[i].Application, configs[i].RootPath, userID)
+		if rootPath == "" || rootPath == "/" {
+			continue
+		}
+		if _, ok := seen[rootPath]; ok {
+			continue
+		}
+		seen[rootPath] = struct{}{}
+
+		_, entry, err := s.resolveAbsolutePath(ctx, client, rootPath, false)
+		if err != nil {
+			if errors.Is(err, errQuarkEntryNotFound) {
+				continue
+			}
+			return fmt.Errorf("解析夸克目录失败 %s: %w", rootPath, err)
+		}
+		if !entry.IsDir() {
+			return fmt.Errorf("夸克目录不是文件夹: %s", rootPath)
+		}
+		if err := client.delete(ctx, entry.Fid); err != nil {
+			return fmt.Errorf("删除夸克目录失败 %s: %w", rootPath, err)
+		}
+	}
+
+	return nil
 }
 
 func (s *QuarkFsService) normalizeConfiguredRootPath(rawRootPath string) string {

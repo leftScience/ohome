@@ -5,6 +5,8 @@ import (
 	"ohome/model"
 	"ohome/service/dto"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type QuarkAutoSaveTaskDao struct {
@@ -75,4 +77,11 @@ func (d *QuarkAutoSaveTaskDao) UpdateLastRunAt(id uint, at time.Time) error {
 
 func (d *QuarkAutoSaveTaskDao) Delete(id uint, ownerUserID uint) error {
 	return global.DB.Where("owner_user_id = ?", ownerUserID).Delete(&model.QuarkAutoSaveTask{}, id).Error
+}
+
+func (d *QuarkAutoSaveTaskDao) DeleteByOwnerUserIDWithDB(db *gorm.DB, ownerUserID uint) error {
+	if ownerUserID == 0 {
+		return nil
+	}
+	return db.Where("owner_user_id = ?", ownerUserID).Delete(&model.QuarkAutoSaveTask{}).Error
 }

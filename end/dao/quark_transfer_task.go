@@ -23,6 +23,13 @@ func (d *QuarkTransferTaskDao) Delete(id uint, ownerUserID uint) error {
 	return global.DB.Where("owner_user_id = ?", ownerUserID).Delete(&model.QuarkTransferTask{}, id).Error
 }
 
+func (d *QuarkTransferTaskDao) DeleteByOwnerUserIDWithDB(db *gorm.DB, ownerUserID uint) error {
+	if ownerUserID == 0 {
+		return nil
+	}
+	return db.Where("owner_user_id = ?", ownerUserID).Delete(&model.QuarkTransferTask{}).Error
+}
+
 func (d *QuarkTransferTaskDao) Create(task *model.QuarkTransferTask, sourceTaskID *uint, startedAt time.Time) error {
 	return global.DB.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(task).Error; err != nil {

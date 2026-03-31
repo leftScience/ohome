@@ -2,6 +2,7 @@ package service
 
 import (
 	"path"
+	"strconv"
 	"strings"
 )
 
@@ -37,6 +38,44 @@ func normalizeQuarkConfigRootPathValue(raw string) string {
 		return ""
 	}
 	return "/"
+}
+
+func buildQuarkUserScopedRootPath(raw string, userID uint) string {
+	base := normalizeConfiguredQuarkRootPath(raw)
+	if userID == 0 {
+		if base != "" {
+			return base
+		}
+		return "/"
+	}
+
+	userSegment := strings.TrimSpace(strconv.FormatUint(uint64(userID), 10))
+	if userSegment == "" {
+		if base != "" {
+			return base
+		}
+		return "/"
+	}
+
+	if base == "" || base == "/" {
+		return "/" + userSegment
+	}
+	return normalizeConfiguredQuarkRootPath(path.Join(base, userSegment))
+}
+
+func resolveQuarkRootPathForUser(application, raw string, userID uint) string {
+	base := normalizeConfiguredQuarkRootPath(raw)
+	if !shouldUseUserScopedQuarkRoot(application) {
+		if base != "" {
+			return base
+		}
+		return "/"
+	}
+	return buildQuarkUserScopedRootPath(raw, userID)
+}
+
+func shouldUseUserScopedQuarkRoot(application string) bool {
+	return !strings.EqualFold(strings.TrimSpace(application), "upload")
 }
 
 func splitNormalizedQuarkPathSegments(raw string) []string {

@@ -40,7 +40,7 @@ func (m *FileService) AddFile(ctx *gin.Context, fileUploadDTO dto.FileUploadDTO)
 	newFileName := base + "_" + tsStr + ext
 
 	quarkFs := QuarkFsService{}
-	if err := quarkFs.uploadFileToTarget(ctx.Request.Context(), uploadApplication, "/", file, newFileName); err != nil {
+	if err := quarkFs.uploadFileToTarget(ctx.Request.Context(), uploadApplication, "/", file, newFileName, 0); err != nil {
 		return fileModel, fmt.Errorf("上传文件失败: %w", err)
 	}
 

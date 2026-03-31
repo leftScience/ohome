@@ -523,7 +523,7 @@ func (s *DropsItemService) addPhotosTx(ctx context.Context, tx *gorm.DB, item *m
 			ext = ".jpg"
 		}
 		fileName := fmt.Sprintf("%02d_%d%s", currentMaxSort+index+1, time.Now().UnixMilli(), ext)
-		if err := (&QuarkFsService{}).uploadFileToTarget(ctx, dropsUploadApplication, folder+"/", file, fileName); err != nil {
+		if err := (&QuarkFsService{}).uploadFileToTarget(ctx, dropsUploadApplication, folder+"/", file, fileName, 0); err != nil {
 			return fmt.Errorf("上传物资照片失败: %w", err)
 		}
 		filePath := dropsNormalizeQuarkPath(folder + "/" + fileName)

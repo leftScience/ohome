@@ -128,6 +128,18 @@ func (m *UserService) DeleteUserById(iCommonIDDTO *dto.CommonIDDTO, loginUser mo
 				return errors.New("至少需要保留一个超级管理员")
 			}
 		}
+		if err := (&QuarkFsService{}).DeleteUserScopedRoots(target.ID); err != nil {
+			return err
+		}
+		if err := quarkAutoSaveTaskDao.DeleteByOwnerUserIDWithDB(tx, target.ID); err != nil {
+			return err
+		}
+		if err := quarkTransferTaskDao.DeleteByOwnerUserIDWithDB(tx, target.ID); err != nil {
+			return err
+		}
+		if err := userMediaHistoryDao.DeleteByUserIDWithDB(tx, target.ID); err != nil {
+			return err
+		}
 		return userDao.DeleteUserByIdWithDB(tx, iCommonIDDTO.ID)
 	})
 }

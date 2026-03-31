@@ -10,23 +10,23 @@ type QuarkConfigService struct {
 	BaseService
 }
 
-func (s *QuarkConfigService) GetQuarkConfigByApplication(applicationDTO *dto.QuarkApplicationDTO) (model.QuarkConfig, error) {
+func (s *QuarkConfigService) GetQuarkConfigByApplication(applicationDTO *dto.QuarkApplicationDTO, userID uint) (model.QuarkConfig, error) {
 	config, err := quarkConfigDao.GetByApplication(strings.TrimSpace(applicationDTO.Application))
 	if err != nil {
 		return model.QuarkConfig{}, err
 	}
-	config.RootPath = normalizeQuarkConfigRootPathValue(config.RootPath)
+	config.RootPath = normalizeQuarkConfigRootPathValue(resolveQuarkRootPathForUser(config.Application, config.RootPath, userID))
 	return config, nil
 }
 
-func (s *QuarkConfigService) GetQuarkConfigList(listDTO *dto.QuarkConfigListDTO) ([]model.QuarkConfig, int64, error) {
+func (s *QuarkConfigService) GetQuarkConfigList(listDTO *dto.QuarkConfigListDTO, userID uint) ([]model.QuarkConfig, int64, error) {
 	listDTO.Application = strings.TrimSpace(listDTO.Application)
 	configs, total, err := quarkConfigDao.GetList(listDTO)
 	if err != nil {
 		return nil, 0, err
 	}
 	for i := range configs {
-		configs[i].RootPath = normalizeQuarkConfigRootPathValue(configs[i].RootPath)
+		configs[i].RootPath = normalizeQuarkConfigRootPathValue(resolveQuarkRootPathForUser(configs[i].Application, configs[i].RootPath, userID))
 	}
 	return configs, total, nil
 }

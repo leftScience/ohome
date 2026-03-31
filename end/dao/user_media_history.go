@@ -58,6 +58,13 @@ func (d *UserMediaHistoryDao) Delete(id uint) error {
 	return global.DB.Delete(&model.UserMediaHistory{}, id).Error
 }
 
+func (d *UserMediaHistoryDao) DeleteByUserIDWithDB(db *gorm.DB, userID uint) error {
+	if userID == 0 {
+		return nil
+	}
+	return db.Where("user_id = ?", userID).Delete(&model.UserMediaHistory{}).Error
+}
+
 func (d *UserMediaHistoryDao) UpsertByUserAppFolder(history *model.UserMediaHistory) (model.UserMediaHistory, error) {
 	history.PrepareForSave()
 

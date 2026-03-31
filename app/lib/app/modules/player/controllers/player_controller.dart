@@ -1645,7 +1645,10 @@ class PlayerController extends GetxController {
 
   Future<void> _loadGlobalPlaybackProxyMode() async {
     try {
-      final config = await _configApi.findConfigByKey(_webProxyModeKey);
+      final config = await _configApi.findConfigByKey(
+        _webProxyModeKey,
+        showErrorToast: false,
+      );
       globalPlaybackProxyMode.value = _normalizePlaybackProxyMode(
         config?.value ?? _defaultPlaybackProxyMode,
       );
