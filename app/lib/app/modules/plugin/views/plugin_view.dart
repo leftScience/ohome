@@ -113,7 +113,7 @@ class PluginView extends GetView<PluginController> {
                 () => _SettingsMenuCard(
                   icon: Icons.info_outline_rounded,
                   iconColor: const Color(0xFF64B5F6),
-                  title: '关于 oHome',
+                  title: '关于oHome',
                   subtitle: controller.isSuperAdmin
                       ? '项目介绍、联系方式与 App / 服务端更新'
                       : '项目介绍、联系方式与 App 更新',

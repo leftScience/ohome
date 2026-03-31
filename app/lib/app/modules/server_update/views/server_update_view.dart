@@ -19,7 +19,7 @@ class ServerUpdateView extends GetView<ServerUpdateController> {
       backgroundColor: const Color(0xFF111218),
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('关于 oHome'),
+        title: const Text('关于oHome'),
         backgroundColor: Colors.transparent,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
@@ -82,6 +82,27 @@ class ServerUpdateView extends GetView<ServerUpdateController> {
                     SizedBox(height: 10.h),
                     _SectionCard(
                       title: '应用更新',
+                      trailing: FilledButton.icon(
+                        onPressed:
+                            controller.appUpdateChecking.value ||
+                                controller.isAppUpdating
+                            ? null
+                            : () => controller.checkAppUpdate(
+                                promptWhenAvailable: true,
+                              ),
+                        icon: controller.appUpdateChecking.value
+                            ? SizedBox(
+                                width: 14.w,
+                                height: 14.w,
+                                child: const CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.refresh_rounded),
+                        label: Text(
+                          controller.appUpdateChecking.value ? '检查中' : '检查更新',
+                        ),
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -106,36 +127,6 @@ class ServerUpdateView extends GetView<ServerUpdateController> {
                               height: 1.5,
                             ),
                           ),
-                          SizedBox(height: 10.h),
-                          Wrap(
-                            spacing: 10.w,
-                            runSpacing: 10.h,
-                            children: [
-                              FilledButton.icon(
-                                onPressed:
-                                    controller.appUpdateChecking.value ||
-                                        controller.isAppUpdating
-                                    ? null
-                                    : () => controller.checkAppUpdate(
-                                        promptWhenAvailable: true,
-                                      ),
-                                icon: controller.appUpdateChecking.value
-                                    ? SizedBox(
-                                        width: 14.w,
-                                        height: 14.w,
-                                        child: const CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                        ),
-                                      )
-                                    : const Icon(Icons.refresh_rounded),
-                                label: Text(
-                                  controller.appUpdateChecking.value
-                                      ? '检查中'
-                                      : '检查更新',
-                                ),
-                              ),
-                            ],
-                          ),
                           if (controller.isAppUpdating) ...[
                             SizedBox(height: 12.h),
                             ClipRRect(
@@ -159,6 +150,23 @@ class ServerUpdateView extends GetView<ServerUpdateController> {
                       SizedBox(height: 10.h),
                       _SectionCard(
                         title: '服务端更新',
+                        trailing: FilledButton.icon(
+                          onPressed: controller.checking.value
+                              ? null
+                              : controller.checkUpdate,
+                          icon: controller.checking.value
+                              ? SizedBox(
+                                  width: 14.w,
+                                  height: 14.w,
+                                  child: const CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.refresh_rounded),
+                          label: Text(
+                            controller.checking.value ? '检查中' : '检查更新',
+                          ),
+                        ),
                         child: controller.loading.value && info == null
                             ? const Center(child: CircularProgressIndicator())
                             : Column(
@@ -168,20 +176,25 @@ class ServerUpdateView extends GetView<ServerUpdateController> {
                                     label: '部署模式',
                                     value: info?.deployMode.isNotEmpty == true
                                         ? info!.deployMode
-                                        : '--',
+                                        : (check?.deployMode.isNotEmpty == true
+                                              ? check!.deployMode
+                                              : '--'),
                                   ),
                                   _InfoRow(
                                     label: '当前版本',
                                     value:
                                         info?.currentVersion.isNotEmpty == true
                                         ? info!.currentVersion
-                                        : '--',
+                                        : (check?.currentVersion.isNotEmpty ==
+                                                  true
+                                              ? check!.currentVersion
+                                              : '--'),
                                   ),
                                   _InfoRow(
                                     label: 'Updater',
-                                    value: info?.updaterReachable == true
-                                        ? '在线'
-                                        : '离线',
+                                    value: info == null
+                                        ? '--'
+                                        : (info.updaterReachable ? '在线' : '离线'),
                                   ),
                                   _InfoRow(
                                     label: '最新版本',
@@ -220,56 +233,12 @@ class ServerUpdateView extends GetView<ServerUpdateController> {
                                   ],
                                   SizedBox(height: 10.h),
                                   Text(
-                                    '检查更新只会拉取版本信息，不会自动开始升级；请在确认后手动触发。',
+                                    '点击“检查更新”后，会先检查版本，再由你确认是否开始升级。',
                                     style: TextStyle(
                                       fontSize: 12.sp,
                                       color: Colors.white60,
                                       height: 1.5,
                                     ),
-                                  ),
-                                  SizedBox(height: 10.h),
-                                  Wrap(
-                                    spacing: 10.w,
-                                    runSpacing: 10.h,
-                                    children: [
-                                      FilledButton.icon(
-                                        onPressed: controller.checking.value
-                                            ? null
-                                            : controller.checkUpdate,
-                                        icon: controller.checking.value
-                                            ? SizedBox(
-                                                width: 14.w,
-                                                height: 14.w,
-                                                child:
-                                                    const CircularProgressIndicator(
-                                                      strokeWidth: 2,
-                                                    ),
-                                              )
-                                            : const Icon(Icons.refresh_rounded),
-                                        label: const Text('检查更新'),
-                                      ),
-                                      OutlinedButton.icon(
-                                        onPressed:
-                                            check?.available == true &&
-                                                !controller.applying.value &&
-                                                !controller.hasActiveTask
-                                            ? controller.confirmApplyUpdate
-                                            : null,
-                                        icon: controller.applying.value
-                                            ? SizedBox(
-                                                width: 14.w,
-                                                height: 14.w,
-                                                child:
-                                                    const CircularProgressIndicator(
-                                                      strokeWidth: 2,
-                                                    ),
-                                              )
-                                            : const Icon(
-                                                Icons.system_update_alt_rounded,
-                                              ),
-                                        label: const Text('开始更新'),
-                                      ),
-                                    ],
                                   ),
                                   if (controller.hasActiveTask &&
                                       task != null) ...[
@@ -490,10 +459,11 @@ class _CompactContactTile extends StatelessWidget {
 }
 
 class _SectionCard extends StatelessWidget {
-  const _SectionCard({required this.title, required this.child});
+  const _SectionCard({required this.title, required this.child, this.trailing});
 
   final String title;
   final Widget child;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -522,14 +492,17 @@ class _SectionCard extends StatelessWidget {
                     ),
                   ),
                   SizedBox(width: 8.w),
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
+                  if (trailing != null) ...[SizedBox(width: 12.w), trailing!],
                 ],
               ),
               SizedBox(height: 12.h),

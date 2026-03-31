@@ -136,9 +136,6 @@ class ServerUpdateController extends GetxController {
   void onInit() {
     super.onInit();
     unawaited(_loadCurrentAppVersion());
-    if (isSuperAdmin) {
-      unawaited(loadInfo(silent: true));
-    }
   }
 
   @override
@@ -148,10 +145,7 @@ class ServerUpdateController extends GetxController {
   }
 
   Future<void> refreshPage({bool silent = false}) async {
-    await checkAppUpdate(silent: silent, promptWhenAvailable: false);
-    if (isSuperAdmin) {
-      await loadInfo(silent: silent);
-    }
+    await _loadCurrentAppVersion();
   }
 
   Future<void> loadInfo({bool silent = false}) async {
@@ -244,7 +238,7 @@ class ServerUpdateController extends GetxController {
       final result = await _serverUpdateApi.check();
       checkResult.value = result;
       if (result.available) {
-        Get.snackbar('提示', '发现服务端新版本，请手动点击“开始更新”触发升级');
+        await _showServerUpdateDialog(result);
       } else {
         Get.snackbar('提示', '当前后端已是最新版本（${result.currentVersion}）');
       }
@@ -253,19 +247,6 @@ class ServerUpdateController extends GetxController {
     } finally {
       checking.value = false;
     }
-  }
-
-  Future<void> confirmApplyUpdate() async {
-    final result = checkResult.value;
-    if (result == null) {
-      Get.snackbar('提示', '请先检查更新');
-      return;
-    }
-    if (!result.available) {
-      Get.snackbar('提示', '当前没有可用的服务端更新');
-      return;
-    }
-    await _showServerUpdateDialog(result);
   }
 
   Future<void> applyUpdate() async {
