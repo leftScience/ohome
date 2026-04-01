@@ -3,7 +3,7 @@ name: Server Binary Release
 on:
   push:
     tags:
-      - "*"
+      - "server-v*"
 
 permissions:
   contents: write
@@ -60,6 +60,22 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Derive release metadata
+        shell: bash
+        run: |
+          RAW_TAG="${GITHUB_REF_NAME}"
+          if [[ ! "${RAW_TAG}" =~ ^server-(v?[0-9]+\.[0-9]+\.[0-9]+(-rc[0-9]+)?)$ ]]; then
+            echo "::error::Unsupported server release tag: ${RAW_TAG}"
+            echo "::error::Expected format: server-v<version> or server-<version>"
+            exit 1
+          fi
+
+          RELEASE_VERSION="${BASH_REMATCH[1]}"
+          {
+            echo "RELEASE_REF_NAME=${RAW_TAG}"
+            echo "RELEASE_VERSION=${RELEASE_VERSION}"
+          } >> "$GITHUB_ENV"
+
       - name: Read runtime version baseline
         shell: bash
         run: |
@@ -77,21 +93,20 @@ jobs:
       - name: Derive packaged manifest URLs
         shell: bash
         run: |
-          GITHUB_MANIFEST_URL="https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/server.json"
+          test -n "${{ secrets.MINIO_ENDPOINT }}"
+          test -n "${{ secrets.MINIO_BUCKET }}"
+
           MINIO_ENDPOINT="${{ secrets.MINIO_ENDPOINT }}"
           MINIO_ENDPOINT="${MINIO_ENDPOINT%/}"
           MINIO_BUCKET="${{ secrets.MINIO_BUCKET }}"
           MINIO_PUBLIC_BASE_URL="${{ secrets.MINIO_PUBLIC_BASE_URL }}"
           MINIO_PUBLIC_BASE_URL="${MINIO_PUBLIC_BASE_URL%/}"
 
-          if [[ -n "${MINIO_PUBLIC_BASE_URL}" ]]; then
-            PACKAGED_UPDATE_MANIFEST_URLS="${MINIO_PUBLIC_BASE_URL}/server/server.json,${GITHUB_MANIFEST_URL}"
-          elif [[ -n "${MINIO_ENDPOINT}" && -n "${MINIO_BUCKET}" ]]; then
-            PACKAGED_UPDATE_MANIFEST_URLS="${MINIO_ENDPOINT}/${MINIO_BUCKET}/server/server.json,${GITHUB_MANIFEST_URL}"
-          else
-            PACKAGED_UPDATE_MANIFEST_URLS="${GITHUB_MANIFEST_URL}"
+          if [[ -z "${MINIO_PUBLIC_BASE_URL}" ]]; then
+            MINIO_PUBLIC_BASE_URL="${MINIO_ENDPOINT}/${MINIO_BUCKET}"
           fi
 
+          PACKAGED_UPDATE_MANIFEST_URLS="${MINIO_PUBLIC_BASE_URL}/server/server.json"
           echo "PACKAGED_UPDATE_MANIFEST_URLS=${PACKAGED_UPDATE_MANIFEST_URLS}" >> "$GITHUB_ENV"
 
       - name: Set up Go
@@ -127,12 +142,12 @@ jobs:
 
           GOOS="${GOOS}" GOARCH="${GOARCH}" CGO_ENABLED=0 GOTOOLCHAIN=auto GOPROXY=https://goproxy.cn,direct \
             go build \
-            -ldflags="-X 'ohome/buildinfo.Version=${GITHUB_REF_NAME}' -X 'ohome/buildinfo.Commit=${GITHUB_SHA}' -X 'ohome/buildinfo.BuildTime=${BUILD_TIME}' -X 'ohome/buildinfo.Channel=stable'" \
+            -ldflags="-X 'ohome/buildinfo.Version=${RELEASE_VERSION}' -X 'ohome/buildinfo.Commit=${GITHUB_SHA}' -X 'ohome/buildinfo.BuildTime=${BUILD_TIME}' -X 'ohome/buildinfo.Channel=stable'" \
             -o "${SERVER_OUTPUT}" .
 
           GOOS="${GOOS}" GOARCH="${GOARCH}" CGO_ENABLED=0 GOTOOLCHAIN=auto GOPROXY=https://goproxy.cn,direct \
             go build \
-            -ldflags="-X 'ohome/buildinfo.Version=${GITHUB_REF_NAME}' -X 'ohome/buildinfo.Commit=${GITHUB_SHA}' -X 'ohome/buildinfo.BuildTime=${BUILD_TIME}' -X 'ohome/buildinfo.Channel=stable' -X 'ohome/buildinfo.RuntimeVersion=${RUNTIME_VERSION}'" \
+            -ldflags="-X 'ohome/buildinfo.Version=${RELEASE_VERSION}' -X 'ohome/buildinfo.Commit=${GITHUB_SHA}' -X 'ohome/buildinfo.BuildTime=${BUILD_TIME}' -X 'ohome/buildinfo.Channel=stable' -X 'ohome/buildinfo.RuntimeVersion=${RUNTIME_VERSION}'" \
             -o "${LAUNCHER_OUTPUT}" ./cmd/launcher
 
           cp conf/config.release.yaml "${CONF_DIR}/config.yaml"
@@ -153,7 +168,7 @@ jobs:
           )
           PY
           cp sql/init_data.sql "${SQL_DIR}/init_data.sql"
-          printf "%s" "${GITHUB_REF_NAME}" > "${BIN_DIR}/server.version"
+          printf "%s" "${RELEASE_VERSION}" > "${BIN_DIR}/server.version"
 
           if [[ "${GOOS}" != "windows" ]]; then
             chmod +x "${SERVER_OUTPUT}" "${LAUNCHER_OUTPUT}"
@@ -198,6 +213,22 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Derive release metadata
+        shell: bash
+        run: |
+          RAW_TAG="${GITHUB_REF_NAME}"
+          if [[ ! "${RAW_TAG}" =~ ^server-(v?[0-9]+\.[0-9]+\.[0-9]+(-rc[0-9]+)?)$ ]]; then
+            echo "::error::Unsupported server release tag: ${RAW_TAG}"
+            echo "::error::Expected format: server-v<version> or server-<version>"
+            exit 1
+          fi
+
+          RELEASE_VERSION="${BASH_REMATCH[1]}"
+          {
+            echo "RELEASE_REF_NAME=${RAW_TAG}"
+            echo "RELEASE_VERSION=${RELEASE_VERSION}"
+          } >> "$GITHUB_ENV"
+
       - name: Read runtime version baseline
         shell: bash
         run: |
@@ -224,20 +255,20 @@ jobs:
           set -euo pipefail
 
           OUTPUT_DIR="dist/server-release"
-          REPO_RELEASE_BASE="https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}"
+          REPO_RELEASE_BASE="https://github.com/${GITHUB_REPOSITORY}/releases/download/${RELEASE_REF_NAME}"
           MINIO_ENDPOINT="${{ secrets.MINIO_ENDPOINT }}"
           MINIO_ENDPOINT="${MINIO_ENDPOINT%/}"
           MINIO_BUCKET="${{ secrets.MINIO_BUCKET }}"
           MINIO_PUBLIC_BASE_URL="${{ secrets.MINIO_PUBLIC_BASE_URL }}"
           MINIO_PUBLIC_BASE_URL="${MINIO_PUBLIC_BASE_URL%/}"
-          VERSIONED_MANIFEST="${OUTPUT_DIR}/server-${GITHUB_REF_NAME}.json"
+          VERSIONED_MANIFEST="${OUTPUT_DIR}/server-${RELEASE_VERSION}.json"
           ROLLING_MANIFEST="${OUTPUT_DIR}/server.json"
           BUILD_TIME="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
           if [[ -n "${MINIO_PUBLIC_BASE_URL}" ]]; then
-            MINIO_RELEASE_BASE="${MINIO_PUBLIC_BASE_URL}/server/releases/${GITHUB_REF_NAME}"
+            MINIO_RELEASE_BASE="${MINIO_PUBLIC_BASE_URL}/server/releases/${RELEASE_REF_NAME}"
           elif [[ -n "${MINIO_ENDPOINT}" && -n "${MINIO_BUCKET}" ]]; then
-            MINIO_RELEASE_BASE="${MINIO_ENDPOINT}/${MINIO_BUCKET}/server/releases/${GITHUB_REF_NAME}"
+            MINIO_RELEASE_BASE="${MINIO_ENDPOINT}/${MINIO_BUCKET}/server/releases/${RELEASE_REF_NAME}"
           else
             MINIO_RELEASE_BASE=""
           fi
@@ -256,10 +287,10 @@ jobs:
           ${DARWIN_ARM64_SHA256}  ohome-darwin-arm64.tar.gz
           EOF
 
-          VERSION="${GITHUB_REF_NAME}" \
+          VERSION="${RELEASE_VERSION}" \
           CHANNEL="stable" \
           BUILD_TIME="${BUILD_TIME}" \
-          RELEASE_NOTES="Release ${GITHUB_REF_NAME}" \
+          RELEASE_NOTES="Release ${RELEASE_VERSION}" \
           MIN_RUNTIME_VERSION="${MIN_RUNTIME_VERSION}" \
           RECOMMENDED_RUNTIME_VERSION="${RECOMMENDED_RUNTIME_VERSION}" \
           LINUX_AMD64_URL="${MINIO_RELEASE_BASE:+${MINIO_RELEASE_BASE}/ohome-linux-amd64.tar.gz}" \
@@ -300,37 +331,36 @@ jobs:
             dist/server-release/ohome-darwin-amd64.tar.gz
             dist/server-release/ohome-darwin-arm64.tar.gz
             dist/server-release/server.json
-            dist/server-release/server-${{ github.ref_name }}.json
+            dist/server-release/server-*.json
             dist/server-release/checksums-server.txt
 
-      - name: Prepare optional MinIO settings
+      - name: Prepare MinIO settings
         shell: bash
         run: |
           set -euo pipefail
 
-          if [[ -n "${{ secrets.MINIO_ENDPOINT }}" && -n "${{ secrets.MINIO_ACCESS_KEY }}" && -n "${{ secrets.MINIO_SECRET_KEY }}" && -n "${{ secrets.MINIO_BUCKET }}" ]]; then
-            MINIO_ENDPOINT="${{ secrets.MINIO_ENDPOINT }}"
-            MINIO_ENDPOINT="${MINIO_ENDPOINT%/}"
-            MINIO_BUCKET="${{ secrets.MINIO_BUCKET }}"
-            MINIO_PUBLIC_BASE_URL="${{ secrets.MINIO_PUBLIC_BASE_URL }}"
-            MINIO_PUBLIC_BASE_URL="${MINIO_PUBLIC_BASE_URL%/}"
-            if [[ -z "${MINIO_PUBLIC_BASE_URL}" ]]; then
-              MINIO_PUBLIC_BASE_URL="${MINIO_ENDPOINT}/${MINIO_BUCKET}"
-            fi
+          test -n "${{ secrets.MINIO_ENDPOINT }}"
+          test -n "${{ secrets.MINIO_ACCESS_KEY }}"
+          test -n "${{ secrets.MINIO_SECRET_KEY }}"
+          test -n "${{ secrets.MINIO_BUCKET }}"
 
-            {
-              echo "DO_MINIO_UPLOAD=true"
-              echo "MINIO_ENDPOINT=${MINIO_ENDPOINT}"
-              echo "MINIO_BUCKET=${MINIO_BUCKET}"
-              echo "MINIO_PUBLIC_BASE_URL=${MINIO_PUBLIC_BASE_URL}"
-              echo "RELEASE_PREFIX=server/releases/${GITHUB_REF_NAME}"
-            } >> "$GITHUB_ENV"
-          else
-            echo "DO_MINIO_UPLOAD=false" >> "$GITHUB_ENV"
+          MINIO_ENDPOINT="${{ secrets.MINIO_ENDPOINT }}"
+          MINIO_ENDPOINT="${MINIO_ENDPOINT%/}"
+          MINIO_BUCKET="${{ secrets.MINIO_BUCKET }}"
+          MINIO_PUBLIC_BASE_URL="${{ secrets.MINIO_PUBLIC_BASE_URL }}"
+          MINIO_PUBLIC_BASE_URL="${MINIO_PUBLIC_BASE_URL%/}"
+          if [[ -z "${MINIO_PUBLIC_BASE_URL}" ]]; then
+            MINIO_PUBLIC_BASE_URL="${MINIO_ENDPOINT}/${MINIO_BUCKET}"
           fi
 
+          {
+            echo "MINIO_ENDPOINT=${MINIO_ENDPOINT}"
+            echo "MINIO_BUCKET=${MINIO_BUCKET}"
+            echo "MINIO_PUBLIC_BASE_URL=${MINIO_PUBLIC_BASE_URL}"
+            echo "RELEASE_PREFIX=server/releases/${RELEASE_REF_NAME}"
+          } >> "$GITHUB_ENV"
+
       - name: Ensure AWS CLI
-        if: env.DO_MINIO_UPLOAD == 'true'
         shell: bash
         run: |
           if command -v aws >/dev/null 2>&1; then
@@ -343,7 +373,6 @@ jobs:
           fi
 
       - name: Upload compatibility copy to MinIO
-        if: env.DO_MINIO_UPLOAD == 'true'
         shell: bash
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.MINIO_ACCESS_KEY }}
@@ -363,7 +392,7 @@ jobs:
             ohome-darwin-amd64.tar.gz \
             ohome-darwin-arm64.tar.gz \
             checksums-server.txt \
-            server-${GITHUB_REF_NAME}.json; do
+            server-${RELEASE_VERSION}.json; do
             content_type="application/octet-stream"
             case "${asset}" in
               *.json) content_type="application/json" ;;

@@ -1,10 +1,9 @@
 name: Android Release APK
 
 on:
-  workflow_dispatch:
   push:
     tags:
-      - "*"
+      - "app-v*"
 
 permissions:
   contents: write
@@ -26,6 +25,22 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Derive release metadata
+        shell: bash
+        run: |
+          RAW_TAG="${GITHUB_REF_NAME}"
+          if [[ ! "${RAW_TAG}" =~ ^app-(v?[0-9]+\.[0-9]+\.[0-9]+(-rc[0-9]+)?)$ ]]; then
+            echo "::error::Unsupported Android release tag: ${RAW_TAG}"
+            echo "::error::Expected format: app-v<version> or app-<version>"
+            exit 1
+          fi
+
+          RELEASE_VERSION="${BASH_REMATCH[1]}"
+          {
+            echo "RELEASE_REF_NAME=${RAW_TAG}"
+            echo "RELEASE_VERSION=${RELEASE_VERSION}"
+          } >> "$GITHUB_ENV"
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -71,15 +86,13 @@ jobs:
           if [[ -z "${MINIO_PUBLIC_BASE_URL}" ]]; then
             MINIO_PUBLIC_BASE_URL="${MINIO_ENDPOINT}/${MINIO_BUCKET}"
           fi
-          GITHUB_ANDROID_MANIFEST_URL="https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/android.json"
-          APP_UPDATE_MANIFEST_URL="${MINIO_PUBLIC_BASE_URL}/android/android.json,${GITHUB_ANDROID_MANIFEST_URL}"
-          RELEASE_PREFIX="android/releases/${GITHUB_REF_NAME}"
+          APP_UPDATE_MANIFEST_URL="${MINIO_PUBLIC_BASE_URL}/android/android.json"
+          RELEASE_PREFIX="android/releases/${RELEASE_REF_NAME}"
 
           {
             echo "MINIO_ENDPOINT=${MINIO_ENDPOINT}"
             echo "MINIO_BUCKET=${MINIO_BUCKET}"
             echo "MINIO_PUBLIC_BASE_URL=${MINIO_PUBLIC_BASE_URL}"
-            echo "GITHUB_ANDROID_MANIFEST_URL=${GITHUB_ANDROID_MANIFEST_URL}"
             echo "APP_UPDATE_MANIFEST_URL=${APP_UPDATE_MANIFEST_URL}"
             echo "RELEASE_PREFIX=${RELEASE_PREFIX}"
           } >> "$GITHUB_ENV"
@@ -91,7 +104,7 @@ jobs:
           BUILD_METADATA_FILE="$RUNNER_TEMP/ohome-release.env" \
           APK_SPLIT_PER_ABI=0 \
           CI_BUILD_NUMBER="${GITHUB_RUN_NUMBER}" \
-          RELEASE_TAG="${GITHUB_REF_NAME}" \
+          RELEASE_TAG="${RELEASE_VERSION}" \
           APP_UPDATE_MANIFEST_URL="${APP_UPDATE_MANIFEST_URL}" \
           bash build_prod.sh
 
@@ -103,12 +116,12 @@ jobs:
           OUTPUT_DIR="app/build/app/outputs/flutter-apk"
           ABI="arm64-v8a"
           MANIFEST_ASSET="app/build/app/outputs/flutter-apk/android.json"
-          VERSIONED_MANIFEST_ASSET="app/build/app/outputs/flutter-apk/android-${GITHUB_REF_NAME}.json"
+          VERSIONED_MANIFEST_ASSET="app/build/app/outputs/flutter-apk/android-${RELEASE_VERSION}.json"
           CHECKSUM_ASSET="app/build/app/outputs/flutter-apk/checksums-android.txt"
           SOURCE_APK="app/${APK_RELATIVE_PATH}"
           RELEASE_APK="${OUTPUT_DIR}/ohome-release-arm64-v8a.apk"
           VERSIONED_APK_URL="${MINIO_PUBLIC_BASE_URL}/${RELEASE_PREFIX}/ohome-release-${ABI}.apk"
-          GITHUB_APK_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/ohome-release-arm64-v8a.apk"
+          GITHUB_APK_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${RELEASE_REF_NAME}/ohome-release-arm64-v8a.apk"
 
           cp "$SOURCE_APK" "$RELEASE_APK"
           APK_SHA256=$(shasum -a 256 "$RELEASE_APK" | awk '{print $1}')
@@ -121,7 +134,7 @@ jobs:
             "apkUrl": "${VERSIONED_APK_URL}",
             "apkUrls": ["${VERSIONED_APK_URL}", "${GITHUB_APK_URL}"],
             "sha256": "${APK_SHA256}",
-            "releaseNotes": "Release ${GITHUB_REF_NAME}",
+            "releaseNotes": "Release ${RELEASE_VERSION}",
             "artifacts": {
               "${ABI}": {
                 "apkUrl": "${VERSIONED_APK_URL}",
@@ -179,7 +192,7 @@ jobs:
             --content-type "application/json" \
             --cache-control "no-cache,no-store,must-revalidate"
 
-          aws s3 cp "${OUTPUT_DIR}/android-${GITHUB_REF_NAME}.json" \
+          aws s3 cp "${OUTPUT_DIR}/android-${RELEASE_VERSION}.json" \
             "s3://${MINIO_BUCKET}/${VERSIONED_PREFIX}/android.json" \
             --endpoint-url "${MINIO_ENDPOINT}" \
             --content-type "application/json" \
