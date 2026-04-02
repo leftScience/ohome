@@ -1916,7 +1916,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
         child: Align(
           alignment: Alignment.centerLeft,
           child: Padding(
-            padding: EdgeInsets.only(left: 14, bottom: 35),
+            padding: EdgeInsets.only(left: 25),
             child: IgnorePointer(
               ignoring: !visible,
               child: AnimatedOpacity(
@@ -1924,16 +1924,12 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                 duration: const Duration(milliseconds: 250),
                 child: Tooltip(
                   message: label,
-                  child: Material(
-                    color: Colors.black38,
+                  child: InkWell(
                     borderRadius: BorderRadius.circular(22.r),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(22.r),
-                      onTap: () => unawaited(_toggleFullscreenControlsLock()),
-                      child: Padding(
-                        padding: EdgeInsets.all(10),
-                        child: Icon(icon, color: Colors.white, size: 20),
-                      ),
+                    onTap: () => unawaited(_toggleFullscreenControlsLock()),
+                    child: Padding(
+                      padding: EdgeInsets.all(10),
+                      child: Icon(icon, color: Colors.white, size: 20),
                     ),
                   ),
                 ),
