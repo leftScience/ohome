@@ -28,6 +28,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
   final AndroidPipService _androidPipService = Get.find<AndroidPipService>();
 
   Timer? _speedBoostTimer;
+  Timer? _lockButtonHideTimer;
   Worker? _pipAspectRatioWorker;
   int? _speedBoostPointer;
   Offset? _speedBoostStartPosition;
@@ -36,6 +37,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
   double _gestureVolume = 0.5;
   bool _gestureMediaLoaded = false;
   bool _gestureBrightnessChanged = false;
+  final RxBool _lockButtonVisible = true.obs;
 
   static const _speeds = <double>[0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
   static const _speedBoostDelay = Duration(milliseconds: 260);
@@ -45,6 +47,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
   static const double _episodeDrawerItemExtent = 64;
   static const double _gestureExcludeTopRatio = 0.15;
   static const double _gestureExcludeBottomRatio = 0.18;
+  static const Duration _lockButtonAutoHideDuration = Duration(seconds: 4);
 
   @override
   void initState() {
@@ -77,9 +80,12 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
   @override
   void dispose() {
     _cancelSpeedBoost();
+    _cancelLockButtonHideTimer();
+    _lockButtonVisible.close();
     _pipAspectRatioWorker?.dispose();
     _volumeController.showSystemUI = true;
     unawaited(_androidPipService.setEnabled(enabled: false));
+    unawaited(controller.setControlsLocked(false));
     unawaited(_resetGestureBrightness());
     unawaited(controller.stopPlayback());
     unawaited(SystemChrome.setPreferredOrientations([]));
@@ -97,6 +103,34 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
       _speedBoostActivated = false;
       unawaited(controller.stopSpeedBoost());
     }
+  }
+
+  void _showLockButtonTemporarily() {
+    if (!controller.isFullscreen.value) return;
+    if (!mounted) return;
+    _lockButtonVisible.value = true;
+    _resetLockButtonHideTimer();
+  }
+
+  void _resetLockButtonHideTimer() {
+    _lockButtonHideTimer?.cancel();
+    _lockButtonHideTimer = Timer(_lockButtonAutoHideDuration, () {
+      if (mounted) _lockButtonVisible.value = false;
+    });
+  }
+
+  void _cancelLockButtonHideTimer() {
+    _lockButtonHideTimer?.cancel();
+    _lockButtonHideTimer = null;
+  }
+
+  Future<void> _toggleFullscreenControlsLock() async {
+    final next = !controller.isControlsLocked.value;
+    if (next) {
+      _cancelSpeedBoost();
+    }
+    await controller.setControlsLocked(next);
+    _showLockButtonTemporarily();
   }
 
   Future<void> _loadFullscreenGestureMediaState() async {
@@ -272,6 +306,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
   }
 
   void _onSpeedBoostPointerDown(VideoState state, PointerDownEvent event) {
+    if (controller.isControlsLocked.value) return;
     if (_speedBoostPointer != null) return;
     final ro = state.context.findRenderObject();
     if (ro is! RenderBox) return;
@@ -297,6 +332,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
   }
 
   void _onSpeedBoostPointerMove(VideoState state, PointerMoveEvent event) {
+    if (controller.isControlsLocked.value) return;
     if (_speedBoostPointer != event.pointer) return;
     final ro = state.context.findRenderObject();
     if (ro is! RenderBox) return;
@@ -1857,7 +1893,6 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
     required VoidCallback onPressed,
     String? tooltip,
     double iconSize = 24,
-    double scale = 1,
   }) {
     Widget button = MaterialCustomButton(
       iconSize: iconSize,
@@ -1866,6 +1901,48 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
     );
     if (tooltip == null || tooltip.isEmpty) return button;
     return Tooltip(message: tooltip, child: button);
+  }
+
+  Widget _buildFullscreenLockButton() {
+    return Obx(() {
+      if (!controller.isFullscreen.value) {
+        return const SizedBox.shrink();
+      }
+      final locked = controller.isControlsLocked.value;
+      final label = locked ? '解锁' : '锁定';
+      final icon = locked ? Icons.lock_rounded : Icons.lock_open_rounded;
+      final visible = _lockButtonVisible.value;
+      return Positioned.fill(
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: Padding(
+            padding: EdgeInsets.only(left: 14, bottom: 35),
+            child: IgnorePointer(
+              ignoring: !visible,
+              child: AnimatedOpacity(
+                opacity: visible ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 250),
+                child: Tooltip(
+                  message: label,
+                  child: Material(
+                    color: Colors.black38,
+                    borderRadius: BorderRadius.circular(22.r),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(22.r),
+                      onTap: () => unawaited(_toggleFullscreenControlsLock()),
+                      child: Padding(
+                        padding: EdgeInsets.all(10),
+                        child: Icon(icon, color: Colors.white, size: 20),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    });
   }
 
   @override
@@ -1991,6 +2068,15 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                             fit: StackFit.expand,
                             children: [
                               Obx(() {
+                                final isLocked =
+                                    controller.isFullscreen.value &&
+                                    controller.isControlsLocked.value;
+                                if (isLocked) {
+                                  return GestureDetector(
+                                    behavior: HitTestBehavior.opaque,
+                                    onTap: _showLockButtonTemporarily,
+                                  );
+                                }
                                 if (controller.isSpeedBoosting.value) {
                                   return const SizedBox.shrink();
                                 }
@@ -2077,18 +2163,35 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                                   ),
                                 );
                               }),
-                              const SizedBox.shrink(),
+                              _buildFullscreenLockButton(),
+                              Obx(() {
+                                if (!controller.isFullscreen.value ||
+                                    controller.isControlsLocked.value) {
+                                  return const SizedBox.shrink();
+                                }
+                                return Positioned.fill(
+                                  child: Listener(
+                                    behavior: HitTestBehavior.translucent,
+                                    onPointerUp: (_) =>
+                                        _showLockButtonTemporarily(),
+                                  ),
+                                );
+                              }),
                             ],
                           ),
                         );
                       },
                       onEnterFullscreen: () async {
                         controller.isFullscreen.value = true;
+                        _showLockButtonTemporarily();
                         await _syncPictureInPictureAvailability(enabled: true);
                         await defaultEnterNativeFullscreen();
                       },
                       onExitFullscreen: () async {
                         controller.isFullscreen.value = false;
+                        _cancelLockButtonHideTimer();
+                        _lockButtonVisible.value = true;
+                        await controller.setControlsLocked(false);
                         await _syncPictureInPictureAvailability(enabled: false);
                         await defaultExitNativeFullscreen();
                         await SystemChrome.setPreferredOrientations(const [
