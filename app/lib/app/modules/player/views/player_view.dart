@@ -1856,10 +1856,12 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
     required IconData icon,
     required VoidCallback onPressed,
     String? tooltip,
+    double iconSize = 24,
+    double scale = 1,
   }) {
-    final button = MaterialCustomButton(
-      iconSize: 24,
-      icon: Icon(icon, size: 24),
+    Widget button = MaterialCustomButton(
+      iconSize: iconSize,
+      icon: Icon(icon, size: iconSize),
       onPressed: onPressed,
     );
     if (tooltip == null || tooltip.isEmpty) return button;
@@ -2031,6 +2033,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                                                   fullscreenDrawer: true,
                                                 ),
                                             tooltip: '倍速',
+                                            iconSize: 23,
                                           ),
                                           if (_androidPipService
                                               .isSupportedSync) ...[
@@ -2042,6 +2045,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                                                 _enterPictureInPictureFromFullscreen(),
                                               ),
                                               tooltip: '小窗',
+                                              iconSize: 22,
                                             ),
                                           ],
                                           SizedBox(width: 6.w),
