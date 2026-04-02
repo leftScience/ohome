@@ -17,6 +17,7 @@ import 'package:ohome/app/data/storage/token_storage.dart';
 import 'package:ohome/app/data/storage/user_storage.dart';
 import 'package:ohome/app/services/app_update_service.dart';
 import 'package:ohome/app/services/app_message_push_service.dart';
+import 'package:ohome/app/services/android_pip_service.dart';
 import 'package:ohome/app/services/auth_service.dart';
 import 'package:ohome/app/services/history_playback_service.dart';
 import 'package:ohome/app/services/media_history_service.dart';
@@ -89,6 +90,10 @@ class IndexServices {
     Get.put<HistoryPlaybackService>(HistoryPlaybackService(), permanent: true);
     Get.put<AppUpdateService>(
       AppUpdateService(appUpdateApi: Get.find<AppUpdateApi>()),
+      permanent: true,
+    );
+    await Get.putAsync<AndroidPipService>(
+      () => AndroidPipService().init(),
       permanent: true,
     );
     await authService.restoreSession();

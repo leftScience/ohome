@@ -10,6 +10,7 @@ import 'package:screen_brightness/screen_brightness.dart';
 import 'package:volume_controller/volume_controller.dart';
 
 import '../../../widgets/playlist_loading_view.dart';
+import '../../../services/android_pip_service.dart';
 import '../controllers/player_controller.dart';
 
 class PlayerView extends StatefulWidget {
@@ -24,8 +25,10 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
   final ScrollController _episodeScrollController = ScrollController();
   final ScreenBrightness _screenBrightness = ScreenBrightness.instance;
   final VolumeController _volumeController = VolumeController.instance;
+  final AndroidPipService _androidPipService = Get.find<AndroidPipService>();
 
   Timer? _speedBoostTimer;
+  Worker? _pipAspectRatioWorker;
   int? _speedBoostPointer;
   Offset? _speedBoostStartPosition;
   bool _speedBoostActivated = false;
@@ -54,6 +57,10 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
     );
     unawaited(_loadFullscreenGestureMediaState());
     controller.handleRouteArguments(Get.arguments);
+    _pipAspectRatioWorker = ever<double>(controller.videoAspectRatio, (_) {
+      if (!controller.isFullscreen.value) return;
+      unawaited(_syncPictureInPictureAvailability());
+    });
     WidgetsBinding.instance.addObserver(this);
   }
 
@@ -70,7 +77,9 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
   @override
   void dispose() {
     _cancelSpeedBoost();
+    _pipAspectRatioWorker?.dispose();
     _volumeController.showSystemUI = true;
+    unawaited(_androidPipService.setEnabled(enabled: false));
     unawaited(_resetGestureBrightness());
     unawaited(controller.stopPlayback());
     unawaited(SystemChrome.setPreferredOrientations([]));
@@ -137,6 +146,25 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
     try {
       await _screenBrightness.resetApplicationScreenBrightness();
     } catch (_) {}
+  }
+
+  Future<void> _syncPictureInPictureAvailability({
+    bool? enabled,
+    bool autoEnter = true,
+  }) async {
+    await _androidPipService.setEnabled(
+      enabled: enabled ?? controller.isFullscreen.value,
+      autoEnter: autoEnter,
+      aspectRatio: controller.videoAspectRatio.value,
+    );
+  }
+
+  Future<void> _enterPictureInPictureFromFullscreen() async {
+    if (!controller.isFullscreen.value) return;
+    await _syncPictureInPictureAvailability(enabled: true);
+    await _androidPipService.enterPictureInPicture(
+      aspectRatio: controller.videoAspectRatio.value,
+    );
   }
 
   String _fullscreenBackTitle() {
@@ -1827,12 +1855,15 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
   Widget _buildFullscreenBottomControlButton({
     required IconData icon,
     required VoidCallback onPressed,
+    String? tooltip,
   }) {
-    return MaterialCustomButton(
+    final button = MaterialCustomButton(
       iconSize: 24,
       icon: Icon(icon, size: 24),
       onPressed: onPressed,
     );
+    if (tooltip == null || tooltip.isEmpty) return button;
+    return Tooltip(message: tooltip, child: button);
   }
 
   @override
@@ -1999,7 +2030,20 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                                                   state.context,
                                                   fullscreenDrawer: true,
                                                 ),
+                                            tooltip: '倍速',
                                           ),
+                                          if (_androidPipService
+                                              .isSupportedSync) ...[
+                                            SizedBox(width: 6.w),
+                                            _buildFullscreenBottomControlButton(
+                                              icon: Icons
+                                                  .picture_in_picture_alt_rounded,
+                                              onPressed: () => unawaited(
+                                                _enterPictureInPictureFromFullscreen(),
+                                              ),
+                                              tooltip: '小窗',
+                                            ),
+                                          ],
                                           SizedBox(width: 6.w),
                                           const MaterialFullscreenButton(),
                                         ],
@@ -2036,10 +2080,12 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                       },
                       onEnterFullscreen: () async {
                         controller.isFullscreen.value = true;
+                        await _syncPictureInPictureAvailability(enabled: true);
                         await defaultEnterNativeFullscreen();
                       },
                       onExitFullscreen: () async {
                         controller.isFullscreen.value = false;
+                        await _syncPictureInPictureAvailability(enabled: false);
                         await defaultExitNativeFullscreen();
                         await SystemChrome.setPreferredOrientations(const [
                           DeviceOrientation.portraitUp,
