@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 
+import '../../utils/backend_url_resolver.dart';
 import '../../utils/http_client.dart';
 import '../models/quark_file_entry.dart';
 
@@ -189,5 +190,23 @@ class WebdavApi {
       },
     );
     return utf8.decode(bytes, allowMalformed: true);
+  }
+
+  String buildFileStreamUrl({
+    required String applicationType,
+    required String path,
+  }) {
+    final app = applicationType.trim();
+    final filePath = path.trim();
+    if (app.isEmpty || filePath.isEmpty) {
+      return '';
+    }
+
+    final normalizedPath = filePath.startsWith('/') ? filePath : '/$filePath';
+    final relative = Uri(
+      path: 'public/quarkFs/$app/files/stream',
+      queryParameters: <String, dynamic>{'path': normalizedPath},
+    ).toString();
+    return BackendUrlResolver.resolve(relative);
   }
 }

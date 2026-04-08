@@ -16,16 +16,16 @@ class ReadView extends GetView<ReadController> {
       controller: controller,
       iconBuilder: (entry) => entry.isDir
           ? Icons.folder_rounded
-          : _isTxt(entry.name)
-          ? Icons.description_rounded
+          : _isEpub(entry.name)
+          ? Icons.menu_book_rounded
           : Icons.insert_drive_file_rounded,
       iconColorBuilder: (entry) => entry.isDir
           ? Colors.amber
-          : _isTxt(entry.name)
+          : _isEpub(entry.name)
           ? const Color(0xFF34D399)
           : Colors.blueGrey,
       statusBuilder: (entry) =>
-          entry.isDir ? '文件夹' : (_isTxt(entry.name) ? '点击阅读' : '不支持的文件类型'),
+          entry.isDir ? '文件夹' : (_isEpub(entry.name) ? 'EPUB 电子书' : '不支持的文件类型'),
       onFolderTap: (entry, entries, currentPath) => _onFolderTap(entry),
       onFileTap: (entry, entries, currentPath) => _onFileTap(entry),
     );
@@ -37,8 +37,8 @@ class ReadView extends GetView<ReadController> {
   }
 
   Future<void> _onFileTap(WebdavFileEntry entry) async {
-    if (!_isTxt(entry.name)) {
-      Get.snackbar('提示', '当前仅支持 txt 文件阅读');
+    if (!_isEpub(entry.name)) {
+      Get.snackbar('提示', '当前仅支持 EPUB 文件阅读');
       return;
     }
     await Get.toNamed(
@@ -51,7 +51,7 @@ class ReadView extends GetView<ReadController> {
     );
   }
 
-  bool _isTxt(String name) {
-    return name.trim().toLowerCase().endsWith('.txt');
+  bool _isEpub(String name) {
+    return name.trim().toLowerCase().endsWith('.epub');
   }
 }
