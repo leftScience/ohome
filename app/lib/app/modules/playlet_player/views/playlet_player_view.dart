@@ -607,35 +607,6 @@ class _PlayletPlayerViewState extends State<PlayletPlayerView>
                       ),
                     ),
                   ),
-                  Obx(
-                    () => IconButton(
-                      tooltip: '投屏',
-                      onPressed: controller.canCastCurrentEpisode
-                          ? () => unawaited(controller.castCurrentEpisode())
-                          : null,
-                      icon: Icon(
-                        controller.isCasting
-                            ? Icons.cast_connected
-                            : controller.canCastCurrentEpisode
-                            ? Icons.cast
-                            : Icons.cast_outlined,
-                        color: controller.canCastCurrentEpisode
-                            ? Colors.white
-                            : Colors.white38,
-                      ),
-                    ),
-                  ),
-                  Obx(() {
-                    if (!controller.isCasting) return const SizedBox.shrink();
-                    return IconButton(
-                      tooltip: '结束投屏',
-                      onPressed: () => unawaited(controller.stopCasting()),
-                      icon: const Icon(
-                        Icons.stop_screen_share_outlined,
-                        color: Colors.white,
-                      ),
-                    );
-                  }),
                 ],
               ),
             ),
