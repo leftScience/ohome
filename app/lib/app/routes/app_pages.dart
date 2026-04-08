@@ -42,14 +42,16 @@ import '../modules/music/bindings/music_binding.dart';
 import '../modules/music/views/music_view.dart';
 import '../modules/music_player/bindings/music_player_binding.dart';
 import '../modules/music_player/views/music_player_view.dart';
-import '../modules/audiobook/bindings/audiobook_binding.dart';
-import '../modules/audiobook/views/audiobook_view.dart';
 import '../modules/history/bindings/history_binding.dart';
 import '../modules/history/views/history_view.dart';
 import '../modules/playlet/bindings/playlet_binding.dart';
 import '../modules/playlet/views/playlet_view.dart';
 import '../modules/playlet_player/bindings/playlet_player_binding.dart';
 import '../modules/playlet_player/views/playlet_player_view.dart';
+import '../modules/read/bindings/read_binding.dart';
+import '../modules/read/views/read_view.dart';
+import '../modules/reader/bindings/reader_binding.dart';
+import '../modules/reader/views/reader_view.dart';
 import '../modules/video_cast/views/video_cast_view.dart';
 
 part 'app_routes.dart';
@@ -188,9 +190,15 @@ class AppPages {
       middlewares: [AuthMiddleware()],
     ),
     GetPage(
-      name: _Paths.AUDIOBOOK,
-      page: () => AudiobookView(),
-      binding: AudiobookBinding(),
+      name: _Paths.READ,
+      page: () => const ReadView(),
+      binding: ReadBinding(),
+      middlewares: [AuthMiddleware()],
+    ),
+    GetPage(
+      name: _Paths.READER,
+      page: () => const ReaderView(),
+      binding: ReaderBinding(),
       middlewares: [AuthMiddleware()],
     ),
     GetPage(

@@ -108,7 +108,7 @@ class _SearchViewState extends State<SearchView> {
                       color: Colors.white,
                     ),
                     decoration: InputDecoration(
-                      hintText: '搜索影视、音乐、有声书...',
+                      hintText: '搜索影视、短剧、播客、阅读...',
                       border: InputBorder.none,
                       isDense: true,
                       contentPadding: EdgeInsets.symmetric(

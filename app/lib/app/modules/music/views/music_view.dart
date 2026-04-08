@@ -17,10 +17,10 @@ class MusicView extends GetView<MusicController> {
   @override
   Widget build(BuildContext context) {
     return ResourceCardPage(
-      title: '音乐',
+      title: '播客',
       controller: controller,
       iconBuilder: (entry) =>
-          entry.isDir ? Icons.folder_rounded : Icons.music_note,
+          entry.isDir ? Icons.folder_rounded : Icons.podcasts_rounded,
       iconColorBuilder: (entry) =>
           entry.isDir ? Colors.amber : Colors.pinkAccent,
       statusBuilder: (entry) => entry.isDir ? '文件夹' : '点击播放',

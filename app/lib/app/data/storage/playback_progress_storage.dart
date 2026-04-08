@@ -74,12 +74,7 @@ class PlaybackProgressStorage {
   final String _applicationType;
   final MediaHistoryService? _historyService;
 
-  static const Set<String> _supportedTypes = <String>{
-    'tv',
-    'playlet',
-    'music',
-    'xiaoshuo',
-  };
+  static const Set<String> _supportedTypes = <String>{'tv', 'playlet', 'music'};
 
   static String _normalizeApplicationType(String value) {
     final normalized = value.trim().toLowerCase();

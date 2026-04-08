@@ -121,7 +121,7 @@ class MediaHistoryEntry {
 
   static String _resolveFolderTitle(String folderPath) {
     final normalized = folderPath.replaceAll('\\', '/').trim();
-    if (normalized.isEmpty) return '播放';
+    if (normalized.isEmpty) return '资源';
     final parts = normalized
         .split('/')
         .where((part) => part.trim().isNotEmpty)

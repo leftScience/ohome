@@ -186,14 +186,8 @@ class HomeView extends GetView<HomeController> {
               right: -2.w,
               top: -2.h,
               child: Container(
-                constraints: BoxConstraints(
-                  minWidth: 18.w,
-                  minHeight: 18.h,
-                ),
-                padding: EdgeInsets.symmetric(
-                  horizontal: 6.w,
-                  vertical: 1.h,
-                ),
+                constraints: BoxConstraints(minWidth: 18.w, minHeight: 18.h),
+                padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 1.h),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [Color(0xFFFF5252), Color(0xFFD32F2F)],
@@ -257,7 +251,7 @@ class HomeView extends GetView<HomeController> {
                 SizedBox(width: 12.w),
                 Expanded(
                   child: Text(
-                    '搜索影视、音乐、有声书...',
+                    '搜索影视、短剧、播客、阅读...',
                     style: TextStyle(
                       color: Colors.white54,
                       fontSize: 14.5.sp,
@@ -313,20 +307,20 @@ class HomeView extends GetView<HomeController> {
         onTap: () => Get.toNamed(Routes.PLAYLET),
       ),
       _ResourceEntry(
-        icon: Icons.music_note_rounded,
-        label: '音乐',
-        subtitle: '畅听无限',
+        icon: Icons.podcasts_rounded,
+        label: '播客',
+        subtitle: '随时播放',
         gradient: const [Color(0xFF1CB5E0), Color(0xFF000851)], // 深邃幽蓝
         iconColor: const Color(0xFF89F7FE),
         onTap: () => Get.toNamed(Routes.MUSIC),
       ),
       _ResourceEntry(
-        icon: Icons.headphones_rounded,
-        label: '有声书',
-        subtitle: '沉浸听书',
-        gradient: const [Color(0xFFFF512F), Color(0xFFDD2476)], // 活力暖橙粉
-        iconColor: const Color(0xFFFFDAB9),
-        onTap: () => Get.toNamed(Routes.AUDIOBOOK),
+        icon: Icons.menu_book_rounded,
+        label: '阅读',
+        subtitle: '打开文本',
+        gradient: const [Color(0xFF11998E), Color(0xFF38EF7D)],
+        iconColor: const Color(0xFFD1FAE5),
+        onTap: () => Get.toNamed(Routes.READ),
       ),
     ];
 

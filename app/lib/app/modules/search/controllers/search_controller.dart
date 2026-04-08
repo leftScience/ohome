@@ -77,7 +77,7 @@ class SearchController extends GetxController {
     _RecommendTabSpec(isMovie: false, group: '最近热门剧集', sub: '国产剧'),
   ];
 
-  static const _quarkTargets = <String>['tv', 'playlet', 'music', 'xiaoshuo'];
+  static const _quarkTargets = <String>['tv', 'playlet', 'music', 'read'];
 
   @override
   void onInit() {

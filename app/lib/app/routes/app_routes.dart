@@ -25,7 +25,8 @@ abstract class Routes {
   static const MUSIC = _Paths.MUSIC;
   static const PLAYER = _Paths.PLAYER;
   static const MUSIC_PLAYER = _Paths.MUSIC_PLAYER;
-  static const AUDIOBOOK = _Paths.AUDIOBOOK;
+  static const READ = _Paths.READ;
+  static const READER = _Paths.READER;
   static const HISTORY = _Paths.HISTORY;
   static const USER_MANAGEMENT = _Paths.USER_MANAGEMENT;
   static const SERVER_UPDATE = _Paths.SERVER_UPDATE;
@@ -53,7 +54,8 @@ abstract class _Paths {
   static const MUSIC = '/music';
   static const PLAYER = '/player';
   static const MUSIC_PLAYER = '/music-player';
-  static const AUDIOBOOK = '/audiobook';
+  static const READ = '/read';
+  static const READER = '/reader';
   static const HISTORY = '/history';
   static const USER_MANAGEMENT = '/user-management';
   static const SERVER_UPDATE = '/server-update';

@@ -27,7 +27,9 @@ class PlaybackEntryConfig {
     final isVideo = normalized == 'tv' || normalized == 'playlet';
     return PlaybackEntryConfig(
       applicationType: normalized,
-      playerRoute: isVideo
+      playerRoute: normalized == 'read'
+          ? '/reader'
+          : isVideo
           ? (normalized == 'playlet' ? '/playlet-player' : '/player')
           : '/music-player',
       streamUriBuilder:
@@ -35,13 +37,15 @@ class PlaybackEntryConfig {
           (file) => _defaultStreamUriBuilder(normalized, file),
       supportedExtensions:
           supportedExtensions ??
-          (isVideo
+          (normalized == 'read'
+              ? const <String>['.txt']
+              : isVideo
               ? _defaultVideoExtensions
               : _defaultAudioExtensionsFor(normalized)),
       defaultTitle: switch (normalized) {
         'playlet' => '短剧',
-        'music' => '音乐',
-        'xiaoshuo' => '有声书',
+        'music' => '播客',
+        'read' => '阅读',
         _ => '影视',
       },
       isVideo: isVideo,
@@ -82,20 +86,6 @@ class PlaybackEntryConfig {
   ];
 
   static List<String> _defaultAudioExtensionsFor(String applicationType) {
-    final normalized = applicationType.trim().toLowerCase();
-    if (normalized == 'xiaoshuo') {
-      return const <String>[
-        '.mp3',
-        '.aac',
-        '.m4a',
-        '.m4b',
-        '.flac',
-        '.wav',
-        '.ogg',
-        '.opus',
-        if (!kIsWeb) '.wma',
-      ];
-    }
     return const <String>[
       '.mp3',
       '.aac',
@@ -116,7 +106,7 @@ class PlaybackEntryConfig {
       case 'tv':
       case 'playlet':
       case 'music':
-      case 'xiaoshuo':
+      case 'read':
         return normalized;
       default:
         return 'tv';
@@ -147,8 +137,22 @@ class PlaybackEntryService extends GetxService {
     MediaHistoryEntry entry,
   ) async {
     final config = PlaybackEntryConfig.forApplication(entry.applicationType);
-    final folderPath = entry.folderPath.trim();
     final itemPath = MediaPath.normalize(entry.itemPath);
+    if (config.applicationType == 'read') {
+      if (itemPath.isEmpty) {
+        return null;
+      }
+      return PlaybackLaunchPayload(
+        route: config.playerRoute,
+        arguments: <String, dynamic>{
+          'title': titleFromPath(itemPath, fallback: entry.itemTitle),
+          'filePath': itemPath,
+          'applicationType': config.applicationType,
+        },
+      );
+    }
+
+    final folderPath = entry.folderPath.trim();
     if (folderPath.isEmpty || itemPath.isEmpty) {
       return null;
     }

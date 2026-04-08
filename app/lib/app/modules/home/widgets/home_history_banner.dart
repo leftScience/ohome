@@ -72,7 +72,7 @@ class HomeHistoryBanner extends GetView<HomeController> {
           return;
         }
         if (entry != null && _isAudioType(entry.applicationType)) {
-          // 音乐/有声书直接播放，不跳转页面
+          // 播客直接播放，不跳转页面
           await controller.playAudioWithoutNavigation(entry);
           return;
         }
@@ -93,10 +93,7 @@ class HomeHistoryBanner extends GetView<HomeController> {
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(20.r),
-                border: Border.all(
-                  color: const Color(0xFF3E4055),
-                  width: 1.5,
-                ),
+                border: Border.all(color: const Color(0xFF3E4055), width: 1.5),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.3),
@@ -110,7 +107,9 @@ class HomeHistoryBanner extends GetView<HomeController> {
                 children: [
                   GestureDetector(
                     behavior: HitTestBehavior.opaque,
-                    onTap: hasActiveAudio || entry != null ? onPlayButtonTap : null,
+                    onTap: hasActiveAudio || entry != null
+                        ? onPlayButtonTap
+                        : null,
                     child: SizedBox(
                       width: 46.w,
                       child: Center(
@@ -139,7 +138,9 @@ class HomeHistoryBanner extends GetView<HomeController> {
                   Expanded(
                     child: GestureDetector(
                       behavior: HitTestBehavior.opaque,
-                      onTap: hasActiveAudio || entry != null ? onContinue : null,
+                      onTap: hasActiveAudio || entry != null
+                          ? onContinue
+                          : null,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
@@ -188,9 +189,7 @@ class HomeHistoryBanner extends GetView<HomeController> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            initializingPlayback
-                                ? '正在加载播放列表...'
-                                : summary,
+                            initializingPlayback ? '正在加载播放列表...' : summary,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
@@ -306,7 +305,7 @@ class HomeHistoryBanner extends GetView<HomeController> {
 
   static bool _isAudioType(String applicationType) {
     final normalized = applicationType.trim().toLowerCase();
-    return normalized == 'music' || normalized == 'xiaoshuo';
+    return normalized == 'music';
   }
 
   static String _typeLabel(String applicationType) {
@@ -314,9 +313,9 @@ class HomeHistoryBanner extends GetView<HomeController> {
       case 'tv':
         return '影视';
       case 'music':
-        return '音乐';
-      case 'xiaoshuo':
-        return '有声书';
+        return '播客';
+      case 'read':
+        return '阅读';
       case 'playlet':
         return '短剧';
       default:

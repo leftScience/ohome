@@ -23,7 +23,7 @@ class HistoryPlaybackService extends GetxService {
 
     final launch = await _entryService.buildFromHistoryEntry(entry);
     if (launch == null) {
-      Get.snackbar('提示', '当前记录没有有效的播放路径');
+      Get.snackbar('提示', '当前记录没有有效的打开路径');
       return false;
     }
 

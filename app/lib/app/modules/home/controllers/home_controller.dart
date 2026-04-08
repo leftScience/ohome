@@ -76,8 +76,6 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     );
   }
 
-
-
   @override
   void onClose() {
     WidgetsBinding.instance.removeObserver(this);
@@ -97,8 +95,6 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       _shouldReloadHistoryOnNextPlayerOpen = true;
     }
   }
-
-
 
   Future<void> refreshRecentHistory() async {
     if (!_authService.isLoggedIn || _authService.user.value == null) {
@@ -323,12 +319,11 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     );
   }
 
-  /// 播放音频（音乐/有声书）但不跳转页面
+  /// 播放音频（播客）但不跳转页面
   /// 用于首页播放条的播放按钮点击
   Future<bool> playAudioWithoutNavigation(MediaHistoryEntry entry) async {
     final applicationType = entry.applicationType.trim().toLowerCase();
-    // 只支持音乐和有声音频
-    if (applicationType != 'music' && applicationType != 'xiaoshuo') {
+    if (applicationType != 'music') {
       return false;
     }
 
@@ -405,8 +400,6 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     }
   }
 
-
-
   void _upsertTodoItem(TodoItemModel item) {
     final next = todoItems.toList(growable: true);
     final index = next.indexWhere((element) => element.id == item.id);
@@ -472,6 +465,4 @@ class HomeController extends GetxController with WidgetsBindingObserver {
         )
         .toList(growable: false);
   }
-
-
 }

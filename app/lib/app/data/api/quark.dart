@@ -1,3 +1,7 @@
+import 'dart:convert';
+
+import 'package:dio/dio.dart';
+
 import '../../utils/http_client.dart';
 import '../models/quark_file_entry.dart';
 
@@ -159,5 +163,31 @@ class WebdavApi {
       data: <String, dynamic>{'path': targetPath},
       decoder: (_) {},
     );
+  }
+
+  Future<String> fetchTextFileContent({
+    required String applicationType,
+    required String path,
+  }) async {
+    final app = applicationType.trim();
+    final filePath = path.trim();
+    if (app.isEmpty || filePath.isEmpty) {
+      return '';
+    }
+
+    final bytes = await _httpClient.get<List<int>>(
+      'public/quarkFs/$app/files/stream',
+      queryParameters: <String, dynamic>{'path': filePath},
+      showErrorToast: false,
+      options: Options(responseType: ResponseType.bytes),
+      decoder: (data) {
+        if (data is List<int>) return data;
+        if (data is List) {
+          return data.whereType<int>().toList(growable: false);
+        }
+        throw ApiException('文本内容解析失败');
+      },
+    );
+    return utf8.decode(bytes, allowMalformed: true);
   }
 }

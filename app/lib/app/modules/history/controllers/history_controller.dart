@@ -20,8 +20,8 @@ class HistoryController extends GetxController {
   static const List<_HistoryCategory> _categories = <_HistoryCategory>[
     _HistoryCategory(label: '影视', value: 'tv'),
     _HistoryCategory(label: '短剧', value: 'playlet'),
-    _HistoryCategory(label: '音乐', value: 'music'),
-    _HistoryCategory(label: '有声书', value: 'xiaoshuo'),
+    _HistoryCategory(label: '播客', value: 'music'),
+    _HistoryCategory(label: '阅读', value: 'read'),
   ];
 
   final selectedTabIndex = 0.obs;

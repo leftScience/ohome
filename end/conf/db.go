@@ -65,6 +65,10 @@ func InitDB() (*gorm.DB, error) {
 		}
 	}
 
+	if err := migrateQuarkApplications(db); err != nil {
+		return nil, err
+	}
+
 	return db, nil
 }
 

@@ -341,10 +341,7 @@ class MusicPlayerController extends GetxController with WidgetsBindingObserver {
     dynamic arguments, {
     bool forceReload = false,
   }) {
-    return _handleRouteArgumentsInternal(
-      arguments,
-      forceReload: forceReload,
-    );
+    return _handleRouteArgumentsInternal(arguments, forceReload: forceReload);
   }
 
   Future<void> _handleRouteArgumentsInternal(
@@ -849,20 +846,6 @@ class MusicPlayerController extends GetxController with WidgetsBindingObserver {
   }
 
   List<String> _defaultSupportedExtensionsFor(String applicationType) {
-    final normalized = applicationType.trim().toLowerCase();
-    if (normalized == 'xiaoshuo') {
-      return const <String>[
-        '.mp3',
-        '.aac',
-        '.m4a',
-        '.m4b',
-        '.flac',
-        '.wav',
-        '.ogg',
-        '.opus',
-        '.wma',
-      ];
-    }
     return const <String>[
       '.mp3',
       '.aac',
@@ -947,10 +930,6 @@ class MusicPlayerController extends GetxController with WidgetsBindingObserver {
   }
 
   PlaybackAudioProfile get _audioProfile {
-    final normalized = _applicationType.trim().toLowerCase();
-    if (normalized == 'xiaoshuo') {
-      return PlaybackAudioProfile.speech;
-    }
     return PlaybackAudioProfile.media;
   }
 

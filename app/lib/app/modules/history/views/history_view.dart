@@ -486,8 +486,8 @@ class _HistoryTile extends StatelessWidget {
         return const Color(0xFFFFAB91);
       case 'music':
         return const Color(0xFF90CAF9);
-      case 'xiaoshuo':
-        return const Color(0xFFFFCC80);
+      case 'read':
+        return const Color(0xFFA5D6A7);
       default:
         return const Color(0xFF80CBC4);
     }
@@ -507,9 +507,9 @@ class _HistoryTile extends StatelessWidget {
       case 'playlet':
         return '短剧';
       case 'music':
-        return '音乐';
-      case 'xiaoshuo':
-        return '有声书';
+        return '播客';
+      case 'read':
+        return '阅读';
       default:
         return value;
     }
@@ -522,9 +522,9 @@ class _HistoryTile extends StatelessWidget {
       case 'playlet':
         return Icons.smart_display_rounded;
       case 'music':
-        return Icons.music_note_rounded;
-      case 'xiaoshuo':
-        return Icons.headphones_rounded;
+        return Icons.podcasts_rounded;
+      case 'read':
+        return Icons.menu_book_rounded;
       default:
         return Icons.history_rounded;
     }

@@ -8,9 +8,9 @@ String quarkApplicationLabel(String application) {
     case 'playlet':
       return '短剧';
     case 'music':
-      return '音乐';
-    case 'xiaoshuo':
-      return '有声小说';
+      return '播客';
+    case 'read':
+      return '阅读';
     case 'tv':
       return '影视';
     default:
@@ -23,9 +23,9 @@ IconData quarkApplicationIcon(String application) {
     case 'playlet':
       return Icons.movie_filter_rounded;
     case 'music':
-      return Icons.queue_music_rounded;
-    case 'xiaoshuo':
-      return Icons.headphones_rounded;
+      return Icons.podcasts_rounded;
+    case 'read':
+      return Icons.menu_book_rounded;
     case 'tv':
     default:
       return Icons.live_tv_rounded;
@@ -38,8 +38,8 @@ Color quarkApplicationAccent(String application) {
       return const Color(0xFFFB7185);
     case 'music':
       return const Color(0xFF22C55E);
-    case 'xiaoshuo':
-      return const Color(0xFFF59E0B);
+    case 'read':
+      return const Color(0xFF14B8A6);
     case 'tv':
     default:
       return const Color(0xFF8B5CF6);
