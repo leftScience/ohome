@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_epub_viewer/flutter_epub_viewer.dart';
@@ -7,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../data/api/quark.dart';
+import '../../../services/media_history_service.dart';
 
 class ReaderThemePreset {
   const ReaderThemePreset({
@@ -34,10 +34,9 @@ class ReaderThemePreset {
   EpubTheme toEpubTheme() {
     final backgroundHex = _hex(backgroundColor);
     final textHex = _hex(textColor);
-    final headingHex = _hex(Color.alphaBlend(
-      const Color(0x14000000),
-      textColor,
-    ));
+    final headingHex = _hex(
+      Color.alphaBlend(const Color(0x14000000), textColor),
+    );
 
     return EpubTheme.custom(
       backgroundDecoration: BoxDecoration(color: backgroundColor),
@@ -102,11 +101,18 @@ class ReaderChapterItem {
 }
 
 class ReaderController extends GetxController {
-  ReaderController({WebdavApi? webdavApi})
-    : _webdavApi = webdavApi ?? Get.find<WebdavApi>();
+  ReaderController({WebdavApi? webdavApi, MediaHistoryService? historyService})
+    : _webdavApi = webdavApi ?? Get.find<WebdavApi>(),
+      _historyService =
+          historyService ??
+          (Get.isRegistered<MediaHistoryService>()
+              ? Get.find<MediaHistoryService>()
+              : null);
 
   static const _fontSizeStorageKey = 'reader_epub_font_size';
   static const _themeStorageKey = 'reader_epub_theme';
+  static const _historyDuration = Duration(milliseconds: 1000000);
+  static const _historyPersistDebounceDuration = Duration(milliseconds: 700);
   static const themePresets = <ReaderThemePreset>[
     ReaderThemePreset(
       id: 'warm',
@@ -155,6 +161,7 @@ class ReaderController extends GetxController {
   ];
 
   final WebdavApi _webdavApi;
+  final MediaHistoryService? _historyService;
 
   final epubController = EpubController();
   final title = '阅读'.obs;
@@ -176,6 +183,9 @@ class ReaderController extends GetxController {
   Timer? _persistTimer;
   Timer? _chapterSyncTimer;
   String? _initialCfi;
+  EpubLocation? _lastLocation;
+  int _persistToken = 0;
+  int _chapterSyncToken = 0;
   late EpubDisplaySettings displaySettings;
 
   String? get initialCfi => _initialCfi;
@@ -272,9 +282,8 @@ class ReaderController extends GetxController {
   }
 
   void onRelocated(EpubLocation location) {
-    progress.value = location.progress.clamp(0.0, 1.0);
-    currentCfi.value = location.startCfi.trim();
-    _schedulePersistReadingPosition();
+    _applyLocation(location);
+    _schedulePersistReadingPosition(location);
     _scheduleChapterSync();
   }
 
@@ -311,11 +320,13 @@ class ReaderController extends GetxController {
           16.0;
       fontSize.value = resolvedFontSize.clamp(12.0, 30.0);
       final resolvedThemeId =
-          _preferences?.getString(_themeStorageKey)?.trim() ?? themePresets.first.id;
-      selectedThemeId.value = themePresets.any((item) => item.id == resolvedThemeId)
+          _preferences?.getString(_themeStorageKey)?.trim() ??
+          themePresets.first.id;
+      selectedThemeId.value =
+          themePresets.any((item) => item.id == resolvedThemeId)
           ? resolvedThemeId
           : themePresets.first.id;
-      _initialCfi = _preferences?.getString(_positionStorageKey)?.trim();
+      _initialCfi = await _readPersistedCfi(path: path, applicationType: app);
       if (_initialCfi?.isEmpty ?? true) {
         _initialCfi = null;
       }
@@ -350,8 +361,9 @@ class ReaderController extends GetxController {
 
     final nextTitle = (arguments['title'] ?? '').toString().trim();
     final nextPath = (arguments['filePath'] ?? '').toString().trim();
-    final nextApplicationType =
-        (arguments['applicationType'] ?? '').toString().trim();
+    final nextApplicationType = (arguments['applicationType'] ?? '')
+        .toString()
+        .trim();
 
     if (nextTitle.isNotEmpty) {
       title.value = nextTitle;
@@ -368,25 +380,141 @@ class ReaderController extends GetxController {
     return value.trim().toLowerCase().endsWith('.epub');
   }
 
-  String get _positionStorageKey {
-    final encodedPath = base64Url.encode(utf8.encode(filePath.value.trim()));
-    return 'reader_epub_cfi_$encodedPath';
+  void _applyLocation(EpubLocation location) {
+    final cfi = location.startCfi.trim();
+    if (cfi.isEmpty) return;
+    _lastLocation = location;
+    progress.value = location.progress.clamp(0.0, 1.0);
+    currentCfi.value = cfi;
   }
 
-  void _schedulePersistReadingPosition() {
-    final cfi = currentCfi.value.trim();
-    if (cfi.isEmpty) return;
-
+  void _schedulePersistReadingPosition(EpubLocation location) {
+    _persistToken += 1;
+    final token = _persistToken;
     _persistTimer?.cancel();
-    _persistTimer = Timer(const Duration(milliseconds: 800), () async {
-      await _preferences?.setString(_positionStorageKey, cfi);
+    _persistTimer = Timer(_historyPersistDebounceDuration, () {
+      unawaited(_persistSettledReadingPosition(token, location));
     });
   }
 
+  Future<void> _persistSettledReadingPosition(
+    int token,
+    EpubLocation fallback,
+  ) async {
+    await Future<void>.delayed(const Duration(milliseconds: 160));
+
+    var location = fallback;
+    try {
+      if (canOpenBook && !viewerLoading.value) {
+        location = await epubController.getCurrentLocation();
+      }
+    } catch (_) {}
+
+    if (token != _persistToken) return;
+    _applyLocation(location);
+    await _saveReadingHistory(location);
+  }
+
+  Future<String?> _readPersistedCfi({
+    required String path,
+    required String applicationType,
+  }) async {
+    final service = _historyService;
+    if (service == null || path.trim().isEmpty) return null;
+
+    try {
+      final entry = await service.fetchByFolder(
+        applicationType: applicationType,
+        folderPath: path,
+        preferFresh: true,
+      );
+      final cfi =
+          _stringFromExtra(entry?.extra, 'restoreCfi')?.trim() ??
+          _stringFromExtra(entry?.extra, 'endCfi')?.trim() ??
+          _stringFromExtra(entry?.extra, 'cfi')?.trim();
+      return cfi == null || cfi.isEmpty ? null : cfi;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _saveReadingHistory(EpubLocation location) async {
+    final service = _historyService;
+    final path = filePath.value.trim();
+    final app = applicationType.value.trim().isEmpty
+        ? 'read'
+        : applicationType.value.trim();
+    final bookTitle = title.value.trim().isEmpty
+        ? _titleFromPath(path, fallback: '阅读')
+        : title.value.trim();
+
+    final cfi = location.startCfi.trim();
+    if (service == null || path.isEmpty || cfi.isEmpty) return;
+
+    try {
+      await service.saveProgress(
+        applicationType: app,
+        folderPath: path,
+        itemTitle: bookTitle,
+        position: _progressPosition,
+        itemPath: path,
+        duration: _historyDuration,
+        extra: <String, dynamic>{
+          'cfi': cfi,
+          'endCfi': location.endCfi.trim(),
+          'restoreCfi': location.endCfi.trim().isEmpty
+              ? cfi
+              : location.endCfi.trim(),
+          'restoreStrategy': 'endCfi',
+          'startXpath': location.startXpath,
+          'endXpath': location.endXpath,
+          'progress': progress.value,
+          'chapterHref': currentChapterHref.value,
+          'chapterTitle': currentChapterTitle,
+          'itemPath': path,
+        },
+      );
+    } catch (_) {
+      return;
+    }
+  }
+
+  Duration get _progressPosition {
+    final normalized = progress.value.clamp(0.0, 1.0);
+    return Duration(
+      milliseconds: (normalized * _historyDuration.inMilliseconds).round(),
+    );
+  }
+
+  String? _stringFromExtra(Map<String, dynamic>? extra, String key) {
+    final value = extra?[key];
+    return value is String ? value : null;
+  }
+
+  String _titleFromPath(String path, {required String fallback}) {
+    final normalized = path.replaceAll('\\', '/').trim();
+    if (normalized.isEmpty) return fallback;
+    final parts = normalized
+        .split('/')
+        .where((part) => part.trim().isNotEmpty)
+        .toList(growable: false);
+    return parts.isEmpty ? fallback : parts.last;
+  }
+
   void _scheduleChapterSync() {
+    _chapterSyncToken += 1;
+    final token = _chapterSyncToken;
     _chapterSyncTimer?.cancel();
-    _chapterSyncTimer = Timer(const Duration(milliseconds: 250), () async {
+    _chapterSyncTimer = Timer(const Duration(milliseconds: 450), () async {
+      try {
+        if (canOpenBook && !viewerLoading.value) {
+          _applyLocation(await epubController.getCurrentLocation());
+        }
+      } catch (_) {}
+
+      if (token != _chapterSyncToken) return;
       final href = await _readCurrentChapterHref();
+      if (token != _chapterSyncToken) return;
       if (href.isEmpty) return;
       currentChapterHref.value = href;
     });
@@ -576,9 +704,11 @@ class ReaderController extends GetxController {
   void onClose() {
     _persistTimer?.cancel();
     _chapterSyncTimer?.cancel();
-    final cfi = currentCfi.value.trim();
-    if (cfi.isNotEmpty) {
-      unawaited(_preferences?.setString(_positionStorageKey, cfi) ?? Future.value());
+    _chapterSyncToken += 1;
+    final location = _lastLocation;
+    if (location != null && location.startCfi.trim().isNotEmpty) {
+      _persistToken += 1;
+      unawaited(_saveReadingHistory(location));
     }
     super.onClose();
   }

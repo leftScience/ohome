@@ -112,16 +112,6 @@ class ReaderView extends GetView<ReaderController> {
     final initialOffset = currentIndex >= 0 ? currentIndex * itemExtent : 0.0;
     final scrollController = ScrollController(initialScrollOffset: initialOffset);
 
-    void scrollToCurrentChapter() {
-      final index = controller.currentChapterIndex;
-      if (index < 0 || !scrollController.hasClients) return;
-      scrollController.animateTo(
-        index * itemExtent,
-        duration: const Duration(milliseconds: 240),
-        curve: Curves.easeOutCubic,
-      );
-    }
-
     return showModalBottomSheet<void>(
       context: context,
       backgroundColor: controller.activeTheme.surfaceColor,
@@ -130,30 +120,6 @@ class ReaderView extends GetView<ReaderController> {
         return SafeArea(
           child: Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        controller.currentChapterTitle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: controller.activeTheme.secondaryTextColor,
-                        ),
-                      ),
-                    ),
-                    TextButton.icon(
-                      onPressed: controller.currentChapterIndex >= 0
-                          ? scrollToCurrentChapter
-                          : null,
-                      icon: const Icon(Icons.my_location_rounded, size: 18),
-                      label: const Text('定位当前'),
-                    ),
-                  ],
-                ),
-              ),
               Divider(height: 1, color: controller.activeTheme.dividerColor),
               Expanded(
                 child: ListView.builder(
@@ -163,7 +129,6 @@ class ReaderView extends GetView<ReaderController> {
                   itemBuilder: (context, index) {
                     final item = controller.chapterItems[index];
                     final chapter = item.chapter;
-                    final isCurrent = index == controller.currentChapterIndex;
                     final title = chapter.title.trim().isEmpty
                         ? '第 ${index + 1} 章'
                         : chapter.title.trim();
@@ -186,23 +151,14 @@ class ReaderView extends GetView<ReaderController> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            color: isCurrent
-                                ? controller.activeTheme.accentColor
-                                : controller.activeTheme.textColor,
-                            fontWeight: isCurrent
-                                ? FontWeight.w700
-                                : FontWeight.w500,
+                            color: controller.activeTheme.textColor,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
-                        trailing: isCurrent
-                            ? Icon(
-                                Icons.play_arrow_rounded,
-                                color: controller.activeTheme.accentColor,
-                              )
-                            : Icon(
-                                Icons.chevron_right_rounded,
-                                color: controller.activeTheme.secondaryTextColor,
-                              ),
+                        trailing: Icon(
+                          Icons.chevron_right_rounded,
+                          color: controller.activeTheme.secondaryTextColor,
+                        ),
                         onTap: () => controller.openChapter(chapter),
                       ),
                     );
