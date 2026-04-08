@@ -454,6 +454,21 @@ class MessagesController extends GetxController {
     }
   }
 
+  Future<void> sendSystemMessage({
+    required String title,
+    required String content,
+  }) async {
+    try {
+      await _appMessageApi.sendSystemMessage(
+        title: title,
+        content: content,
+      );
+      Get.snackbar('提示', '系统消息已发送');
+    } catch (e) {
+      Get.snackbar('错误', '发送失败: $e');
+    }
+  }
+
   String _translateDropsSummary(String summary) {
     var result = summary;
     final replacements = <String, String>{

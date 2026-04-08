@@ -5,7 +5,7 @@ import '../../drops/views/drops_view.dart';
 import '../../home/controllers/home_controller.dart';
 import '../../home/views/home_view.dart';
 import '../../home/widgets/home_history_banner.dart';
-import '../../plugin/views/plugin_view.dart';
+import '../../me/views/me_view.dart';
 import '../controllers/main_controller.dart';
 
 class MainView extends GetView<MainController> {
@@ -14,7 +14,7 @@ class MainView extends GetView<MainController> {
   static const List<Widget> _tabViews = <Widget>[
     HomeView(),
     DropsView(),
-    PluginView(),
+    MeView(),
   ];
   static const double _tabBarHeight = 54;
   static const double _floatingHorizontalPadding = 24;

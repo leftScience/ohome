@@ -6,10 +6,10 @@ import 'package:get/get.dart';
 
 import '../../../data/models/user_model.dart';
 import '../../../theme/app_theme.dart';
-import '../controllers/plugin_controller.dart';
+import '../controllers/me_controller.dart';
 
-class PluginView extends GetView<PluginController> {
-  const PluginView({super.key});
+class MeView extends GetView<MeController> {
+  const MeView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +19,7 @@ class PluginView extends GetView<PluginController> {
       bottom: false,
       child: Stack(
         children: [
-          const _PluginBackdrop(),
+          const _MeBackdrop(),
           ListView(
             padding: EdgeInsets.fromLTRB(20.w, 28.h, 20.w, bottomInset),
             children: [
@@ -128,7 +128,7 @@ class PluginView extends GetView<PluginController> {
           : user?.name ?? '未登录';
       final subTitle = user?.roleName.isNotEmpty == true
           ? user!.roleName
-          : '移动端设置中心';
+          : '个人中心';
       final avatarUrl = user?.avatarUrl ?? '';
       final avatarText = user?.name.isNotEmpty == true
           ? user!.name.substring(0, 1).toUpperCase()
@@ -165,8 +165,12 @@ class PluginView extends GetView<PluginController> {
                       children: [
                         CircleAvatar(
                           radius: 28.r,
-                          backgroundColor: AppThemeColors.primary.withValues(alpha: 0.16),
-                          backgroundImage: avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
+                          backgroundColor: AppThemeColors.primary.withValues(
+                            alpha: 0.16,
+                          ),
+                          backgroundImage: avatarUrl.isNotEmpty
+                              ? NetworkImage(avatarUrl)
+                              : null,
                           child: avatarUrl.isEmpty
                               ? Text(
                                   avatarText,
@@ -196,7 +200,9 @@ class PluginView extends GetView<PluginController> {
                                   ? SizedBox(
                                       width: 10.w,
                                       height: 10.w,
-                                      child: const CircularProgressIndicator(strokeWidth: 1.6),
+                                      child: const CircularProgressIndicator(
+                                        strokeWidth: 1.6,
+                                      ),
                                     )
                                   : Icon(
                                       Icons.camera_alt_rounded,
@@ -229,13 +235,19 @@ class PluginView extends GetView<PluginController> {
                           subTitle,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: 12.sp, color: Colors.white54),
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            color: Colors.white54,
+                          ),
                         ),
                         if (user != null) ...[
                           SizedBox(height: 6.h),
                           Text(
                             '点击更换头像',
-                            style: TextStyle(fontSize: 11.sp, color: Colors.white38),
+                            style: TextStyle(
+                              fontSize: 11.sp,
+                              color: Colors.white38,
+                            ),
                           ),
                         ],
                       ],
@@ -307,112 +319,118 @@ class _QuarkAdminMenuCard extends StatelessWidget {
                 padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(22.r),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.12),
+                  ),
                 ),
                 child: Column(
                   children: [
-              Row(
-                children: [
-                  Container(
-                    width: 40.w,
-                    height: 40.w,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF64B5F6).withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(14.r),
-                    ),
-                    child: Icon(
-                      Icons.folder_special_outlined,
-                      color: const Color(0xFF64B5F6),
-                      size: 22.w,
-                    ),
-                  ),
-                  SizedBox(width: 14.w),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    Row(
                       children: [
-                        Text(
-                          '夸克配置',
-                          style: TextStyle(
-                            fontSize: 15.sp,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          '统一管理夸克登录、搜索和播放设置',
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            color: Colors.white54,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  AnimatedRotation(
-                    turns: expanded ? 0.5 : 0,
-                    duration: const Duration(milliseconds: 200),
-                    child: Icon(
-                      Icons.keyboard_arrow_down_rounded,
-                      size: 22.w,
-                      color: Colors.white38,
-                    ),
-                  ),
-                ],
-              ),
-              AnimatedSize(
-                duration: const Duration(milliseconds: 220),
-                curve: Curves.easeInOut,
-                child: expanded
-                    ? Padding(
-                        padding: EdgeInsets.only(top: 14.h),
-                        child: Container(
+                        Container(
+                          width: 40.w,
+                          height: 40.w,
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.04),
-                            borderRadius: BorderRadius.circular(18.r),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.05),
-                            ),
+                            color: const Color(
+                              0xFF64B5F6,
+                            ).withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(14.r),
                           ),
+                          child: Icon(
+                            Icons.folder_special_outlined,
+                            color: const Color(0xFF64B5F6),
+                            size: 22.w,
+                          ),
+                        ),
+                        SizedBox(width: 14.w),
+                        Expanded(
                           child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _SettingsSubMenuTile(
-                                icon: Icons.cookie_outlined,
-                                iconColor: const Color(0xFFFFB74D),
-                                title: '夸克登录',
-                                subtitle: '设置 quark_cookies 参数',
-                                onTap: onLoginTap,
+                              Text(
+                                '夸克配置',
+                                style: TextStyle(
+                                  fontSize: 15.sp,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
                               ),
-                              _buildDivider(),
-                              _SettingsSubMenuTile(
-                                icon: Icons.travel_explore_rounded,
-                                iconColor: const Color(0xFF64B5F6),
-                                title: '夸克搜索',
-                                subtitle: '配置 HTTP 代理、HTTPS 代理、TG 频道和启用插件',
-                                onTap: onSearchTap,
-                              ),
-                              _buildDivider(),
-                              _SettingsSubMenuTile(
-                                icon: Icons.smart_display_outlined,
-                                iconColor: const Color(0xFFBA68C8),
-                                title: '夸克播放',
-                                subtitle: '配置 302 / 本地代理，更多代理参数请在后端配置文件设置',
-                                onTap: onStreamTap,
+                              SizedBox(height: 4.h),
+                              Text(
+                                '统一管理夸克登录、搜索和播放设置',
+                                style: TextStyle(
+                                  fontSize: 12.sp,
+                                  color: Colors.white54,
+                                ),
                               ),
                             ],
                           ),
                         ),
-                      )
-                    : const SizedBox.shrink(),
+                        AnimatedRotation(
+                          turns: expanded ? 0.5 : 0,
+                          duration: const Duration(milliseconds: 200),
+                          child: Icon(
+                            Icons.keyboard_arrow_down_rounded,
+                            size: 22.w,
+                            color: Colors.white38,
+                          ),
+                        ),
+                      ],
+                    ),
+                    AnimatedSize(
+                      duration: const Duration(milliseconds: 220),
+                      curve: Curves.easeInOut,
+                      child: expanded
+                          ? Padding(
+                              padding: EdgeInsets.only(top: 14.h),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.04),
+                                  borderRadius: BorderRadius.circular(18.r),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.05),
+                                  ),
+                                ),
+                                child: Column(
+                                  children: [
+                                    _SettingsSubMenuTile(
+                                      icon: Icons.cookie_outlined,
+                                      iconColor: const Color(0xFFFFB74D),
+                                      title: '夸克登录',
+                                      subtitle: '设置 quark_cookies 参数',
+                                      onTap: onLoginTap,
+                                    ),
+                                    _buildDivider(),
+                                    _SettingsSubMenuTile(
+                                      icon: Icons.travel_explore_rounded,
+                                      iconColor: const Color(0xFF64B5F6),
+                                      title: '夸克搜索',
+                                      subtitle:
+                                          '配置 HTTP 代理、HTTPS 代理、TG 频道和启用插件',
+                                      onTap: onSearchTap,
+                                    ),
+                                    _buildDivider(),
+                                    _SettingsSubMenuTile(
+                                      icon: Icons.smart_display_outlined,
+                                      iconColor: const Color(0xFFBA68C8),
+                                      title: '夸克播放',
+                                      subtitle:
+                                          '配置 302 / 本地代理，更多代理参数请在后端配置文件设置',
+                                      onTap: onStreamTap,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            )
+                          : const SizedBox.shrink(),
+                    ),
+                  ],
+                ),
               ),
-            ],
+            ),
           ),
-         ),
         ),
-       ),
       ),
-     ),
     );
   }
 
@@ -548,7 +566,7 @@ class _EditProfileSheet extends StatefulWidget {
     required this.initialUser,
   });
 
-  final PluginController controller;
+  final MeController controller;
   final UserModel initialUser;
 
   @override
@@ -887,7 +905,9 @@ class _SettingsMenuCard extends StatelessWidget {
                 padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(22.r),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.12),
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -940,16 +960,14 @@ class _SettingsMenuCard extends StatelessWidget {
   }
 }
 
-class _PluginBackdrop extends StatelessWidget {
-  const _PluginBackdrop();
+class _MeBackdrop extends StatelessWidget {
+  const _MeBackdrop();
 
   @override
   Widget build(BuildContext context) {
     return Positioned.fill(
       child: DecoratedBox(
-        decoration: const BoxDecoration(
-          color: Color(0xFF131521),
-        ),
+        decoration: const BoxDecoration(color: Color(0xFF131521)),
         child: Stack(
           children: [
             Positioned(

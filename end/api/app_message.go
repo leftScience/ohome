@@ -101,3 +101,20 @@ func (a *AppMessage) Subscribe(c *gin.Context) {
 		global.Logger.Errorf("App Message WS Upgrade Error: user=%d err=%s", loginUser.ID, err.Error())
 	}
 }
+
+func (a *AppMessage) SendSystemMessage(c *gin.Context) {
+	loginUser, err := getLoginUser(c)
+	if err != nil {
+		utils.FailWithMessage(err.Error(), c)
+		return
+	}
+	var dto dto.SendSystemMessageDTO
+	if err := a.Request(RequestOptions{Ctx: c, DTO: &dto}).GetErrors(); err != nil {
+		return
+	}
+	if err := appMessageService.SendSystemMessageToAll(dto.Title, dto.Content, loginUser.ID); err != nil {
+		utils.FailWithMessage(err.Error(), c)
+		return
+	}
+	utils.Ok(c)
+}

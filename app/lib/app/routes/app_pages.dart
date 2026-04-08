@@ -6,6 +6,8 @@ import '../middlewares/auth_middleware.dart';
 import '../middlewares/super_admin_middleware.dart';
 import '../modules/home/bindings/home_binding.dart';
 import '../modules/home/views/home_view.dart';
+import '../modules/me/bindings/me_binding.dart';
+import '../modules/me/views/me_view.dart';
 import '../modules/messages/bindings/messages_binding.dart';
 import '../modules/messages/views/messages_view.dart';
 import '../modules/login/bindings/login_binding.dart';
@@ -16,8 +18,6 @@ import '../modules/main/bindings/main_binding.dart';
 import '../modules/main/views/main_view.dart';
 import '../modules/moments/bindings/moments_binding.dart';
 import '../modules/moments/views/moments_view.dart';
-import '../modules/plugin/bindings/plugin_binding.dart';
-import '../modules/plugin/views/plugin_view.dart';
 import '../modules/quark_login/bindings/quark_login_binding.dart';
 import '../modules/quark_login/views/quark_login_view.dart';
 import '../modules/quark_search_settings/bindings/quark_search_settings_binding.dart';
@@ -98,11 +98,7 @@ class AppPages {
       page: () => const MomentsView(),
       binding: MomentsBinding(),
     ),
-    GetPage(
-      name: _Paths.PLUGIN,
-      page: () => const PluginView(),
-      binding: PluginBinding(),
-    ),
+    GetPage(name: _Paths.ME, page: () => const MeView(), binding: MeBinding()),
     GetPage(
       name: _Paths.QUARK_LOGIN,
       page: () => const QuarkLoginView(),

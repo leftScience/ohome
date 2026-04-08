@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:ohome/app/data/models/discovered_server.dart';
-import 'package:ohome/app/modules/plugin/widgets/change_password_sheet.dart';
+import 'package:ohome/app/modules/me/widgets/change_password_sheet.dart';
 import 'package:ohome/app/routes/app_pages.dart';
 import 'package:ohome/app/services/discovery_service.dart';
 import 'package:ohome/app/utils/app_env.dart';

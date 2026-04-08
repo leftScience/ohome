@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
 import '../../../data/models/app_message_model.dart';
+import '../../../services/auth_service.dart';
 import '../../../theme/app_theme.dart';
 import '../controllers/messages_controller.dart';
 
@@ -15,12 +16,14 @@ class MessagesView extends StatefulWidget {
 
 class _MessagesViewState extends State<MessagesView> {
   late final MessagesController controller;
+  late final AuthService authService;
   late final PageController _pageController;
 
   @override
   void initState() {
     super.initState();
     controller = Get.find<MessagesController>();
+    authService = Get.find<AuthService>();
     _pageController = PageController(
       initialPage: controller.selectedTabIndex.value,
     );
@@ -48,6 +51,15 @@ class _MessagesViewState extends State<MessagesView> {
           SizedBox(width: 8.w),
         ],
       ),
+      floatingActionButton: Obx(() {
+        final isSuperAdmin = authService.user.value?.isSuperAdmin ?? false;
+        if (!isSuperAdmin) return const SizedBox.shrink();
+        return FloatingActionButton(
+          onPressed: _showSendSystemMessageBottomSheet,
+          backgroundColor: AppThemeColors.primary,
+          child: const Icon(Icons.add, color: Colors.white),
+        );
+      }),
       body: SafeArea(
         child: Column(
           children: [
@@ -406,5 +418,241 @@ class _MessagesViewState extends State<MessagesView> {
   static String _formatDate(DateTime value) {
     String two(int number) => number.toString().padLeft(2, '0');
     return '${value.year}-${two(value.month)}-${two(value.day)}';
+  }
+
+  void _showSendSystemMessageBottomSheet() {
+    final titleController = TextEditingController();
+    final contentController = TextEditingController();
+
+    Get.bottomSheet(
+      Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFF171717),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(30.r)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(20.w, 14.h, 20.w, 20.h + MediaQuery.viewInsetsOf(context).bottom),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 42.w,
+                    height: 4.h,
+                    decoration: BoxDecoration(
+                      color: Colors.white24,
+                      borderRadius: BorderRadius.circular(999.r),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 20.h),
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(18.w),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        AppThemeColors.primary.withValues(alpha: 0.18),
+                        AppThemeColors.secondary.withValues(alpha: 0.08),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(24.r),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.08),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 46.w,
+                        height: 46.w,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(16.r),
+                        ),
+                        child: Icon(
+                          Icons.campaign_rounded,
+                          color: Colors.white,
+                          size: 24.w,
+                        ),
+                      ),
+                      SizedBox(width: 14.w),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '发送系统消息',
+                              style: TextStyle(
+                                fontSize: 18.sp,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                            SizedBox(height: 4.h),
+                            Text(
+                              '发送全局通知给所有用户',
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                color: Colors.white70,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 18.h),
+                Text(
+                  '标题',
+                  style: TextStyle(
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white70,
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                TextField(
+                  controller: titleController,
+                  style: TextStyle(fontSize: 14.sp, color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: '请输入消息标题',
+                    hintStyle: TextStyle(fontSize: 13.sp, color: Colors.white38),
+                    prefixIcon: Icon(Icons.title_rounded, color: Colors.white38, size: 20.w),
+                    filled: true,
+                    fillColor: const Color(0xFF111111),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 14.w,
+                      vertical: 14.h,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14.r),
+                      borderSide: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.08),
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14.r),
+                      borderSide: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.08),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14.r),
+                      borderSide: const BorderSide(color: AppThemeColors.primary),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 14.h),
+                Text(
+                  '内容',
+                  style: TextStyle(
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white70,
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                TextField(
+                  controller: contentController,
+                  style: TextStyle(fontSize: 14.sp, color: Colors.white),
+                  maxLines: 5,
+                  decoration: InputDecoration(
+                    hintText: '请输入消息内容',
+                    hintStyle: TextStyle(fontSize: 13.sp, color: Colors.white38),
+                    filled: true,
+                    fillColor: const Color(0xFF111111),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 14.w,
+                      vertical: 14.h,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14.r),
+                      borderSide: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.08),
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14.r),
+                      borderSide: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.08),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14.r),
+                      borderSide: const BorderSide(color: AppThemeColors.primary),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 22.h),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Get.back(),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: Size.fromHeight(50.h),
+                          side: BorderSide(
+                            color: Colors.white.withValues(alpha: 0.12),
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16.r),
+                          ),
+                        ),
+                        child: Text(
+                          '取消',
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () {
+                          final title = titleController.text.trim();
+                          final content = contentController.text.trim();
+                          if (title.isEmpty || content.isEmpty) {
+                            Get.snackbar('提示', '标题和内容不能为空');
+                            return;
+                          }
+                          Get.back();
+                          controller.sendSystemMessage(title: title, content: content);
+                        },
+                        style: FilledButton.styleFrom(
+                          minimumSize: Size.fromHeight(50.h),
+                          backgroundColor: AppThemeColors.primary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16.r),
+                          ),
+                        ),
+                        child: Text(
+                          '发送',
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+    );
   }
 }

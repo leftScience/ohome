@@ -12,10 +12,11 @@ const (
 )
 
 const (
-	AppMessageTypeDropsItemExpire    = "drops_item_expire"
-	AppMessageTypeDropsEventReminder = "drops_event_reminder"
-	AppMessageTypeQuarkTransferDone  = "quark_transfer_done"
-	AppMessageTypeQuarkTransferFail  = "quark_transfer_fail"
+	AppMessageTypeDropsItemExpire     = "drops_item_expire"
+	AppMessageTypeDropsEventReminder  = "drops_event_reminder"
+	AppMessageTypeQuarkTransferDone   = "quark_transfer_done"
+	AppMessageTypeQuarkTransferFail   = "quark_transfer_fail"
+	AppMessageTypeSystemBroadcast     = "system_broadcast"
 )
 
 const (

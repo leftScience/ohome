@@ -6,7 +6,11 @@ import '../controllers/home_controller.dart';
 class HomeBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<MessagesController>(() => MessagesController());
-    Get.lazyPut<HomeController>(() => HomeController());
+    if (!Get.isRegistered<MessagesController>()) {
+      Get.put<MessagesController>(MessagesController());
+    }
+    if (!Get.isRegistered<HomeController>()) {
+      Get.put<HomeController>(HomeController());
+    }
   }
 }

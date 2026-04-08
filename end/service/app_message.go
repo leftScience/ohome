@@ -236,3 +236,32 @@ func ensureAppMessageLeadingSlash(value string) string {
 	}
 	return "/" + text
 }
+
+func (s *AppMessageService) SendSystemMessageToAll(title, content string, senderID uint) error {
+	recipients, err := s.ListRecipientUserIDs()
+	if err != nil {
+		return err
+	}
+	if len(recipients) == 0 {
+		return nil
+	}
+
+	now := time.Now()
+	messages := make([]model.AppMessage, 0, len(recipients))
+	for _, recipientID := range recipients {
+		sourceKey := fmt.Sprintf("system_broadcast:%d:%d", now.Unix(), recipientID)
+		messages = append(messages, model.AppMessage{
+			OwnerUserID: recipientID,
+			CreatedBy:   senderID,
+			Source:      model.AppMessageSourceSystem,
+			SourceKey:   sourceKey,
+			MessageType: model.AppMessageTypeSystemBroadcast,
+			Title:       title,
+			Summary:     content,
+			UniqueKey:   model.BuildAppMessageUniqueKey(model.AppMessageSourceSystem, sourceKey),
+			TriggerDate: now,
+		})
+	}
+
+	return s.SaveMessages(messages)
+}

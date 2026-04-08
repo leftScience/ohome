@@ -43,6 +43,20 @@ class AppMessageApi {
     return _httpClient.delete<void>('/appMessage/$id', decoder: (_) {});
   }
 
+  Future<void> sendSystemMessage({
+    required String title,
+    required String content,
+  }) {
+    return _httpClient.post<void>(
+      '/appMessage/sendSystem',
+      data: <String, dynamic>{
+        'title': title,
+        'content': content,
+      },
+      decoder: (_) {},
+    );
+  }
+
   static Map<String, dynamic> _asMap(dynamic data) {
     if (data is Map<String, dynamic>) return data;
     if (data is Map) return data.cast<String, dynamic>();

@@ -5,6 +5,8 @@ import '../controllers/messages_controller.dart';
 class MessagesBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<MessagesController>(() => MessagesController());
+    if (!Get.isRegistered<MessagesController>()) {
+      Get.put<MessagesController>(MessagesController());
+    }
   }
 }

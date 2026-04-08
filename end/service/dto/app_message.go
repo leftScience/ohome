@@ -9,3 +9,8 @@ type AppMessageListDTO struct {
 type AppMessageReadDTO struct {
 	ID uint `json:"id" form:"id"`
 }
+
+type SendSystemMessageDTO struct {
+	Title   string `json:"title" form:"title" binding:"required"`
+	Content string `json:"content" form:"content" binding:"required"`
+}

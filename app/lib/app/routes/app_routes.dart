@@ -12,7 +12,6 @@ abstract class Routes {
   static const MESSAGES = _Paths.MESSAGES;
   static const MOMENTS = _Paths.MOMENTS;
   static const ME = _Paths.ME;
-  static const PLUGIN = _Paths.PLUGIN;
   static const QUARK_LOGIN = _Paths.QUARK_LOGIN;
   static const QUARK_SEARCH_SETTINGS = _Paths.QUARK_SEARCH_SETTINGS;
   static const QUARK_STREAM_SETTINGS = _Paths.QUARK_STREAM_SETTINGS;
@@ -41,7 +40,6 @@ abstract class _Paths {
   static const MESSAGES = '/messages';
   static const MOMENTS = '/moments';
   static const ME = '/me';
-  static const PLUGIN = '/plugin';
   static const QUARK_LOGIN = '/quark-login';
   static const QUARK_SEARCH_SETTINGS = '/quark-search-settings';
   static const QUARK_STREAM_SETTINGS = '/quark-stream-settings';

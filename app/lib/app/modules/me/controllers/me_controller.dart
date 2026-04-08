@@ -10,8 +10,8 @@ import '../../../services/auth_service.dart';
 import '../widgets/avatar_crop_sheet.dart';
 import '../widgets/change_password_sheet.dart';
 
-class PluginController extends GetxController {
-  PluginController({
+class MeController extends GetxController {
+  MeController({
     AuthService? authService,
     UserApi? userApi,
     ImagePicker? imagePicker,

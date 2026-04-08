@@ -16,6 +16,7 @@ func InitAppMessageRoutes() {
 			rg.POST("/appMessage/list", messageApi.GetList)
 			rg.POST("/appMessage/read", messageApi.MarkRead)
 			rg.POST("/appMessage/readAll", messageApi.MarkAllRead)
+			rg.POST("/appMessage/sendSystem", messageApi.SendSystemMessage)
 			rg.DELETE("/appMessage/:id", messageApi.Delete)
 		}
 	})
