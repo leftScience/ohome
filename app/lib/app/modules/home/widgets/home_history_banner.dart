@@ -89,7 +89,7 @@ class HomeHistoryBanner extends GetView<HomeController> {
             child: Container(
               width: double.infinity,
               height: 68.h,
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+              padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 12.h),
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(20.r),

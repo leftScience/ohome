@@ -20,6 +20,8 @@ class MainView extends GetView<MainController> {
   static const double _floatingHorizontalPadding = 24;
   static const double _floatingBottomSpacing = 16;
   static const double _historyBannerGap = 10;
+  static const double _tabBarInnerHorizontalPadding = 14;
+  static const double _tabItemWidth = 72;
 
   @override
   Widget build(BuildContext context) {
@@ -72,6 +74,9 @@ class MainView extends GetView<MainController> {
   Widget _buildFloatingTabBar() {
     return Container(
       height: _tabBarHeight,
+      padding: const EdgeInsets.symmetric(
+        horizontal: _tabBarInnerHorizontalPadding,
+      ),
       decoration: BoxDecoration(
         color: const Color(0xFF1E1E1E),
         borderRadius: BorderRadius.circular(32),
@@ -88,7 +93,7 @@ class MainView extends GetView<MainController> {
         ],
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           _buildTabItem(
             index: 0,
@@ -117,7 +122,8 @@ class MainView extends GetView<MainController> {
   }) {
     final isSelected = controller.index.value == index;
 
-    return Expanded(
+    return SizedBox(
+      width: _tabItemWidth,
       child: GestureDetector(
         onTap: () => controller.setIndex(index),
         behavior: HitTestBehavior.opaque,
