@@ -189,6 +189,11 @@ class ReaderController extends GetxController {
   static const _txtTargetSegmentLength = 12000;
   static const _txtHardSegmentLength = 16000;
   static const _txtPaginationRefineWindow = 80;
+  static const _tapMaxDuration = Duration(milliseconds: 320);
+  static const _tapNavigationCooldown = Duration(milliseconds: 320);
+  static const _tapMaxMoveDistance = 0.05;
+  static const _tapLeftZoneMaxX = 0.28;
+  static const _tapRightZoneMinX = 0.52;
   static const _txtLineHeight = 1.95;
   static const _txtLetterSpacing = 0.24;
   static const txtPagePadding = EdgeInsets.symmetric(
@@ -304,6 +309,9 @@ class ReaderController extends GetxController {
   PdfDocument? _pdfDocument;
   EpubDisplaySettings? displaySettings;
   final Map<String, _ReaderTxtPaginationResult> _txtPaginationCache = {};
+  Offset? _touchDownOffset;
+  DateTime? _touchDownAt;
+  DateTime? _lastTapNavigationAt;
 
   String? get initialCfi => _restoreState.epubCfi;
   PdfController? get pdfController => _pdfController;
@@ -534,6 +542,62 @@ class ReaderController extends GetxController {
         return;
       case ReaderFileFormat.unknown:
         return;
+    }
+  }
+
+  void onReaderTouchDown(double x, double y) {
+    if (!canOpenReader || viewerLoading.value) {
+      return;
+    }
+
+    _touchDownOffset = _normalizeTouchPoint(x, y);
+    _touchDownAt = DateTime.now();
+  }
+
+  void cancelReaderTouch() {
+    _touchDownAt = null;
+    _touchDownOffset = null;
+  }
+
+  Future<void> onReaderTouchUp(double x, double y) async {
+    final touchDownAt = _touchDownAt;
+    final touchDownOffset = _touchDownOffset;
+    cancelReaderTouch();
+
+    if (!canOpenReader ||
+        viewerLoading.value ||
+        touchDownAt == null ||
+        touchDownOffset == null) {
+      return;
+    }
+
+    final now = DateTime.now();
+    if (now.difference(touchDownAt) > _tapMaxDuration) {
+      return;
+    }
+
+    final touchUpOffset = _normalizeTouchPoint(x, y);
+    final moveX = (touchUpOffset.dx - touchDownOffset.dx).abs();
+    final moveY = (touchUpOffset.dy - touchDownOffset.dy).abs();
+    if (moveX > _tapMaxMoveDistance || moveY > _tapMaxMoveDistance) {
+      return;
+    }
+
+    final lastTapNavigationAt = _lastTapNavigationAt;
+    if (lastTapNavigationAt != null &&
+        now.difference(lastTapNavigationAt) < _tapNavigationCooldown) {
+      return;
+    }
+
+    if (touchUpOffset.dx >= _tapRightZoneMinX) {
+      _lastTapNavigationAt = now;
+      await goNextPage();
+      return;
+    }
+
+    if (touchUpOffset.dx <= _tapLeftZoneMaxX) {
+      _lastTapNavigationAt = now;
+      await goPreviousPage();
     }
   }
 
@@ -1074,6 +1138,13 @@ class ReaderController extends GetxController {
         .where((part) => part.trim().isNotEmpty)
         .toList(growable: false);
     return parts.isEmpty ? fallback : parts.last;
+  }
+
+  Offset _normalizeTouchPoint(double x, double y) {
+    return Offset(
+      math.max(0.0, math.min(1.0, x)),
+      math.max(0.0, math.min(1.0, y)),
+    );
   }
 
   void _scheduleChapterSync() {

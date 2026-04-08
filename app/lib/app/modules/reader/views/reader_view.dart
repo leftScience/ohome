@@ -109,6 +109,10 @@ class ReaderView extends GetView<ReaderController> {
             onEpubLoaded: controller.onEpubLoaded,
             onChaptersLoaded: controller.onChaptersLoaded,
             onRelocated: controller.onRelocated,
+            onTouchDown: controller.onReaderTouchDown,
+            onTouchUp: (x, y) {
+              unawaited(controller.onReaderTouchUp(x, y));
+            },
           ),
         ),
         if (controller.viewerLoading.value)
@@ -133,9 +137,7 @@ class ReaderView extends GetView<ReaderController> {
     final sheetSecondaryTextColor = isPdf
         ? Colors.white60
         : chrome.secondaryTextColor;
-    final sheetAccentColor = isPdf
-        ? standardDrawerAccent
-        : chrome.accentColor;
+    final sheetAccentColor = isPdf ? standardDrawerAccent : chrome.accentColor;
     final sheetDividerColor = isPdf
         ? Colors.white.withValues(alpha: 0.08)
         : chrome.dividerColor;
@@ -397,49 +399,52 @@ class _TxtReaderBodyState extends State<_TxtReaderBody> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          return Stack(
-            children: [
-              Positioned.fill(
-                child: NotificationListener<ScrollNotification>(
-                  onNotification: _handleTxtScrollNotification,
-                  child: PageView.builder(
-                    key: ValueKey(
-                      'txt-$version-${widget.controller.currentTxtSegmentIndex.value}',
-                    ),
-                    controller: pageController,
-                    itemCount: pages.length,
-                    onPageChanged: widget.controller.onTxtPageChanged,
-                    itemBuilder: (context, index) {
-                      final page = pages[index];
-                      return Padding(
-                        padding: ReaderController.txtPagePadding,
-                        child: Align(
-                          alignment: Alignment.topLeft,
-                          child: Text(
-                            page.text,
-                            style: widget.controller.txtTextStyle,
-                            textAlign: TextAlign.justify,
+          return _ReaderTapNavigationSurface(
+            controller: widget.controller,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: NotificationListener<ScrollNotification>(
+                    onNotification: _handleTxtScrollNotification,
+                    child: PageView.builder(
+                      key: ValueKey(
+                        'txt-$version-${widget.controller.currentTxtSegmentIndex.value}',
+                      ),
+                      controller: pageController,
+                      itemCount: pages.length,
+                      onPageChanged: widget.controller.onTxtPageChanged,
+                      itemBuilder: (context, index) {
+                        final page = pages[index];
+                        return Padding(
+                          padding: ReaderController.txtPagePadding,
+                          child: Align(
+                            alignment: Alignment.topLeft,
+                            child: Text(
+                              page.text,
+                              style: widget.controller.txtTextStyle,
+                              textAlign: TextAlign.justify,
+                            ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
                 ),
-              ),
-              Positioned(
-                right: 16,
-                bottom: 16,
-                child: _ReaderBadge(
-                  backgroundColor: widget.controller.activeTheme.surfaceColor
-                      .withValues(alpha: 0.86),
-                  borderColor: widget.controller.activeTheme.dividerColor,
-                  textColor: widget.controller.activeTheme.secondaryTextColor,
-                  text:
-                      '第 ${widget.controller.currentTxtSegmentIndex.value + 1}/${widget.controller.txtSegments.length} 片 · '
-                      '第 ${widget.controller.currentTxtPageIndex.value + 1}/${widget.controller.txtPageCount.value} 页',
+                Positioned(
+                  right: 16,
+                  bottom: 16,
+                  child: _ReaderBadge(
+                    backgroundColor: widget.controller.activeTheme.surfaceColor
+                        .withValues(alpha: 0.86),
+                    borderColor: widget.controller.activeTheme.dividerColor,
+                    textColor: widget.controller.activeTheme.secondaryTextColor,
+                    text:
+                        '第 ${widget.controller.currentTxtSegmentIndex.value + 1}/${widget.controller.txtSegments.length} 片 · '
+                        '第 ${widget.controller.currentTxtPageIndex.value + 1}/${widget.controller.txtPageCount.value} 页',
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           );
         });
       },
@@ -463,48 +468,89 @@ class _PdfReaderBody extends StatelessWidget {
       return const Center(child: CircularProgressIndicator());
     }
 
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: PdfView(
-            controller: pdfController,
-            renderer: _renderPdfPage,
-            scrollDirection: Axis.horizontal,
-            backgroundDecoration: const BoxDecoration(color: Colors.white),
-            onDocumentLoaded: controller.onPdfDocumentLoaded,
-            onDocumentError: controller.onPdfDocumentError,
-            onPageChanged: controller.onPdfPageChanged,
-            builders: const PdfViewBuilders<DefaultBuilderOptions>(
-              options: DefaultBuilderOptions(),
-              documentLoaderBuilder: _emptyBuilder,
-              pageLoaderBuilder: _emptyBuilder,
-              errorBuilder: _errorBuilder,
-            ),
-          ),
-        ),
-        if (controller.viewerLoading.value)
+    return _ReaderTapNavigationSurface(
+      controller: controller,
+      child: Stack(
+        children: [
           Positioned.fill(
-            child: ColoredBox(
-              color: chrome.overlayColor,
-              child: const Center(child: CircularProgressIndicator()),
+            child: PdfView(
+              controller: pdfController,
+              renderer: _renderPdfPage,
+              scrollDirection: Axis.horizontal,
+              backgroundDecoration: const BoxDecoration(color: Colors.white),
+              onDocumentLoaded: controller.onPdfDocumentLoaded,
+              onDocumentError: controller.onPdfDocumentError,
+              onPageChanged: controller.onPdfPageChanged,
+              builders: const PdfViewBuilders<DefaultBuilderOptions>(
+                options: DefaultBuilderOptions(),
+                documentLoaderBuilder: _emptyBuilder,
+                pageLoaderBuilder: _emptyBuilder,
+                errorBuilder: _errorBuilder,
+              ),
             ),
           ),
-        Positioned(
-          right: 16,
-          bottom: 16,
-          child: Obx(
-            () => _ReaderBadge(
-              backgroundColor: badgeBackgroundColor,
-              borderColor: badgeBorderColor,
-              textColor: badgeTextColor,
-              text: controller.pdfPageCount.value > 0
-                  ? '第 ${controller.currentPdfPage.value}/${controller.pdfPageCount.value} 页'
-                  : '加载页码中...',
+          if (controller.viewerLoading.value)
+            Positioned.fill(
+              child: ColoredBox(
+                color: chrome.overlayColor,
+                child: const Center(child: CircularProgressIndicator()),
+              ),
+            ),
+          Positioned(
+            right: 16,
+            bottom: 16,
+            child: Obx(
+              () => _ReaderBadge(
+                backgroundColor: badgeBackgroundColor,
+                borderColor: badgeBorderColor,
+                textColor: badgeTextColor,
+                text: controller.pdfPageCount.value > 0
+                    ? '第 ${controller.currentPdfPage.value}/${controller.pdfPageCount.value} 页'
+                    : '加载页码中...',
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
+  }
+}
+
+class _ReaderTapNavigationSurface extends StatelessWidget {
+  const _ReaderTapNavigationSurface({
+    required this.controller,
+    required this.child,
+  });
+
+  final ReaderController controller;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = math.max(1.0, constraints.maxWidth);
+        final height = math.max(1.0, constraints.maxHeight);
+
+        return Listener(
+          behavior: HitTestBehavior.translucent,
+          onPointerDown: (event) {
+            final point = _normalizePointer(event.localPosition, width, height);
+            controller.onReaderTouchDown(point.dx, point.dy);
+          },
+          onPointerUp: (event) {
+            final point = _normalizePointer(event.localPosition, width, height);
+            unawaited(controller.onReaderTouchUp(point.dx, point.dy));
+          },
+          onPointerCancel: (_) => controller.cancelReaderTouch(),
+          child: child,
+        );
+      },
+    );
+  }
+
+  Offset _normalizePointer(Offset offset, double width, double height) {
+    return Offset(offset.dx / width, offset.dy / height);
   }
 }
 
