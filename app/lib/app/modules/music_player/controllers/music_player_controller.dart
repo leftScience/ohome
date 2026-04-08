@@ -337,9 +337,13 @@ class MusicPlayerController extends GetxController with WidgetsBindingObserver {
     return -1;
   }
 
-  void handleRouteArguments(dynamic arguments, {bool forceReload = false}) {
-    unawaited(
-      _handleRouteArgumentsInternal(arguments, forceReload: forceReload),
+  Future<void> handleRouteArguments(
+    dynamic arguments, {
+    bool forceReload = false,
+  }) {
+    return _handleRouteArgumentsInternal(
+      arguments,
+      forceReload: forceReload,
     );
   }
 

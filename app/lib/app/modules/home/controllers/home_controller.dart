@@ -9,6 +9,7 @@ import '../../../routes/app_pages.dart';
 import '../../../services/auth_service.dart';
 import '../../../services/history_playback_service.dart';
 import '../../../services/media_history_service.dart';
+import '../../../services/playback_entry_service.dart';
 import '../../messages/controllers/messages_controller.dart';
 import '../../music_player/controllers/music_player_controller.dart';
 
@@ -17,6 +18,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     AuthService? authService,
     MediaHistoryService? mediaHistoryService,
     HistoryPlaybackService? historyPlaybackService,
+    PlaybackEntryService? entryService,
     TodoApi? todoApi,
     MessagesController? messagesController,
   }) : _authService = authService ?? Get.find<AuthService>(),
@@ -24,6 +26,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
            mediaHistoryService ?? Get.find<MediaHistoryService>(),
        _historyPlaybackService =
            historyPlaybackService ?? Get.find<HistoryPlaybackService>(),
+       _entryService = entryService ?? Get.find<PlaybackEntryService>(),
        _todoApi = todoApi ?? Get.find<TodoApi>(),
        _messagesController =
            messagesController ?? Get.find<MessagesController>();
@@ -31,12 +34,14 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   final AuthService _authService;
   final MediaHistoryService _mediaHistoryService;
   final HistoryPlaybackService _historyPlaybackService;
+  final PlaybackEntryService _entryService;
   final TodoApi _todoApi;
   final MessagesController _messagesController;
 
   final recentHistory = Rxn<MediaHistoryEntry>();
   final recentHistoryLoading = false.obs;
   final recentHistoryOpening = false.obs;
+  final initializingAudioPlayback = false.obs;
   final todoItems = <TodoItemModel>[].obs;
   final todoLoading = false.obs;
   final todoSubmitting = false.obs;
@@ -316,6 +321,67 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       refresh: true,
       showErrorToast: false,
     );
+  }
+
+  /// 播放音频（音乐/有声书）但不跳转页面
+  /// 用于首页播放条的播放按钮点击
+  Future<bool> playAudioWithoutNavigation(MediaHistoryEntry entry) async {
+    final applicationType = entry.applicationType.trim().toLowerCase();
+    // 只支持音乐和有声音频
+    if (applicationType != 'music' && applicationType != 'xiaoshuo') {
+      return false;
+    }
+
+    // 检查是否已有相同类型的活跃音频会话
+    final player = Get.isRegistered<MusicPlayerController>()
+        ? Get.find<MusicPlayerController>()
+        : null;
+
+    if (player != null &&
+        player.tracks.isNotEmpty &&
+        player.applicationType.trim().toLowerCase() == applicationType &&
+        player.folderPath.value == entry.folderPath) {
+      // 如果已经是相同的播放列表，只切换播放状态
+      await player.togglePlayback();
+      return true;
+    }
+
+    // 需要加载新的播放列表并播放
+    initializingAudioPlayback.value = true;
+    try {
+      recentHistoryOpening.value = true;
+
+      // 注册或重新初始化播放器控制器
+      if (player == null) {
+        Get.put(MusicPlayerController());
+      }
+
+      final musicController = Get.find<MusicPlayerController>();
+
+      // 清空当前播放会话
+      await musicController.clearPlaybackSession();
+
+      // 构建路由参数并加载播放列表
+      final launch = await _entryService.buildFromHistoryEntry(entry);
+      if (launch == null) {
+        Get.snackbar('提示', '无法加载播放内容');
+        return false;
+      }
+
+      // 处理路由参数并等待播放器完成初始化
+      await musicController.handleRouteArguments(launch.arguments);
+
+      // 刷新历史记录以更新UI
+      await refreshRecentHistory();
+
+      return true;
+    } catch (e) {
+      Get.snackbar('提示', '播放失败：$e');
+      return false;
+    } finally {
+      recentHistoryOpening.value = false;
+      initializingAudioPlayback.value = false;
+    }
   }
 
   Future<void> _openFromLatestHistoryAfterResume() async {

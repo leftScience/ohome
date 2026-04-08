@@ -21,6 +21,13 @@ class HomeHistoryBanner extends GetView<HomeController> {
         recentHistory: entry,
       );
       final loading = controller.recentHistoryLoading.value;
+      final bufferingPlayback = musicController?.isBuffering.value ?? false;
+      final visiblyPlaying =
+          (musicController?.isPlaying.value ?? false) && !bufferingPlayback;
+      final initializingPlayback =
+          controller.initializingAudioPlayback.value ||
+          (musicController?.isLoadingPlaylist.value ?? false) ||
+          (hasActiveAudio && bufferingPlayback);
 
       final title = hasActiveAudio
           ? _playingTitle(
@@ -59,6 +66,19 @@ class HomeHistoryBanner extends GetView<HomeController> {
               controller.openActiveAudioPlayer();
             };
 
+      Future<void> onPlayButtonTap() async {
+        if (hasActiveAudio) {
+          musicController!.togglePlayback();
+          return;
+        }
+        if (entry != null && _isAudioType(entry.applicationType)) {
+          // 音乐/有声书直接播放，不跳转页面
+          await controller.playAudioWithoutNavigation(entry);
+          return;
+        }
+        onContinue();
+      }
+
       return GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: onBannerTap,
@@ -68,6 +88,7 @@ class HomeHistoryBanner extends GetView<HomeController> {
             filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
             child: Container(
               width: double.infinity,
+              height: 68.h,
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.08),
@@ -85,7 +106,36 @@ class HomeHistoryBanner extends GetView<HomeController> {
                 ],
               ),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: hasActiveAudio || entry != null ? onPlayButtonTap : null,
+                    child: SizedBox(
+                      width: 46.w,
+                      child: Center(
+                        child: initializingPlayback
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.8,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                ),
+                              )
+                            : Icon(
+                                hasActiveAudio && visiblyPlaying
+                                    ? Icons.pause_circle_rounded
+                                    : Icons.play_circle_rounded,
+                                size: 38,
+                                color: Colors.white,
+                              ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 12.w),
                   Expanded(
                     child: GestureDetector(
                       behavior: HitTestBehavior.opaque,
@@ -108,9 +158,7 @@ class HomeHistoryBanner extends GetView<HomeController> {
                                   ),
                                 ),
                               ),
-                              if (hasActiveAudio &&
-                                  (musicController?.isPlaying.value ??
-                                      false)) ...[
+                              if (hasActiveAudio && visiblyPlaying) ...[
                                 const SizedBox(width: 6),
                                 Container(
                                   padding: const EdgeInsets.symmetric(
@@ -140,7 +188,9 @@ class HomeHistoryBanner extends GetView<HomeController> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            summary,
+                            initializingPlayback
+                                ? '正在加载播放列表...'
+                                : summary,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
@@ -152,40 +202,15 @@ class HomeHistoryBanner extends GetView<HomeController> {
                       ),
                     ),
                   ),
-                  IconButton(
-                    onPressed: hasActiveAudio || entry != null
-                        ? () {
-                            if (hasActiveAudio) {
-                              musicController!.togglePlayback();
-                            } else {
-                              onContinue();
-                            }
-                          }
-                        : null,
-                    iconSize: 28,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(
-                      minWidth: 36,
-                      minHeight: 36,
-                    ),
-                    color: Colors.white,
-                    icon: Icon(
-                      hasActiveAudio &&
-                              (musicController?.isPlaying.value ?? false)
-                          ? Icons.pause_circle_rounded
-                          : Icons.play_circle_rounded,
-                      size: 26,
-                    ),
-                  ),
-                  SizedBox(width: 4.w),
+                  SizedBox(width: 8.w),
                   InkWell(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(16.r),
                     onTap: onList,
-                    child: const Padding(
-                      padding: EdgeInsets.all(4),
+                    child: Padding(
+                      padding: EdgeInsets.all(6.r),
                       child: Icon(
                         Icons.format_list_bulleted_rounded,
-                        size: 26,
+                        size: 30,
                         color: Colors.white70,
                       ),
                     ),
@@ -277,6 +302,11 @@ class HomeHistoryBanner extends GetView<HomeController> {
   static String _itemTitle(String itemTitle) {
     final title = itemTitle.trim();
     return title.isEmpty ? '-' : title;
+  }
+
+  static bool _isAudioType(String applicationType) {
+    final normalized = applicationType.trim().toLowerCase();
+    return normalized == 'music' || normalized == 'xiaoshuo';
   }
 
   static String _typeLabel(String applicationType) {
