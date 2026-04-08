@@ -38,7 +38,7 @@ class PlaybackEntryConfig {
       supportedExtensions:
           supportedExtensions ??
           (normalized == 'read'
-              ? const <String>['.txt']
+              ? const <String>['.epub', '.txt', '.pdf']
               : isVideo
               ? _defaultVideoExtensions
               : _defaultAudioExtensionsFor(normalized)),

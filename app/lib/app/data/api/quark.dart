@@ -170,13 +170,24 @@ class WebdavApi {
     required String applicationType,
     required String path,
   }) async {
+    final bytes = await fetchFileBytes(
+      applicationType: applicationType,
+      path: path,
+    );
+    return utf8.decode(bytes, allowMalformed: true);
+  }
+
+  Future<List<int>> fetchFileBytes({
+    required String applicationType,
+    required String path,
+  }) {
     final app = applicationType.trim();
     final filePath = path.trim();
     if (app.isEmpty || filePath.isEmpty) {
-      return '';
+      return Future.value(const <int>[]);
     }
 
-    final bytes = await _httpClient.get<List<int>>(
+    return _httpClient.get<List<int>>(
       'public/quarkFs/$app/files/stream',
       queryParameters: <String, dynamic>{'path': filePath},
       showErrorToast: false,
@@ -186,10 +197,9 @@ class WebdavApi {
         if (data is List) {
           return data.whereType<int>().toList(growable: false);
         }
-        throw ApiException('文本内容解析失败');
+        throw ApiException('文件内容解析失败');
       },
     );
-    return utf8.decode(bytes, allowMalformed: true);
   }
 
   String buildFileStreamUrl({
