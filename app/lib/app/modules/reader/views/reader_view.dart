@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -315,6 +316,45 @@ class _TxtReaderBody extends StatefulWidget {
 
 class _TxtReaderBodyState extends State<_TxtReaderBody> {
   Size? _lastViewport;
+  bool _handlingBoundaryTurn = false;
+
+  bool _handleTxtScrollNotification(ScrollNotification notification) {
+    if (notification is! OverscrollNotification ||
+        notification.metrics.axis != Axis.horizontal ||
+        _handlingBoundaryTurn) {
+      return false;
+    }
+
+    final pages = widget.controller.currentTxtPages;
+    if (pages.isEmpty) return false;
+
+    final currentPageIndex = widget.controller.currentTxtPageIndex.value;
+    final atFirstPage = currentPageIndex <= 0;
+    final atLastPage = currentPageIndex >= pages.length - 1;
+
+    if (notification.overscroll > 0 && atLastPage) {
+      unawaited(_turnTxtBoundaryPage(forward: true));
+    } else if (notification.overscroll < 0 && atFirstPage) {
+      unawaited(_turnTxtBoundaryPage(forward: false));
+    }
+
+    return false;
+  }
+
+  Future<void> _turnTxtBoundaryPage({required bool forward}) async {
+    if (_handlingBoundaryTurn) return;
+    _handlingBoundaryTurn = true;
+    try {
+      if (forward) {
+        await widget.controller.goNextPage();
+      } else {
+        await widget.controller.goPreviousPage();
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 180));
+    } finally {
+      _handlingBoundaryTurn = false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -360,27 +400,30 @@ class _TxtReaderBodyState extends State<_TxtReaderBody> {
           return Stack(
             children: [
               Positioned.fill(
-                child: PageView.builder(
-                  key: ValueKey(
-                    'txt-$version-${widget.controller.currentTxtSegmentIndex.value}',
-                  ),
-                  controller: pageController,
-                  itemCount: pages.length,
-                  onPageChanged: widget.controller.onTxtPageChanged,
-                  itemBuilder: (context, index) {
-                    final page = pages[index];
-                    return Padding(
-                      padding: ReaderController.txtPagePadding,
-                      child: Align(
-                        alignment: Alignment.topLeft,
-                        child: Text(
-                          page.text,
-                          style: widget.controller.txtTextStyle,
-                          textAlign: TextAlign.justify,
+                child: NotificationListener<ScrollNotification>(
+                  onNotification: _handleTxtScrollNotification,
+                  child: PageView.builder(
+                    key: ValueKey(
+                      'txt-$version-${widget.controller.currentTxtSegmentIndex.value}',
+                    ),
+                    controller: pageController,
+                    itemCount: pages.length,
+                    onPageChanged: widget.controller.onTxtPageChanged,
+                    itemBuilder: (context, index) {
+                      final page = pages[index];
+                      return Padding(
+                        padding: ReaderController.txtPagePadding,
+                        child: Align(
+                          alignment: Alignment.topLeft,
+                          child: Text(
+                            page.text,
+                            style: widget.controller.txtTextStyle,
+                            textAlign: TextAlign.justify,
+                          ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
               ),
               Positioned(
