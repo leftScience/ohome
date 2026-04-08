@@ -98,31 +98,30 @@ class ReaderView extends GetView<ReaderController> {
   }
 
   Widget _buildEpubBody() {
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: EpubViewer(
-            epubController: controller.epubController,
-            epubSource: EpubSource.fromUrl(controller.epubUrl.value),
-            initialCfi: controller.initialCfi,
-            displaySettings: controller.displaySettings,
-            onEpubLoaded: controller.onEpubLoaded,
-            onChaptersLoaded: controller.onChaptersLoaded,
-            onRelocated: controller.onRelocated,
-            onTouchDown: controller.onReaderTouchDown,
-            onTouchUp: (x, y) {
-              unawaited(controller.onReaderTouchUp(x, y));
-            },
-          ),
-        ),
-        if (controller.viewerLoading.value)
+    return _EpubInteractionSurface(
+      controller: controller,
+      child: Stack(
+        children: [
           Positioned.fill(
-            child: ColoredBox(
-              color: controller.activeTheme.overlayColor,
-              child: const Center(child: CircularProgressIndicator()),
+            child: EpubViewer(
+              epubController: controller.epubController,
+              epubSource: EpubSource.fromUrl(controller.epubUrl.value),
+              initialCfi: controller.initialCfi,
+              displaySettings: controller.displaySettings,
+              onEpubLoaded: controller.onEpubLoaded,
+              onChaptersLoaded: controller.onChaptersLoaded,
+              onRelocated: controller.onRelocated,
             ),
           ),
-      ],
+          if (controller.viewerLoading.value)
+            Positioned.fill(
+              child: ColoredBox(
+                color: controller.activeTheme.overlayColor,
+                child: const Center(child: CircularProgressIndicator()),
+              ),
+            ),
+        ],
+      ),
     );
   }
 
@@ -399,52 +398,49 @@ class _TxtReaderBodyState extends State<_TxtReaderBody> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          return _ReaderTapNavigationSurface(
-            controller: widget.controller,
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: NotificationListener<ScrollNotification>(
-                    onNotification: _handleTxtScrollNotification,
-                    child: PageView.builder(
-                      key: ValueKey(
-                        'txt-$version-${widget.controller.currentTxtSegmentIndex.value}',
-                      ),
-                      controller: pageController,
-                      itemCount: pages.length,
-                      onPageChanged: widget.controller.onTxtPageChanged,
-                      itemBuilder: (context, index) {
-                        final page = pages[index];
-                        return Padding(
-                          padding: ReaderController.txtPagePadding,
-                          child: Align(
-                            alignment: Alignment.topLeft,
-                            child: Text(
-                              page.text,
-                              style: widget.controller.txtTextStyle,
-                              textAlign: TextAlign.justify,
-                            ),
-                          ),
-                        );
-                      },
+          return Stack(
+            children: [
+              Positioned.fill(
+                child: NotificationListener<ScrollNotification>(
+                  onNotification: _handleTxtScrollNotification,
+                  child: PageView.builder(
+                    key: ValueKey(
+                      'txt-$version-${widget.controller.currentTxtSegmentIndex.value}',
                     ),
+                    controller: pageController,
+                    itemCount: pages.length,
+                    onPageChanged: widget.controller.onTxtPageChanged,
+                    itemBuilder: (context, index) {
+                      final page = pages[index];
+                      return Padding(
+                        padding: ReaderController.txtPagePadding,
+                        child: Align(
+                          alignment: Alignment.topLeft,
+                          child: Text(
+                            page.text,
+                            style: widget.controller.txtTextStyle,
+                            textAlign: TextAlign.justify,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
-                Positioned(
-                  right: 16,
-                  bottom: 16,
-                  child: _ReaderBadge(
-                    backgroundColor: widget.controller.activeTheme.surfaceColor
-                        .withValues(alpha: 0.86),
-                    borderColor: widget.controller.activeTheme.dividerColor,
-                    textColor: widget.controller.activeTheme.secondaryTextColor,
-                    text:
-                        '第 ${widget.controller.currentTxtSegmentIndex.value + 1}/${widget.controller.txtSegments.length} 片 · '
-                        '第 ${widget.controller.currentTxtPageIndex.value + 1}/${widget.controller.txtPageCount.value} 页',
-                  ),
+              ),
+              Positioned(
+                right: 16,
+                bottom: 16,
+                child: _ReaderBadge(
+                  backgroundColor: widget.controller.activeTheme.surfaceColor
+                      .withValues(alpha: 0.86),
+                  borderColor: widget.controller.activeTheme.dividerColor,
+                  textColor: widget.controller.activeTheme.secondaryTextColor,
+                  text:
+                      '第 ${widget.controller.currentTxtSegmentIndex.value + 1}/${widget.controller.txtSegments.length} 片 · '
+                      '第 ${widget.controller.currentTxtPageIndex.value + 1}/${widget.controller.txtPageCount.value} 页',
                 ),
-              ],
-            ),
+              ),
+            ],
           );
         });
       },
@@ -468,56 +464,53 @@ class _PdfReaderBody extends StatelessWidget {
       return const Center(child: CircularProgressIndicator());
     }
 
-    return _ReaderTapNavigationSurface(
-      controller: controller,
-      child: Stack(
-        children: [
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: PdfView(
+            controller: pdfController,
+            renderer: _renderPdfPage,
+            scrollDirection: Axis.horizontal,
+            backgroundDecoration: const BoxDecoration(color: Colors.white),
+            onDocumentLoaded: controller.onPdfDocumentLoaded,
+            onDocumentError: controller.onPdfDocumentError,
+            onPageChanged: controller.onPdfPageChanged,
+            builders: const PdfViewBuilders<DefaultBuilderOptions>(
+              options: DefaultBuilderOptions(),
+              documentLoaderBuilder: _emptyBuilder,
+              pageLoaderBuilder: _emptyBuilder,
+              errorBuilder: _errorBuilder,
+            ),
+          ),
+        ),
+        if (controller.viewerLoading.value)
           Positioned.fill(
-            child: PdfView(
-              controller: pdfController,
-              renderer: _renderPdfPage,
-              scrollDirection: Axis.horizontal,
-              backgroundDecoration: const BoxDecoration(color: Colors.white),
-              onDocumentLoaded: controller.onPdfDocumentLoaded,
-              onDocumentError: controller.onPdfDocumentError,
-              onPageChanged: controller.onPdfPageChanged,
-              builders: const PdfViewBuilders<DefaultBuilderOptions>(
-                options: DefaultBuilderOptions(),
-                documentLoaderBuilder: _emptyBuilder,
-                pageLoaderBuilder: _emptyBuilder,
-                errorBuilder: _errorBuilder,
-              ),
+            child: ColoredBox(
+              color: chrome.overlayColor,
+              child: const Center(child: CircularProgressIndicator()),
             ),
           ),
-          if (controller.viewerLoading.value)
-            Positioned.fill(
-              child: ColoredBox(
-                color: chrome.overlayColor,
-                child: const Center(child: CircularProgressIndicator()),
-              ),
-            ),
-          Positioned(
-            right: 16,
-            bottom: 16,
-            child: Obx(
-              () => _ReaderBadge(
-                backgroundColor: badgeBackgroundColor,
-                borderColor: badgeBorderColor,
-                textColor: badgeTextColor,
-                text: controller.pdfPageCount.value > 0
-                    ? '第 ${controller.currentPdfPage.value}/${controller.pdfPageCount.value} 页'
-                    : '加载页码中...',
-              ),
+        Positioned(
+          right: 16,
+          bottom: 16,
+          child: Obx(
+            () => _ReaderBadge(
+              backgroundColor: badgeBackgroundColor,
+              borderColor: badgeBorderColor,
+              textColor: badgeTextColor,
+              text: controller.pdfPageCount.value > 0
+                  ? '第 ${controller.currentPdfPage.value}/${controller.pdfPageCount.value} 页'
+                  : '加载页码中...',
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
 
-class _ReaderTapNavigationSurface extends StatelessWidget {
-  const _ReaderTapNavigationSurface({
+class _EpubInteractionSurface extends StatelessWidget {
+  const _EpubInteractionSurface({
     required this.controller,
     required this.child,
   });
@@ -536,13 +529,13 @@ class _ReaderTapNavigationSurface extends StatelessWidget {
           behavior: HitTestBehavior.translucent,
           onPointerDown: (event) {
             final point = _normalizePointer(event.localPosition, width, height);
-            controller.onReaderTouchDown(point.dx, point.dy);
+            controller.onEpubInteractionStart(point.dx, point.dy);
           },
           onPointerUp: (event) {
             final point = _normalizePointer(event.localPosition, width, height);
-            unawaited(controller.onReaderTouchUp(point.dx, point.dy));
+            controller.onEpubInteractionEnd(point.dx, point.dy);
           },
-          onPointerCancel: (_) => controller.cancelReaderTouch(),
+          onPointerCancel: (_) => controller.cancelEpubInteraction(),
           child: child,
         );
       },

@@ -189,11 +189,7 @@ class ReaderController extends GetxController {
   static const _txtTargetSegmentLength = 12000;
   static const _txtHardSegmentLength = 16000;
   static const _txtPaginationRefineWindow = 80;
-  static const _tapMaxDuration = Duration(milliseconds: 320);
-  static const _tapNavigationCooldown = Duration(milliseconds: 320);
-  static const _tapMaxMoveDistance = 0.05;
-  static const _tapLeftZoneMaxX = 0.28;
-  static const _tapRightZoneMinX = 0.52;
+  static const _epubInteractionMinSwipeDistance = 0.05;
   static const _txtLineHeight = 1.95;
   static const _txtLetterSpacing = 0.24;
   static const txtPagePadding = EdgeInsets.symmetric(
@@ -309,9 +305,7 @@ class ReaderController extends GetxController {
   PdfDocument? _pdfDocument;
   EpubDisplaySettings? displaySettings;
   final Map<String, _ReaderTxtPaginationResult> _txtPaginationCache = {};
-  Offset? _touchDownOffset;
-  DateTime? _touchDownAt;
-  DateTime? _lastTapNavigationAt;
+  Offset? _epubInteractionStartOffset;
 
   String? get initialCfi => _restoreState.epubCfi;
   PdfController? get pdfController => _pdfController;
@@ -545,59 +539,38 @@ class ReaderController extends GetxController {
     }
   }
 
-  void onReaderTouchDown(double x, double y) {
-    if (!canOpenReader || viewerLoading.value) {
+  void onEpubInteractionStart(double x, double y) {
+    if (readerFormat.value != ReaderFileFormat.epub ||
+        !canOpenReader ||
+        viewerLoading.value) {
       return;
     }
 
-    _touchDownOffset = _normalizeTouchPoint(x, y);
-    _touchDownAt = DateTime.now();
+    _epubInteractionStartOffset = _normalizeViewportPoint(x, y);
   }
 
-  void cancelReaderTouch() {
-    _touchDownAt = null;
-    _touchDownOffset = null;
+  void cancelEpubInteraction() {
+    _epubInteractionStartOffset = null;
   }
 
-  Future<void> onReaderTouchUp(double x, double y) async {
-    final touchDownAt = _touchDownAt;
-    final touchDownOffset = _touchDownOffset;
-    cancelReaderTouch();
+  void onEpubInteractionEnd(double x, double y) {
+    final touchDownOffset = _epubInteractionStartOffset;
+    cancelEpubInteraction();
 
-    if (!canOpenReader ||
+    if (readerFormat.value != ReaderFileFormat.epub ||
+        !canOpenReader ||
         viewerLoading.value ||
-        touchDownAt == null ||
         touchDownOffset == null) {
       return;
     }
 
-    final now = DateTime.now();
-    if (now.difference(touchDownAt) > _tapMaxDuration) {
-      return;
-    }
-
-    final touchUpOffset = _normalizeTouchPoint(x, y);
+    final touchUpOffset = _normalizeViewportPoint(x, y);
     final moveX = (touchUpOffset.dx - touchDownOffset.dx).abs();
     final moveY = (touchUpOffset.dy - touchDownOffset.dy).abs();
-    if (moveX > _tapMaxMoveDistance || moveY > _tapMaxMoveDistance) {
-      return;
-    }
-
-    final lastTapNavigationAt = _lastTapNavigationAt;
-    if (lastTapNavigationAt != null &&
-        now.difference(lastTapNavigationAt) < _tapNavigationCooldown) {
-      return;
-    }
-
-    if (touchUpOffset.dx >= _tapRightZoneMinX) {
-      _lastTapNavigationAt = now;
-      await goNextPage();
-      return;
-    }
-
-    if (touchUpOffset.dx <= _tapLeftZoneMaxX) {
-      _lastTapNavigationAt = now;
-      await goPreviousPage();
+    final isHorizontalSwipe =
+        moveX > _epubInteractionMinSwipeDistance && moveX > moveY;
+    if (isHorizontalSwipe) {
+      _scheduleEpubPostInteractionSync();
     }
   }
 
@@ -787,7 +760,7 @@ class ReaderController extends GetxController {
       spread: EpubSpread.none,
       manager: EpubManager.continuous,
       snap: true,
-      useSnapAnimationAndroid: false,
+      useSnapAnimationAndroid: true,
       theme: activeTheme.toEpubTheme(),
     );
 
@@ -917,13 +890,22 @@ class ReaderController extends GetxController {
     });
   }
 
-  Future<void> _persistReadingState(int token) async {
-    await Future<void>.delayed(const Duration(milliseconds: 160));
+  Future<void> _persistReadingState(
+    int token, {
+    bool allowLiveEpubLocation = true,
+    bool delayed = true,
+  }) async {
+    if (delayed) {
+      await Future<void>.delayed(const Duration(milliseconds: 160));
+    }
     if (token != _persistToken) return;
 
     if (readerFormat.value == ReaderFileFormat.epub) {
       var location = _lastLocation;
-      if (location != null && canOpenReader && !viewerLoading.value) {
+      if (allowLiveEpubLocation &&
+          location != null &&
+          canOpenReader &&
+          !viewerLoading.value) {
         try {
           location = await epubController.getCurrentLocation();
         } catch (_) {}
@@ -1140,11 +1122,22 @@ class ReaderController extends GetxController {
     return parts.isEmpty ? fallback : parts.last;
   }
 
-  Offset _normalizeTouchPoint(double x, double y) {
+  Offset _normalizeViewportPoint(double x, double y) {
     return Offset(
       math.max(0.0, math.min(1.0, x)),
       math.max(0.0, math.min(1.0, y)),
     );
+  }
+
+  void _scheduleEpubPostInteractionSync() {
+    if (readerFormat.value != ReaderFileFormat.epub ||
+        !canOpenReader ||
+        viewerLoading.value) {
+      return;
+    }
+
+    _scheduleChapterSync();
+    _schedulePersistReadingState();
   }
 
   void _scheduleChapterSync() {
@@ -1865,7 +1858,13 @@ class ReaderController extends GetxController {
     _chapterSyncTimer?.cancel();
     _persistToken += 1;
     _chapterSyncToken += 1;
-    unawaited(_persistReadingState(_persistToken));
+    unawaited(
+      _persistReadingState(
+        _persistToken,
+        allowLiveEpubLocation: false,
+        delayed: false,
+      ),
+    );
     _disposeTxtPageController();
     unawaited(_disposePdfResources());
     super.onClose();
