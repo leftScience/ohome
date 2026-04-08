@@ -68,124 +68,132 @@ class HomeHistoryBanner extends GetView<HomeController> {
             filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
             child: Container(
               width: double.infinity,
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.06),
+                color: Colors.white.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(20.r),
                 border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.12),
-                  width: 1.2,
+                  color: const Color(0xFF3E4055),
+                  width: 1.5,
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
               ),
               child: Row(
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: hasActiveAudio || entry != null ? onContinue : null,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                title,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                            if (hasActiveAudio &&
-                                (musicController?.isPlaying.value ??
-                                    false)) ...[
-                              const SizedBox(width: 6),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 5,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    colors: [
-                                      Color(0xFF7C4DFF),
-                                      Color(0xFF448AFF),
-                                    ],
-                                  ),
-                                  borderRadius: BorderRadius.circular(4.r),
-                                ),
-                                child: const Text(
-                                  '正在播放',
-                                  style: TextStyle(
-                                    fontSize: 9,
-                                    color: Colors.white,
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: hasActiveAudio || entry != null ? onContinue : null,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 14,
                                     fontWeight: FontWeight.w600,
+                                    color: Colors.white,
                                   ),
                                 ),
                               ),
+                              if (hasActiveAudio &&
+                                  (musicController?.isPlaying.value ??
+                                      false)) ...[
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 5,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [
+                                        Color(0xFF7C4DFF),
+                                        Color(0xFF448AFF),
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(4.r),
+                                  ),
+                                  child: const Text(
+                                    '正在播放',
+                                    style: TextStyle(
+                                      fontSize: 9,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ],
-                          ],
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          summary,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.white54,
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 2),
+                          Text(
+                            summary,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.white70,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                IconButton(
-                  onPressed: hasActiveAudio || entry != null
-                      ? () {
-                          if (hasActiveAudio) {
-                            musicController!.togglePlayback();
-                          } else {
-                            onContinue();
+                  IconButton(
+                    onPressed: hasActiveAudio || entry != null
+                        ? () {
+                            if (hasActiveAudio) {
+                              musicController!.togglePlayback();
+                            } else {
+                              onContinue();
+                            }
                           }
-                        }
-                      : null,
-                  iconSize: 28,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: 36,
-                    minHeight: 36,
-                  ),
-                  color: Colors.white,
-                  icon: Icon(
-                    hasActiveAudio &&
-                            (musicController?.isPlaying.value ?? false)
-                        ? Icons.pause_circle_rounded
-                        : Icons.play_circle_rounded,
-                    size: 26,
-                  ),
-                ),
-                SizedBox(width: 4.w),
-                InkWell(
-                  borderRadius: BorderRadius.circular(16),
-                  onTap: onList,
-                  child: const Padding(
-                    padding: EdgeInsets.all(4),
-                    child: Icon(
-                      Icons.format_list_bulleted_rounded,
+                        : null,
+                    iconSize: 28,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 36,
+                      minHeight: 36,
+                    ),
+                    color: Colors.white,
+                    icon: Icon(
+                      hasActiveAudio &&
+                              (musicController?.isPlaying.value ?? false)
+                          ? Icons.pause_circle_rounded
+                          : Icons.play_circle_rounded,
                       size: 26,
-                      color: Colors.white70,
                     ),
                   ),
-                ),
-              ],
+                  SizedBox(width: 4.w),
+                  InkWell(
+                    borderRadius: BorderRadius.circular(16),
+                    onTap: onList,
+                    child: const Padding(
+                      padding: EdgeInsets.all(4),
+                      child: Icon(
+                        Icons.format_list_bulleted_rounded,
+                        size: 26,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
         ),
       );
     });

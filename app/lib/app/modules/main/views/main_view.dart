@@ -16,7 +16,7 @@ class MainView extends GetView<MainController> {
     DropsView(),
     MeView(),
   ];
-  static const double _tabBarHeight = 54;
+  static const double _tabBarHeight = 64;
   static const double _floatingHorizontalPadding = 24;
   static const double _floatingBottomSpacing = 16;
   static const double _historyBannerGap = 10;
@@ -75,6 +75,10 @@ class MainView extends GetView<MainController> {
       decoration: BoxDecoration(
         color: const Color(0xFF1E1E1E),
         borderRadius: BorderRadius.circular(32),
+        border: Border.all(
+          color: const Color(0xFF3E4055),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.25),
@@ -134,7 +138,7 @@ class MainView extends GetView<MainController> {
                     color: isSelected
                         ? const Color(0xFF1E1E1E)
                         : Colors.grey[400],
-                    size: 20,
+                    size: 26,
                   ),
                 ],
               ),
