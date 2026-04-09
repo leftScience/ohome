@@ -9,6 +9,7 @@ import 'package:media_kit_video/media_kit_video.dart';
 import 'package:screen_brightness/screen_brightness.dart';
 import 'package:volume_controller/volume_controller.dart';
 
+import '../../../widgets/media_player_header_title.dart';
 import '../../../widgets/playlist_loading_view.dart';
 import '../../../services/android_pip_service.dart';
 import '../controllers/player_controller.dart';
@@ -236,16 +237,10 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                   SizedBox(width: 4.w),
                   ConstrainedBox(
                     constraints: BoxConstraints(maxWidth: 280.w),
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Text(
-                        title,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                    child: MediaPlayerHeaderTitle(
+                      title: title,
+                      titleColor: Colors.white,
+                      fallbackTitle: '返回',
                     ),
                   ),
                 ],
@@ -1960,17 +1955,10 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
         title: Obx(
           () => Align(
             alignment: Alignment.centerLeft,
-            child: Text(
-              controller.resourceTitle.value,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              softWrap: true,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                height: 1.2,
-                fontWeight: FontWeight.w700,
-              ),
+            child: MediaPlayerHeaderTitle(
+              title: controller.resourceTitle.value,
+              titleColor: Colors.white,
+              fallbackTitle: '影视',
             ),
           ),
         ),

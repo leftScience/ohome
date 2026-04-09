@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
+import '../../../widgets/media_player_header_title.dart';
 import '../../../widgets/playlist_loading_view.dart';
 import '../controllers/music_player_controller.dart';
 
@@ -33,28 +34,10 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
       appBar: AppBar(
         iconTheme: const IconThemeData(color: Colors.white),
         title: Obx(
-          () => Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                controller.playlistTitle.value,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              if (controller.folderPath.value.isNotEmpty)
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Text(
-                    controller.folderPath.value,
-                    softWrap: false,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.labelSmall?.copyWith(color: Colors.white70),
-                  ),
-                ),
-            ],
+          () => MediaPlayerHeaderTitle(
+            title: controller.playlistTitle.value,
+            titleColor: Colors.white,
+            fallbackTitle: '播客',
           ),
         ),
         actions: [

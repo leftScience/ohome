@@ -7,6 +7,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
+import '../../../widgets/media_player_header_title.dart';
 import '../../player/controllers/player_controller.dart';
 
 class PlayletPlayerView extends StatefulWidget {
@@ -592,16 +593,10 @@ class _PlayletPlayerViewState extends State<PlayletPlayerView>
                       child: Padding(
                         padding: EdgeInsets.symmetric(vertical: 8.h),
                         child: Obx(
-                          () => Text(
-                            _title(),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.left,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 17.sp,
-                              fontWeight: FontWeight.w700,
-                            ),
+                          () => MediaPlayerHeaderTitle(
+                            title: _title(),
+                            titleColor: Colors.white,
+                            fallbackTitle: '短剧',
                           ),
                         ),
                       ),

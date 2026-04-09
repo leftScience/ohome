@@ -6,6 +6,7 @@ import 'package:flutter_epub_viewer/flutter_epub_viewer.dart';
 import 'package:get/get.dart';
 import 'package:pdfx/pdfx.dart';
 
+import '../../../widgets/media_player_header_title.dart';
 import '../controllers/reader_controller.dart';
 
 class ReaderView extends GetView<ReaderController> {
@@ -29,11 +30,13 @@ class ReaderView extends GetView<ReaderController> {
           appBar: exiting
               ? null
               : AppBar(
-                  backgroundColor:
-                      isPdf ? Colors.black : chrome.surfaceColor,
-                  foregroundColor:
-                      isPdf ? Colors.white : chrome.textColor,
-                  title: Text(controller.title.value),
+                  backgroundColor: isPdf ? Colors.black : chrome.surfaceColor,
+                  foregroundColor: isPdf ? Colors.white : chrome.textColor,
+                  title: MediaPlayerHeaderTitle(
+                    title: controller.title.value,
+                    titleColor: isPdf ? Colors.white : chrome.textColor,
+                    fallbackTitle: '阅读',
+                  ),
                   actions: [
                     if (controller.canSelectTheme)
                       IconButton(
@@ -62,9 +65,7 @@ class ReaderView extends GetView<ReaderController> {
                     ),
                   ],
                 ),
-          body: exiting
-              ? const SizedBox.shrink()
-              : _buildBody(),
+          body: exiting ? const SizedBox.shrink() : _buildBody(),
         ),
       );
     });
