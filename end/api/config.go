@@ -31,6 +31,10 @@ var sensitiveConfigKeys = map[string]struct{}{
 	sensitiveConfigKeyQuarkStreamWebProxyMode:   {},
 }
 
+var readableSensitiveConfigKeys = map[string]struct{}{
+	sensitiveConfigKeyQuarkStreamWebProxyMode: {},
+}
+
 type Config struct {
 	BaseApi
 }
@@ -55,11 +59,11 @@ func (config *Config) GetConfigList(c *gin.Context) {
 	}
 
 	if !loginUser.IsSuperAdmin() {
-		if isSensitiveConfigKey(iConfigListDTO.Key) || containsSensitiveConfigKeys(iConfigListDTO.Keys) {
+		if !canReadConfig(loginUser, iConfigListDTO.Key) || containsUnreadableSensitiveConfigKeys(loginUser, iConfigListDTO.Keys) {
 			utils.PermissionFail("无权限访问", c)
 			return
 		}
-		iConfigListDTO.ExcludeKeys = sensitiveConfigKeyList()
+		iConfigListDTO.ExcludeKeys = unreadableSensitiveConfigKeyList(loginUser)
 	}
 
 	giConfigList, nTotal, err := configService.GetConfigList(&iConfigListDTO)
@@ -93,7 +97,7 @@ func (config *Config) GetConfigById(c *gin.Context) {
 		utils.FailWithMessage(err.Error(), c)
 		return
 	}
-	if !canAccessConfig(loginUser, iConfig.Key) {
+	if !canReadConfig(loginUser, iConfig.Key) {
 		utils.PermissionFail("无权限访问", c)
 		return
 	}
@@ -114,7 +118,7 @@ func (config *Config) AddOrUpdateConfig(c *gin.Context) {
 		return
 	}
 
-	if !canAccessConfig(loginUser, iConfigUpdateDTO.Key) {
+	if !canWriteConfig(loginUser, iConfigUpdateDTO.Key) {
 		utils.PermissionFail("无权限访问", c)
 		return
 	}
@@ -124,7 +128,7 @@ func (config *Config) AddOrUpdateConfig(c *gin.Context) {
 			utils.FailWithMessage(err.Error(), c)
 			return
 		}
-		if !canAccessConfig(loginUser, currentConfig.Key) {
+		if !canWriteConfig(loginUser, currentConfig.Key) {
 			utils.PermissionFail("无权限访问", c)
 			return
 		}
@@ -157,7 +161,7 @@ func (config *Config) DeleteConfig(c *gin.Context) {
 		utils.FailWithMessage(err.Error(), c)
 		return
 	}
-	if !canAccessConfig(loginUser, currentConfig.Key) {
+	if !canWriteConfig(loginUser, currentConfig.Key) {
 		utils.PermissionFail("无权限访问", c)
 		return
 	}
@@ -175,25 +179,43 @@ func isSensitiveConfigKey(key string) bool {
 	return exists
 }
 
-func canAccessConfig(loginUser model.LoginUser, key string) bool {
+func canReadSensitiveConfig(key string) bool {
+	_, exists := readableSensitiveConfigKeys[strings.TrimSpace(key)]
+	return exists
+}
+
+func canReadConfig(loginUser model.LoginUser, key string) bool {
+	if !isSensitiveConfigKey(key) {
+		return true
+	}
+	if loginUser.IsSuperAdmin() {
+		return true
+	}
+	return canReadSensitiveConfig(key)
+}
+
+func canWriteConfig(loginUser model.LoginUser, key string) bool {
 	if !isSensitiveConfigKey(key) {
 		return true
 	}
 	return loginUser.IsSuperAdmin()
 }
 
-func containsSensitiveConfigKeys(keys []string) bool {
+func containsUnreadableSensitiveConfigKeys(loginUser model.LoginUser, keys []string) bool {
 	for _, key := range keys {
-		if isSensitiveConfigKey(key) {
+		if !canReadConfig(loginUser, key) {
 			return true
 		}
 	}
 	return false
 }
 
-func sensitiveConfigKeyList() []string {
+func unreadableSensitiveConfigKeyList(loginUser model.LoginUser) []string {
 	keys := make([]string, 0, len(sensitiveConfigKeys))
 	for key := range sensitiveConfigKeys {
+		if canReadConfig(loginUser, key) {
+			continue
+		}
 		keys = append(keys, key)
 	}
 	return keys
