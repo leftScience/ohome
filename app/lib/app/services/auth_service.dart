@@ -32,6 +32,7 @@ class AuthService extends GetxService {
   final user = Rxn<UserModel>();
 
   Future<void>? _refreshingFuture; // 加个字段避免重复刷新
+  bool _shouldShowDefaultBackendNotice = false;
 
   bool get isLoggedIn {
     final token = accessToken.value;
@@ -59,6 +60,7 @@ class AuthService extends GetxService {
     );
     // 存储用户信息
     await _applyUser(res.user);
+    _shouldShowDefaultBackendNotice = true;
   }
 
   Future<void> register({required String name, required String password}) {
@@ -141,11 +143,18 @@ class AuthService extends GetxService {
 
   Future<void> logout() async {
     await _stopActiveMediaPlayback();
+    _shouldShowDefaultBackendNotice = false;
     accessToken.value = null;
     refreshToken.value = null;
     user.value = null;
     await _tokenStorage.clear();
     await _userStorage.clear();
+  }
+
+  bool consumeDefaultBackendNoticeFlag() {
+    final shouldShow = _shouldShowDefaultBackendNotice;
+    _shouldShowDefaultBackendNotice = false;
+    return shouldShow;
   }
 
   Future<void> _stopActiveMediaPlayback() async {

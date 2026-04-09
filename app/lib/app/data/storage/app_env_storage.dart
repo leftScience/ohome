@@ -2,6 +2,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class AppEnvStorage {
   static const _kApiBaseUrlOverride = 'apiBaseUrlOverride';
+  static const _kDefaultBackendNoticeDismissed =
+      'defaultBackendNoticeDismissed';
 
   SharedPreferences? _prefs;
 
@@ -28,5 +30,15 @@ class AppEnvStorage {
   Future<void> clearApiBaseUrlOverride() async {
     final prefs = await _instance();
     await prefs.remove(_kApiBaseUrlOverride);
+  }
+
+  Future<bool> readDefaultBackendNoticeDismissed() async {
+    final prefs = await _instance();
+    return prefs.getBool(_kDefaultBackendNoticeDismissed) ?? false;
+  }
+
+  Future<void> writeDefaultBackendNoticeDismissed(bool value) async {
+    final prefs = await _instance();
+    await prefs.setBool(_kDefaultBackendNoticeDismissed, value);
   }
 }

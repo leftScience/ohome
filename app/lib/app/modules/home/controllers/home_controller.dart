@@ -5,11 +5,13 @@ import 'package:get/get.dart';
 import '../../../data/api/todo.dart';
 import '../../../data/models/media_history_entry.dart';
 import '../../../data/models/todo_item_model.dart';
+import '../../../data/storage/app_env_storage.dart';
 import '../../../routes/app_pages.dart';
 import '../../../services/auth_service.dart';
 import '../../../services/history_playback_service.dart';
 import '../../../services/media_history_service.dart';
 import '../../../services/playback_entry_service.dart';
+import '../../../utils/app_env.dart';
 import '../../messages/controllers/messages_controller.dart';
 import '../../music_player/controllers/music_player_controller.dart';
 
@@ -21,6 +23,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     PlaybackEntryService? entryService,
     TodoApi? todoApi,
     MessagesController? messagesController,
+    AppEnvStorage? appEnvStorage,
   }) : _authService = authService ?? Get.find<AuthService>(),
        _mediaHistoryService =
            mediaHistoryService ?? Get.find<MediaHistoryService>(),
@@ -29,7 +32,8 @@ class HomeController extends GetxController with WidgetsBindingObserver {
        _entryService = entryService ?? Get.find<PlaybackEntryService>(),
        _todoApi = todoApi ?? Get.find<TodoApi>(),
        _messagesController =
-           messagesController ?? Get.find<MessagesController>();
+           messagesController ?? Get.find<MessagesController>(),
+       _appEnvStorage = appEnvStorage ?? AppEnvStorage();
 
   final AuthService _authService;
   final MediaHistoryService _mediaHistoryService;
@@ -37,6 +41,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   final PlaybackEntryService _entryService;
   final TodoApi _todoApi;
   final MessagesController _messagesController;
+  final AppEnvStorage _appEnvStorage;
 
   final recentHistory = Rxn<MediaHistoryEntry>();
   final recentHistoryLoading = false.obs;
@@ -74,6 +79,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     unawaited(
       _messagesController.loadMessages(refresh: true, showErrorToast: false),
     );
+    unawaited(_maybeShowDefaultBackendNotice());
   }
 
   @override
@@ -465,4 +471,53 @@ class HomeController extends GetxController with WidgetsBindingObserver {
         )
         .toList(growable: false);
   }
+
+  Future<void> _maybeShowDefaultBackendNotice() async {
+    if (!_authService.consumeDefaultBackendNoticeFlag()) {
+      return;
+    }
+    final currentUser = _authService.user.value;
+    if (currentUser == null || currentUser.isSuperAdmin) {
+      return;
+    }
+    if (!AppEnv.instance.isUsingDefaultApiBaseUrl) {
+      return;
+    }
+    if (await _appEnvStorage.readDefaultBackendNoticeDismissed()) {
+      return;
+    }
+
+    await Future<void>.delayed(const Duration(milliseconds: 250));
+    if (isClosed) return;
+
+    final action = await Get.dialog<_DefaultBackendNoticeAction>(
+      AlertDialog(
+        title: const Text('提示'),
+        content: const Text(
+          '你目前使用的是开发者提供的免费后端接口。如需稳定的后端，以及数据的绝对安全，请自部署后端服务器并进行连接。部署方式请参考关于oHome-github的文档',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Get.back(result: _DefaultBackendNoticeAction.close);
+            },
+            child: const Text('关闭'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Get.back(result: _DefaultBackendNoticeAction.dismissForever);
+            },
+            child: const Text('永久关闭'),
+          ),
+        ],
+      ),
+      barrierDismissible: false,
+    );
+
+    if (action == _DefaultBackendNoticeAction.dismissForever) {
+      await _appEnvStorage.writeDefaultBackendNoticeDismissed(true);
+    }
+  }
 }
+
+enum _DefaultBackendNoticeAction { close, dismissForever }
