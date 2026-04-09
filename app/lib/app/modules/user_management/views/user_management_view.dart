@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 
 import '../../../data/models/user_model.dart';
 import '../../../theme/app_theme.dart';
+import '../../../widgets/app_floating_action_button_position.dart';
 import '../controllers/user_management_controller.dart';
 
 class UserManagementView extends GetView<UserManagementController> {
@@ -13,6 +14,8 @@ class UserManagementView extends GetView<UserManagementController> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('用户管理')),
+      floatingActionButtonLocation:
+          AppFloatingActionButtonPosition.scaffoldLocation,
       floatingActionButton: FloatingActionButton.extended(
         onPressed: controller.openCreatePage,
         backgroundColor: AppThemeColors.primary,

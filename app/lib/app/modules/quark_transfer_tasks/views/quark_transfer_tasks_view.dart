@@ -4,7 +4,9 @@ import 'package:get/get.dart';
 
 import '../../../data/models/quark_transfer_task_model.dart';
 import '../../../theme/app_theme.dart';
+import '../../../widgets/app_floating_action_button_position.dart';
 import '../controllers/quark_transfer_tasks_controller.dart';
+import 'manual_transfer_task_sheet.dart';
 
 class QuarkTransferTasksView extends GetView<QuarkTransferTasksController> {
   const QuarkTransferTasksView({super.key});
@@ -21,6 +23,14 @@ class QuarkTransferTasksView extends GetView<QuarkTransferTasksController> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('转存任务')),
+      floatingActionButtonLocation:
+          AppFloatingActionButtonPosition.scaffoldLocation,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _openCreateSheet(context),
+        backgroundColor: AppThemeColors.primary,
+        foregroundColor: Colors.white,
+        child: Icon(Icons.add_rounded, size: 26.w),
+      ),
       body: Column(
         children: [
           Padding(
@@ -30,6 +40,25 @@ class QuarkTransferTasksView extends GetView<QuarkTransferTasksController> {
           Expanded(child: _buildTaskList()),
         ],
       ),
+    );
+  }
+
+  Future<void> _openCreateSheet(BuildContext context) {
+    return showManualTransferTaskSheet(
+      context: context,
+      loadSavePathOptions: controller.fetchSavePathOptions,
+      onSubmit:
+          ({
+            required String title,
+            required String shareUrl,
+            required String savePath,
+          }) {
+            return controller.submitManualTransfer(
+              title: title,
+              shareUrl: shareUrl,
+              savePath: savePath,
+            );
+          },
     );
   }
 
@@ -79,7 +108,7 @@ class QuarkTransferTasksView extends GetView<QuarkTransferTasksController> {
             ? ListView(
                 controller: controller.scrollController,
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: EdgeInsets.fromLTRB(20.w, 80.h, 20.w, 80.h),
+                padding: EdgeInsets.fromLTRB(20.w, 80.h, 20.w, 120.h),
                 children: [
                   Icon(
                     Icons.task_alt_rounded,
@@ -101,7 +130,7 @@ class QuarkTransferTasksView extends GetView<QuarkTransferTasksController> {
               )
             : ListView.separated(
                 controller: controller.scrollController,
-                padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 24.h),
+                padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 100.h),
                 itemCount: tasks.length + (hasMore ? 1 : 0),
                 separatorBuilder: (_, _) => SizedBox(height: 12.h),
                 itemBuilder: (context, index) {

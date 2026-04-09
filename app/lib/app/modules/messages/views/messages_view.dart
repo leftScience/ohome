@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import '../../../data/models/app_message_model.dart';
 import '../../../services/auth_service.dart';
 import '../../../theme/app_theme.dart';
+import '../../../widgets/app_floating_action_button_position.dart';
 import '../controllers/messages_controller.dart';
 
 class MessagesView extends StatefulWidget {
@@ -51,6 +52,8 @@ class _MessagesViewState extends State<MessagesView> {
           SizedBox(width: 8.w),
         ],
       ),
+      floatingActionButtonLocation:
+          AppFloatingActionButtonPosition.scaffoldLocation,
       floatingActionButton: Obx(() {
         final isSuperAdmin = authService.user.value?.isSuperAdmin ?? false;
         if (!isSuperAdmin) return const SizedBox.shrink();
@@ -433,7 +436,12 @@ class _MessagesViewState extends State<MessagesView> {
         child: SafeArea(
           top: false,
           child: SingleChildScrollView(
-            padding: EdgeInsets.fromLTRB(20.w, 14.h, 20.w, 20.h + MediaQuery.viewInsetsOf(context).bottom),
+            padding: EdgeInsets.fromLTRB(
+              20.w,
+              14.h,
+              20.w,
+              20.h + MediaQuery.viewInsetsOf(context).bottom,
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -523,8 +531,15 @@ class _MessagesViewState extends State<MessagesView> {
                   style: TextStyle(fontSize: 14.sp, color: Colors.white),
                   decoration: InputDecoration(
                     hintText: '请输入消息标题',
-                    hintStyle: TextStyle(fontSize: 13.sp, color: Colors.white38),
-                    prefixIcon: Icon(Icons.title_rounded, color: Colors.white38, size: 20.w),
+                    hintStyle: TextStyle(
+                      fontSize: 13.sp,
+                      color: Colors.white38,
+                    ),
+                    prefixIcon: Icon(
+                      Icons.title_rounded,
+                      color: Colors.white38,
+                      size: 20.w,
+                    ),
                     filled: true,
                     fillColor: const Color(0xFF111111),
                     contentPadding: EdgeInsets.symmetric(
@@ -545,7 +560,9 @@ class _MessagesViewState extends State<MessagesView> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14.r),
-                      borderSide: const BorderSide(color: AppThemeColors.primary),
+                      borderSide: const BorderSide(
+                        color: AppThemeColors.primary,
+                      ),
                     ),
                   ),
                 ),
@@ -565,7 +582,10 @@ class _MessagesViewState extends State<MessagesView> {
                   maxLines: 5,
                   decoration: InputDecoration(
                     hintText: '请输入消息内容',
-                    hintStyle: TextStyle(fontSize: 13.sp, color: Colors.white38),
+                    hintStyle: TextStyle(
+                      fontSize: 13.sp,
+                      color: Colors.white38,
+                    ),
                     filled: true,
                     fillColor: const Color(0xFF111111),
                     contentPadding: EdgeInsets.symmetric(
@@ -586,7 +606,9 @@ class _MessagesViewState extends State<MessagesView> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14.r),
-                      borderSide: const BorderSide(color: AppThemeColors.primary),
+                      borderSide: const BorderSide(
+                        color: AppThemeColors.primary,
+                      ),
                     ),
                   ),
                 ),
@@ -626,7 +648,10 @@ class _MessagesViewState extends State<MessagesView> {
                             return;
                           }
                           Get.back();
-                          controller.sendSystemMessage(title: title, content: content);
+                          controller.sendSystemMessage(
+                            title: title,
+                            content: content,
+                          );
                         },
                         style: FilledButton.styleFrom(
                           minimumSize: Size.fromHeight(50.h),

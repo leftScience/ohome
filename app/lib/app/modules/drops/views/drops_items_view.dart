@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
 import '../../../theme/app_theme.dart';
+import '../../../widgets/app_floating_action_button_position.dart';
 import '../controllers/drops_items_controller.dart';
 import 'drops_shared_widgets.dart';
 
@@ -13,6 +14,8 @@ class DropsItemsView extends GetView<DropsItemsController> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('物资管理')),
+      floatingActionButtonLocation:
+          AppFloatingActionButtonPosition.scaffoldLocation,
       floatingActionButton: FloatingActionButton.extended(
         onPressed: controller.openCreate,
         backgroundColor: AppThemeColors.primary,

@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
 import '../../../theme/app_theme.dart';
+import '../../../widgets/app_floating_action_button_position.dart';
 import '../controllers/drops_controller.dart';
 import '../controllers/drops_events_controller.dart';
 import '../controllers/drops_items_controller.dart';
@@ -249,9 +250,7 @@ class _DropsViewState extends State<DropsView>
               ),
             ],
           ),
-          Positioned(
-            right: 20.w,
-            bottom: MediaQuery.of(context).padding.bottom + 68.h,
+          AppFloatingActionButtonAnchor(
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(24.r),

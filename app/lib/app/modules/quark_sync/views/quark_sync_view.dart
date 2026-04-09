@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 
 import '../../../data/models/quark_auto_save_task_model.dart';
 import '../../../theme/app_theme.dart';
+import '../../../widgets/app_floating_action_button_position.dart';
 import '../controllers/quark_sync_controller.dart';
 
 class QuarkSyncView extends GetView<QuarkSyncController> {
@@ -23,12 +24,13 @@ class QuarkSyncView extends GetView<QuarkSyncController> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('夸克同步')),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButtonLocation:
+          AppFloatingActionButtonPosition.scaffoldLocation,
+      floatingActionButton: FloatingActionButton(
         onPressed: controller.openCreatePage,
         backgroundColor: AppThemeColors.primary,
         foregroundColor: Colors.white,
-        icon: const Icon(Icons.add),
-        label: const Text('新增任务'),
+        child: const Icon(Icons.add),
       ),
       body: Column(
         children: [

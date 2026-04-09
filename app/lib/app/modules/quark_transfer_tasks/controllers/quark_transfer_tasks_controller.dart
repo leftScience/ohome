@@ -3,18 +3,28 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../data/api/quark.dart';
+import '../../../data/api/quark_transfer.dart';
 import '../../../data/api/quark_transfer_task.dart';
 import '../../../data/models/quark_transfer_task_model.dart';
+import '../../../utils/http_client.dart';
 import '../../quark_sync/models/quark_sync_form_draft.dart';
 import '../../quark_sync/views/quark_sync_form_view.dart';
 
 class QuarkTransferTasksController extends GetxController {
-  QuarkTransferTasksController({QuarkTransferTaskApi? taskApi})
-    : _taskApi = taskApi ?? Get.find<QuarkTransferTaskApi>();
+  QuarkTransferTasksController({
+    QuarkTransferTaskApi? taskApi,
+    QuarkTransferRepository? transferRepository,
+    WebdavApi? webdavApi,
+  }) : _taskApi = taskApi ?? Get.find<QuarkTransferTaskApi>(),
+       _transferRepository = transferRepository ?? QuarkTransferRepository(),
+       _webdavApi = webdavApi ?? Get.find<WebdavApi>();
 
   static const int _pageSize = 20;
 
   final QuarkTransferTaskApi _taskApi;
+  final QuarkTransferRepository _transferRepository;
+  final WebdavApi _webdavApi;
 
   final scrollController = ScrollController();
   final tasks = <QuarkTransferTaskModel>[].obs;
@@ -23,6 +33,7 @@ class QuarkTransferTasksController extends GetxController {
   final hasMore = true.obs;
   final statusFilter = ''.obs;
   final deletingTaskIds = <int>{}.obs;
+  final submittingManualTask = false.obs;
 
   int _page = 1;
   int _loadToken = 0;
@@ -95,6 +106,63 @@ class QuarkTransferTasksController extends GetxController {
     if (statusFilter.value == status) return;
     statusFilter.value = status;
     unawaited(loadTasks(refresh: true));
+  }
+
+  Future<List<QuarkConfigOption>> fetchSavePathOptions() async {
+    final configs = await _webdavApi.fetchMoveTargets();
+    final options = configs
+        .where((item) {
+          final path = item.rootPath.trim();
+          final application = item.application.trim().toLowerCase();
+          return path.isNotEmpty && path != '/' && application != 'upload';
+        })
+        .toList(growable: true);
+    options.sort((left, right) {
+      final leftLabel = left.remark.isNotEmpty ? left.remark : left.application;
+      final rightLabel = right.remark.isNotEmpty
+          ? right.remark
+          : right.application;
+      return leftLabel.toLowerCase().compareTo(rightLabel.toLowerCase());
+    });
+    return options;
+  }
+
+  Future<bool> submitManualTransfer({
+    required String title,
+    required String shareUrl,
+    required String savePath,
+  }) async {
+    if (submittingManualTask.value) return false;
+
+    final taskTitle = title.trim();
+    final link = shareUrl.trim();
+    final path = savePath.trim();
+    if (taskTitle.isEmpty || link.isEmpty || path.isEmpty) {
+      Get.snackbar('提示', '请填写标题、链接和转存路径');
+      return false;
+    }
+
+    submittingManualTask.value = true;
+    try {
+      await _transferRepository.transferOnce(
+        shareUrl: link,
+        savePath: path,
+        application: '',
+        resourceName: taskTitle,
+      );
+      Get.snackbar('提示', '已加入转存任务');
+      await loadTasks(refresh: true);
+      return true;
+    } on ApiException catch (e) {
+      final message = e.message.trim();
+      Get.snackbar('转存失败', message.isEmpty ? '请稍后重试' : message);
+      return false;
+    } catch (_) {
+      Get.snackbar('转存失败', '请稍后重试');
+      return false;
+    } finally {
+      submittingManualTask.value = false;
+    }
   }
 
   Future<void> openSyncForm(QuarkTransferTaskModel task) async {
