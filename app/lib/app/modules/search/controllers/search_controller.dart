@@ -8,7 +8,6 @@ import '../../../data/api/douban.dart';
 import '../../../data/api/pansou.dart';
 import '../../../data/api/quark_transfer.dart';
 import '../../../data/storage/search_history_storage.dart';
-import '../../../routes/app_pages.dart';
 import '../../../utils/http_client.dart';
 import '../../../widgets/selection_bottom_sheet.dart';
 
@@ -201,10 +200,6 @@ class SearchController extends GetxController {
     } finally {
       transferringUrls.remove(url);
     }
-  }
-
-  void openTransferTasks() {
-    Get.toNamed(Routes.QUARK_TRANSFER_TASKS);
   }
 
   Future<void> _settleFocusBeforeTransferSheet() async {

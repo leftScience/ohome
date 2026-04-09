@@ -135,12 +135,6 @@ class _SearchViewState extends State<SearchView> {
               ),
             ),
             actions: [
-              Padding(
-                padding: EdgeInsets.only(right: 4.w),
-                child: _TransferTaskCenterButton(
-                  onTap: controller.openTransferTasks,
-                ),
-              ),
               Obx(() {
                 final showCancel =
                     controller.searched.value && !controller.searching.value;
@@ -508,20 +502,6 @@ class _SearchViewState extends State<SearchView> {
         ),
       );
     });
-  }
-}
-
-class _TransferTaskCenterButton extends StatelessWidget {
-  const _TransferTaskCenterButton({required this.onTap});
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return IconButton(
-      onPressed: onTap,
-      icon: const Icon(Icons.task_alt_outlined, color: Colors.white),
-      tooltip: '转存任务',
-    );
   }
 }
 

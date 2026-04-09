@@ -23,7 +23,7 @@ class QuarkSyncView extends GetView<QuarkSyncController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('夸克同步')),
+      appBar: AppBar(title: const Text('同步任务')),
       floatingActionButtonLocation:
           AppFloatingActionButtonPosition.scaffoldLocation,
       floatingActionButton: FloatingActionButton(
