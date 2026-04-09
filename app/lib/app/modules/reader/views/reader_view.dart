@@ -16,41 +16,56 @@ class ReaderView extends GetView<ReaderController> {
     return Obx(() {
       final chrome = _ReaderChromeColors.resolve(controller);
       final isPdf = controller.readerFormat.value == ReaderFileFormat.pdf;
-      return Scaffold(
-        backgroundColor: chrome.backgroundColor,
-        appBar: AppBar(
-          backgroundColor: isPdf ? Colors.black : chrome.surfaceColor,
-          foregroundColor: isPdf ? Colors.white : chrome.textColor,
-          title: Text(controller.title.value),
-          actions: [
-            if (controller.canSelectTheme)
-              IconButton(
-                tooltip: '主题',
-                onPressed: () => _showThemeSheet(context),
-                icon: const Icon(Icons.palette_outlined),
-              ),
-            if (controller.canAdjustFontSize) ...[
-              IconButton(
-                tooltip: '减小字号',
-                onPressed: controller.decreaseFontSize,
-                icon: const Icon(Icons.text_decrease_rounded),
-              ),
-              IconButton(
-                tooltip: '增大字号',
-                onPressed: controller.increaseFontSize,
-                icon: const Icon(Icons.text_increase_rounded),
-              ),
-            ],
-            IconButton(
-              tooltip: controller.navigationTooltip,
-              onPressed: controller.canShowNavigation
-                  ? () => _showNavigationSheet(context)
-                  : null,
-              icon: const Icon(Icons.list_alt_rounded),
-            ),
-          ],
+      final exiting = controller.isExiting.value;
+      return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop) {
+            controller.prepareExit();
+          }
+        },
+        child: Scaffold(
+          backgroundColor: chrome.backgroundColor,
+          appBar: exiting
+              ? null
+              : AppBar(
+                  backgroundColor:
+                      isPdf ? Colors.black : chrome.surfaceColor,
+                  foregroundColor:
+                      isPdf ? Colors.white : chrome.textColor,
+                  title: Text(controller.title.value),
+                  actions: [
+                    if (controller.canSelectTheme)
+                      IconButton(
+                        tooltip: '主题',
+                        onPressed: () => _showThemeSheet(context),
+                        icon: const Icon(Icons.palette_outlined),
+                      ),
+                    if (controller.canAdjustFontSize) ...[
+                      IconButton(
+                        tooltip: '减小字号',
+                        onPressed: controller.decreaseFontSize,
+                        icon: const Icon(Icons.text_decrease_rounded),
+                      ),
+                      IconButton(
+                        tooltip: '增大字号',
+                        onPressed: controller.increaseFontSize,
+                        icon: const Icon(Icons.text_increase_rounded),
+                      ),
+                    ],
+                    IconButton(
+                      tooltip: controller.navigationTooltip,
+                      onPressed: controller.canShowNavigation
+                          ? () => _showNavigationSheet(context)
+                          : null,
+                      icon: const Icon(Icons.list_alt_rounded),
+                    ),
+                  ],
+                ),
+          body: exiting
+              ? const SizedBox.shrink()
+              : _buildBody(),
         ),
-        body: _buildBody(),
       );
     });
   }

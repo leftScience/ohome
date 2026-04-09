@@ -290,6 +290,7 @@ class ReaderController extends GetxController {
   final currentChapterHref = ''.obs;
   final currentPdfPage = 1.obs;
   final pdfPageCount = 0.obs;
+  final isExiting = false.obs;
 
   SharedPreferences? _preferences;
   Timer? _persistTimer;
@@ -1850,6 +1851,13 @@ class ReaderController extends GetxController {
         await document.close();
       } catch (_) {}
     }
+  }
+
+  Future<void> prepareExit() async {
+    if (isExiting.value) return;
+    isExiting.value = true;
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    Get.back();
   }
 
   @override
