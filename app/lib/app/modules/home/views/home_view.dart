@@ -2,7 +2,9 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+
 import '../../../routes/app_pages.dart';
+import '../../../widgets/home_style_backdrop.dart';
 import '../controllers/home_controller.dart';
 import '../widgets/home_todo_panel.dart';
 
@@ -24,67 +26,7 @@ class HomeView extends GetView<HomeController> {
     return SafeArea(
       child: Stack(
         children: [
-          // 顶部深色磨砂光晕背景
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 400.h,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    const Color(0xFF131521),
-                    const Color(0xFF1B1E34).withValues(alpha: 0.5),
-                    Colors.transparent,
-                  ],
-                  stops: const [0.0, 0.5, 1.0],
-                ),
-              ),
-            ),
-          ),
-          // 右上方紫色光晕
-          Positioned(
-            top: -40.h,
-            right: -20.w,
-            child: Container(
-              width: 260.w,
-              height: 260.w,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFF7C4DFF).withValues(alpha: 0.22),
-                    const Color(0xFF7C4DFF).withValues(alpha: 0.05),
-                    Colors.transparent,
-                  ],
-                  stops: const [0.0, 0.4, 1.0],
-                ),
-              ),
-            ),
-          ),
-          // 左侧蓝色光晕
-          Positioned(
-            top: 100.h,
-            left: -60.w,
-            child: Container(
-              width: 220.w,
-              height: 220.w,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFF448AFF).withValues(alpha: 0.16),
-                    const Color(0xFF448AFF).withValues(alpha: 0.02),
-                    Colors.transparent,
-                  ],
-                  stops: const [0.0, 0.5, 1.0],
-                ),
-              ),
-            ),
-          ),
+          const HomeStyleBackdrop(),
           // 主内容
           SingleChildScrollView(
             padding: EdgeInsets.fromLTRB(20.w, 24.h, 20.w, 160.h),

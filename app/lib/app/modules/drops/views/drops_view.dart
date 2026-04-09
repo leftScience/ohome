@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 
 import '../../../theme/app_theme.dart';
 import '../../../widgets/app_floating_action_button_position.dart';
+import '../../../widgets/home_style_backdrop.dart';
 import '../controllers/drops_controller.dart';
 import '../controllers/drops_events_controller.dart';
 import '../controllers/drops_items_controller.dart';
@@ -112,7 +113,7 @@ class _DropsViewState extends State<DropsView>
       bottom: false,
       child: Stack(
         children: [
-          const _DropsBackdrop(),
+          const HomeStyleBackdrop(),
           Column(
             children: [
               Padding(
@@ -474,78 +475,6 @@ class _ReminderEntryCard extends StatelessWidget {
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _DropsBackdrop extends StatelessWidget {
-  const _DropsBackdrop();
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned.fill(
-      child: DecoratedBox(
-        decoration: const BoxDecoration(color: Color(0xFF131521)),
-        child: Stack(
-          children: [
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              height: 400.h,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      const Color(0xFF1B1E34).withValues(alpha: 0.5),
-                      const Color(0xFF131521).withValues(alpha: 0.0),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            Positioned(
-              top: -80.h,
-              right: -60.w,
-              child: _BackdropGlow(
-                size: 400.w,
-                color: const Color(0xFFDD2476).withValues(alpha: 0.18),
-              ),
-            ),
-            Positioned(
-              top: 250.h,
-              left: -100.w,
-              child: _BackdropGlow(
-                size: 360.w,
-                color: const Color(0xFF00B4DB).withValues(alpha: 0.15),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _BackdropGlow extends StatelessWidget {
-  const _BackdropGlow({required this.size, required this.color});
-
-  final double size;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: RadialGradient(colors: [color, color.withValues(alpha: 0)]),
         ),
       ),
     );

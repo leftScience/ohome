@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 
 import '../../../data/models/user_model.dart';
 import '../../../theme/app_theme.dart';
+import '../../../widgets/home_style_backdrop.dart';
 import '../controllers/me_controller.dart';
 
 class MeView extends GetView<MeController> {
@@ -19,14 +20,14 @@ class MeView extends GetView<MeController> {
       bottom: false,
       child: Stack(
         children: [
-          const _MeBackdrop(),
+          const HomeStyleBackdrop(),
           ListView(
-            padding: EdgeInsets.fromLTRB(20.w, 28.h, 20.w, bottomInset),
+            padding: EdgeInsets.fromLTRB(20.w, 24.h, 20.w, bottomInset),
             children: [
               Text(
                 '设置',
                 style: TextStyle(
-                  fontSize: 22.sp,
+                  fontSize: 24.sp,
                   fontWeight: FontWeight.w700,
                   color: Colors.white,
                 ),
@@ -139,9 +140,9 @@ class MeView extends GetView<MeController> {
           borderRadius: BorderRadius.circular(22.r),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 16,
-              offset: const Offset(0, 8),
+              color: const Color(0xFF061A4A).withValues(alpha: 0.3),
+              blurRadius: 24,
+              offset: const Offset(0, 12),
             ),
           ],
         ),
@@ -152,123 +153,174 @@ class MeView extends GetView<MeController> {
             child: Container(
               padding: EdgeInsets.all(18.w),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.04),
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF2496C7),
+                    Color(0xFF1565C0),
+                    Color(0xFF0B1F5E),
+                  ],
+                ),
                 borderRadius: BorderRadius.circular(22.r),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
               ),
-              child: Row(
+              child: Stack(
                 children: [
-                  GestureDetector(
-                    onTap: uploading ? null : controller.uploadAvatar,
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        CircleAvatar(
-                          radius: 28.r,
-                          backgroundColor: AppThemeColors.primary.withValues(
-                            alpha: 0.16,
+                  Positioned(
+                    left: -30.w,
+                    bottom: -42.h,
+                    child: IgnorePointer(
+                      child: Container(
+                        width: 130.w,
+                        height: 130.w,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: RadialGradient(
+                            colors: [
+                              Colors.white.withValues(alpha: 0.16),
+                              Colors.transparent,
+                            ],
                           ),
-                          backgroundImage: avatarUrl.isNotEmpty
-                              ? NetworkImage(avatarUrl)
-                              : null,
-                          child: avatarUrl.isEmpty
-                              ? Text(
-                                  avatarText,
-                                  style: TextStyle(
-                                    fontSize: 16.sp,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : null,
                         ),
-                        Positioned(
-                          right: -2.w,
-                          bottom: -2.h,
-                          child: Container(
-                            width: 22.w,
-                            height: 22.w,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF2A2A2A),
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.12),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: -18.h,
+                    right: -10.w,
+                    child: IgnorePointer(
+                      child: Container(
+                        width: 88.w,
+                        height: 88.w,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: RadialGradient(
+                            colors: [
+                              const Color(0xFF9BE7FF).withValues(alpha: 0.34),
+                              Colors.transparent,
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      GestureDetector(
+                        onTap: uploading ? null : controller.uploadAvatar,
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            CircleAvatar(
+                              radius: 28.r,
+                              backgroundColor: Colors.white.withValues(
+                                alpha: 0.18,
                               ),
-                            ),
-                            child: Center(
-                              child: uploading
-                                  ? SizedBox(
-                                      width: 10.w,
-                                      height: 10.w,
-                                      child: const CircularProgressIndicator(
-                                        strokeWidth: 1.6,
+                              backgroundImage: avatarUrl.isNotEmpty
+                                  ? NetworkImage(avatarUrl)
+                                  : null,
+                              child: avatarUrl.isEmpty
+                                  ? Text(
+                                      avatarText,
+                                      style: TextStyle(
+                                        fontSize: 16.sp,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.white,
                                       ),
                                     )
-                                  : Icon(
-                                      Icons.camera_alt_rounded,
-                                      size: 12.w,
-                                      color: Colors.white70,
-                                    ),
+                                  : null,
                             ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(width: 14.w),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 18.sp,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          subTitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            color: Colors.white54,
-                          ),
-                        ),
-                        if (user != null) ...[
-                          SizedBox(height: 6.h),
-                          Text(
-                            '点击更换头像',
-                            style: TextStyle(
-                              fontSize: 11.sp,
-                              color: Colors.white38,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  if (user != null) ...[
-                    SizedBox(width: 12.w),
-                    _ProfileEditButton(
-                      loading: controller.profileUpdating.value,
-                      onTap: controller.profileUpdating.value
-                          ? null
-                          : () => Get.bottomSheet<void>(
-                              _EditProfileSheet(
-                                controller: controller,
-                                initialUser: user,
+                            Positioned(
+                              right: -2.w,
+                              bottom: -2.h,
+                              child: Container(
+                                width: 22.w,
+                                height: 22.w,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF123A8E),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.18),
+                                  ),
+                                ),
+                                child: Center(
+                                  child: uploading
+                                      ? SizedBox(
+                                          width: 10.w,
+                                          height: 10.w,
+                                          child:
+                                              const CircularProgressIndicator(
+                                                strokeWidth: 1.6,
+                                              ),
+                                        )
+                                      : Icon(
+                                          Icons.camera_alt_rounded,
+                                          size: 12.w,
+                                          color: Colors.white70,
+                                        ),
+                                ),
                               ),
-                              isScrollControlled: true,
-                              backgroundColor: Colors.transparent,
                             ),
-                    ),
-                  ],
+                          ],
+                        ),
+                      ),
+                      SizedBox(width: 14.w),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 18.sp,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                            SizedBox(height: 4.h),
+                            Text(
+                              subTitle,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                color: Colors.white.withValues(alpha: 0.78),
+                              ),
+                            ),
+                            if (user != null) ...[
+                              SizedBox(height: 6.h),
+                              Text(
+                                '点击更换头像',
+                                style: TextStyle(
+                                  fontSize: 11.sp,
+                                  color: Colors.white.withValues(alpha: 0.62),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      if (user != null) ...[
+                        SizedBox(width: 12.w),
+                        _ProfileEditButton(
+                          loading: controller.profileUpdating.value,
+                          onTap: controller.profileUpdating.value
+                              ? null
+                              : () => Get.bottomSheet<void>(
+                                  _EditProfileSheet(
+                                    controller: controller,
+                                    initialUser: user,
+                                  ),
+                                  isScrollControlled: true,
+                                  backgroundColor: Colors.transparent,
+                                ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -954,78 +1006,6 @@ class _SettingsMenuCard extends StatelessWidget {
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _MeBackdrop extends StatelessWidget {
-  const _MeBackdrop();
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned.fill(
-      child: DecoratedBox(
-        decoration: const BoxDecoration(color: Color(0xFF131521)),
-        child: Stack(
-          children: [
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              height: 400.h,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      const Color(0xFF1B1E34).withValues(alpha: 0.5),
-                      const Color(0xFF131521).withValues(alpha: 0.0),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            Positioned(
-              top: -80.h,
-              left: -60.w,
-              child: _BackdropGlow(
-                size: 380.w,
-                color: const Color(0xFFE57373).withValues(alpha: 0.14),
-              ),
-            ),
-            Positioned(
-              top: 300.h,
-              right: -80.w,
-              child: _BackdropGlow(
-                size: 300.w,
-                color: const Color(0xFF448AFF).withValues(alpha: 0.10),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _BackdropGlow extends StatelessWidget {
-  const _BackdropGlow({required this.size, required this.color});
-
-  final double size;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: RadialGradient(colors: [color, color.withValues(alpha: 0)]),
         ),
       ),
     );

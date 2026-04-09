@@ -6,6 +6,7 @@ import '../../home/controllers/home_controller.dart';
 import '../../home/views/home_view.dart';
 import '../../home/widgets/home_history_banner.dart';
 import '../../me/views/me_view.dart';
+import '../../../widgets/home_style_backdrop.dart';
 import '../controllers/main_controller.dart';
 
 class MainView extends GetView<MainController> {
@@ -26,10 +27,12 @@ class MainView extends GetView<MainController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF0B0D14),
       resizeToAvoidBottomInset: false,
       extendBody: true,
       body: Stack(
         children: [
+          const HomeStyleBackdrop(),
           // 主内容区域
           Obx(
             () => IndexedStack(
@@ -80,10 +83,7 @@ class MainView extends GetView<MainController> {
       decoration: BoxDecoration(
         color: const Color(0xFF1E1E1E),
         borderRadius: BorderRadius.circular(32),
-        border: Border.all(
-          color: const Color(0xFF3E4055),
-          width: 1.5,
-        ),
+        border: Border.all(color: const Color(0xFF3E4055), width: 1.5),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.25),
