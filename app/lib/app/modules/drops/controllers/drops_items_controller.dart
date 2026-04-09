@@ -21,8 +21,6 @@ class DropsItemsController extends GetxController {
   final loading = false.obs;
   final loadingMore = false.obs;
   final hasMore = true.obs;
-  final scopeType = ''.obs;
-  final category = ''.obs;
 
   int _page = 1;
   int _token = 0;
@@ -57,8 +55,6 @@ class DropsItemsController extends GetxController {
 
     try {
       final result = await _dropsApi.getItemList(
-        scopeType: scopeType.value,
-        category: category.value,
         keyword: keywordController.text,
         page: _page,
         limit: _pageSize,
@@ -87,16 +83,6 @@ class DropsItemsController extends GetxController {
   }
 
   Future<void> search() => loadItems(refresh: true);
-
-  void updateScope(String value) {
-    scopeType.value = value;
-    search();
-  }
-
-  void updateCategory(String value) {
-    category.value = value;
-    search();
-  }
 
   Future<void> openCreate() async {
     await Get.find<DropsController>().ensureDictsLoaded();

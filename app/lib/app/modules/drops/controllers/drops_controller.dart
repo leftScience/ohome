@@ -6,13 +6,9 @@ import '../../../data/api/dict.dart';
 import '../../../data/models/dict_data_model.dart';
 import '../../../data/api/drops.dart';
 import '../../../data/models/drops_overview_model.dart';
-import 'drops_events_controller.dart';
-import 'drops_items_controller.dart';
 import '../drops_catalog.dart';
 import '../views/drops_event_form_view.dart';
-import '../views/drops_events_view.dart';
 import '../views/drops_item_form_view.dart';
-import '../views/drops_items_view.dart';
 import '../views/drops_reminder_view.dart';
 
 class DropsController extends GetxController {
@@ -152,19 +148,6 @@ class DropsController extends GetxController {
     }
   }
 
-  Future<void> openItems() async {
-    await ensureDictsLoaded();
-    final changed = await Get.to<bool>(
-      () => const DropsItemsView(),
-      binding: BindingsBuilder(
-        () => Get.lazyPut<DropsItemsController>(() => DropsItemsController()),
-      ),
-    );
-    if (changed == true) {
-      await refreshOverview();
-    }
-  }
-
   Future<bool> openNewItem() async {
     await ensureDictsLoaded();
     final changed = await Get.to<bool>(() => const DropsItemFormView());
@@ -173,19 +156,6 @@ class DropsController extends GetxController {
       return true;
     }
     return false;
-  }
-
-  Future<void> openEvents() async {
-    await ensureDictsLoaded();
-    final changed = await Get.to<bool>(
-      () => const DropsEventsView(),
-      binding: BindingsBuilder(
-        () => Get.lazyPut<DropsEventsController>(() => DropsEventsController()),
-      ),
-    );
-    if (changed == true) {
-      await refreshOverview();
-    }
   }
 
   Future<bool> openNewEvent() async {

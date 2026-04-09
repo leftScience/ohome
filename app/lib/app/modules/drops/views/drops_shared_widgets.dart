@@ -488,82 +488,6 @@ class DropsEventCard extends StatelessWidget {
 }
 }
 
-class DropsDropdownField extends StatelessWidget {
-  const DropsDropdownField({
-    super.key,
-    required this.value,
-    required this.items,
-    required this.onChanged,
-    this.hintText,
-  });
-
-  final String value;
-  final Map<String, String> items;
-  final ValueChanged<String> onChanged;
-  final String? hintText;
-
-  @override
-  Widget build(BuildContext context) {
-    final effectiveValue = items.containsKey(value)
-        ? value
-        : (items.isNotEmpty ? items.keys.first : null);
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(24.r),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-        child: DropdownButtonFormField<String>(
-          initialValue: effectiveValue,
-          isExpanded: true,
-          dropdownColor: const Color(0xFF1A1A1A),
-          style: TextStyle(color: Colors.white, fontSize: 13.5.sp),
-          icon: Icon(
-            Icons.keyboard_arrow_down_rounded,
-            color: Colors.white54,
-            size: 20.w,
-          ),
-          decoration: InputDecoration(
-            isDense: true,
-            contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-            filled: true,
-            fillColor: Colors.white.withValues(alpha: 0.05),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(24.r),
-              borderSide: BorderSide(
-                color: Colors.white.withValues(alpha: 0.12),
-                width: 1.2,
-              ),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(24.r),
-              borderSide: BorderSide(
-                color: Colors.white.withValues(alpha: 0.12),
-                width: 1.2,
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(24.r),
-              borderSide: BorderSide(
-                color: const Color(0xFF2B78FF).withValues(alpha: 0.5),
-                width: 1.2,
-              ),
-            ),
-          ),
-          items: items.entries
-              .map(
-                (entry) => DropdownMenuItem<String>(
-                  value: entry.key,
-                  child: Text(entry.value, overflow: TextOverflow.ellipsis),
-                ),
-              )
-              .toList(growable: false),
-          onChanged: (value) => onChanged(value ?? ''),
-          hint: hintText == null ? null : Text(hintText!),
-        ),
-      ),
-    );
-  }
-}
-
 class _DropsItemsFilterCard extends StatelessWidget {
   const _DropsItemsFilterCard({required this.controller});
 
@@ -571,7 +495,6 @@ class _DropsItemsFilterCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dropsController = Get.find<DropsController>();
     return Column(
       children: [
         ClipRRect(
@@ -585,34 +508,6 @@ class _DropsItemsFilterCard extends StatelessWidget {
             ),
           ),
         ),
-        SizedBox(height: 12.h),
-        Row(
-          children: [
-            Expanded(
-              child: Obx(() {
-                final _ = dropsController.dictVersion.value;
-                return DropsDropdownField(
-                  value: controller.scopeType.value,
-                  hintText: '范围',
-                  items: {'': '全部范围', ...dropsController.scopeLabels},
-                  onChanged: controller.updateScope,
-                );
-              }),
-            ),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: Obx(() {
-                final _ = dropsController.dictVersion.value;
-                return DropsDropdownField(
-                  value: controller.category.value,
-                  hintText: '分类',
-                  items: {'': '全部分类', ...dropsController.categoryLabels},
-                  onChanged: controller.updateCategory,
-                );
-              }),
-            ),
-          ],
-        ),
       ],
     );
   }
@@ -625,7 +520,6 @@ class _DropsEventsFilterCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dropsController = Get.find<DropsController>();
     return Column(
       children: [
         ClipRRect(
@@ -638,32 +532,6 @@ class _DropsEventsFilterCard extends StatelessWidget {
               decoration: _searchDecoration('搜索标题或备注'),
             ),
           ),
-        ),
-        SizedBox(height: 12.h),
-        Row(
-          children: [
-            Expanded(
-              child: Obx(() {
-                final _ = dropsController.dictVersion.value;
-                return DropsDropdownField(
-                  value: controller.scopeType.value,
-                  items: {'': '全部范围', ...dropsController.scopeLabels},
-                  onChanged: controller.updateScope,
-                );
-              }),
-            ),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: Obx(() {
-                final _ = dropsController.dictVersion.value;
-                return DropsDropdownField(
-                  value: controller.eventType.value,
-                  items: {'': '全部类型', ...dropsController.eventTypeLabels},
-                  onChanged: controller.updateType,
-                );
-              }),
-            ),
-          ],
         ),
       ],
     );

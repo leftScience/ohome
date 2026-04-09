@@ -20,8 +20,6 @@ class DropsEventsController extends GetxController {
   final loading = false.obs;
   final loadingMore = false.obs;
   final hasMore = true.obs;
-  final scopeType = ''.obs;
-  final eventType = ''.obs;
 
   int _page = 1;
   int _token = 0;
@@ -56,8 +54,6 @@ class DropsEventsController extends GetxController {
 
     try {
       final result = await _dropsApi.getEventList(
-        scopeType: scopeType.value,
-        eventType: eventType.value,
         keyword: keywordController.text,
         page: _page,
         limit: _pageSize,
@@ -86,16 +82,6 @@ class DropsEventsController extends GetxController {
   }
 
   Future<void> search() => loadEvents(refresh: true);
-
-  void updateScope(String value) {
-    scopeType.value = value;
-    search();
-  }
-
-  void updateType(String value) {
-    eventType.value = value;
-    search();
-  }
 
   Future<void> openCreate() async {
     await Get.find<DropsController>().ensureDictsLoaded();
