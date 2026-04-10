@@ -432,6 +432,16 @@ class PlayerController extends GetxController {
     unawaited(WakelockPlus.disable());
   }
 
+  Future<void> pauseForBackground() async {
+    await _persistPlaybackSnapshot();
+    try {
+      if (player.state.playing) {
+        await player.pause();
+      }
+    } catch (_) {}
+    unawaited(WakelockPlus.disable());
+  }
+
   Future<void> _persistPlaybackSnapshot() async {
     final folder = _folderPath;
     final episodePath = _currentEpisodePath;

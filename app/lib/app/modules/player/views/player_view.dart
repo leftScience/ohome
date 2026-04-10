@@ -74,7 +74,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
         state == AppLifecycleState.detached) {
       unawaited(_resetGestureBrightness());
       if (controller.isFullscreen.value) return;
-      unawaited(controller.stopPlayback());
+      unawaited(controller.pauseForBackground());
     }
   }
 

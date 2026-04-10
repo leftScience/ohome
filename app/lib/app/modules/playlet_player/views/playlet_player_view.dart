@@ -63,7 +63,7 @@ class _PlayletPlayerViewState extends State<PlayletPlayerView>
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.detached) {
       _stopSpeedBoost();
-      unawaited(controller.stopPlayback());
+      unawaited(controller.pauseForBackground());
     }
   }
 
