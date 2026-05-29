@@ -21,15 +21,10 @@ class LoginController extends GetxController {
   late TextEditingController apiBaseUrlController;
   late TextEditingController nameController;
   late TextEditingController passwordController;
-  late TextEditingController confirmPasswordController;
 
   final isLoading = false.obs;
   final isDiscovering = false.obs;
   final isManualEntryMode = true.obs;
-  final isRegisterMode = false.obs;
-  final isCheckingRegisterStatus = false.obs;
-  final registerEnabled = RxnBool();
-  final registerStatusMessage = RxnString();
   final discoveryErrorMessage = RxnString();
   final discoveredServers = <DiscoveredServer>[].obs;
   final selectedServer = Rxn<DiscoveredServer>();
@@ -48,7 +43,6 @@ class LoginController extends GetxController {
     apiBaseUrlController.addListener(_handleApiBaseUrlChanged);
     nameController = TextEditingController();
     passwordController = TextEditingController();
-    confirmPasswordController = TextEditingController();
   }
 
   String? validateApiBaseUrl(String? value) {
@@ -72,67 +66,6 @@ class LoginController extends GetxController {
       return '请输入密码';
     }
     return null;
-  }
-
-  String? validateConfirmPassword(String? value) {
-    if (!isRegisterMode.value) {
-      return null;
-    }
-    if (value == null || value.isEmpty) {
-      return '请再次输入密码';
-    }
-    if (value != passwordController.text) {
-      return '两次输入的密码不一致';
-    }
-    return null;
-  }
-
-  bool get isRegisterExplicitlyDisabled => registerEnabled.value == false;
-
-  String get headerEyebrow => isRegisterMode.value ? '创建你的家庭账号' : '欢迎回来';
-
-  String get headerTitle => isRegisterMode.value ? '注册' : '登录';
-
-  String get headerDescription => isRegisterMode.value
-      ? '创建普通用户账号后，返回登录页继续进入家庭空间。'
-      : '连接家庭服务端，继续你的影音与事务管理。';
-
-  Future<void> submit() async {
-    if (isRegisterMode.value) {
-      await register();
-      return;
-    }
-    await login();
-  }
-
-  Future<void> openRegister() async {
-    final result = await Get.toNamed(Routes.REGISTER);
-    if (result is String && result.trim().isNotEmpty) {
-      nameController.text = result.trim();
-      Get.snackbar('提示', '注册成功，请登录', duration: const Duration(seconds: 2));
-    }
-    passwordController.clear();
-    confirmPasswordController.clear();
-    autoValidateMode.value = AutovalidateMode.disabled;
-  }
-
-  Future<void> switchAuthMode(bool registerMode) async {
-    if (registerMode == isRegisterMode.value) {
-      return;
-    }
-
-    isRegisterMode.value = registerMode;
-    autoValidateMode.value = AutovalidateMode.disabled;
-    passwordController.clear();
-    confirmPasswordController.clear();
-
-    if (registerMode) {
-      await refreshRegisterStatus();
-      return;
-    }
-
-    registerEnabled.value = null;
-    registerStatusMessage.value = null;
   }
 
   Future<void> login() async {
@@ -171,83 +104,6 @@ class LoginController extends GetxController {
       }
     } finally {
       isLoading.value = false;
-    }
-  }
-
-  Future<void> register() async {
-    autoValidateMode.value = AutovalidateMode.onUserInteraction;
-    final apiBaseUrlInput = _prepareApiBaseUrlInput(showSnackbar: true);
-    if (apiBaseUrlInput == null) {
-      return;
-    }
-
-    if (!loginFormKey.currentState!.validate()) {
-      return;
-    }
-
-    try {
-      isLoading.value = true;
-      await _syncApiBaseUrl(apiBaseUrlInput);
-      final status = await refreshRegisterStatus(showSnackbarOnFailure: true);
-      if (status != true) {
-        return;
-      }
-
-      final auth = Get.find<AuthService>();
-      await auth.register(
-        name: nameController.text.trim(),
-        password: passwordController.text,
-      );
-      await _rememberSuccessfulServer();
-
-      passwordController.clear();
-      confirmPasswordController.clear();
-      registerEnabled.value = null;
-      registerStatusMessage.value = null;
-      isRegisterMode.value = false;
-      autoValidateMode.value = AutovalidateMode.disabled;
-
-      Get.snackbar('提示', '注册成功，请登录', duration: const Duration(seconds: 2));
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  Future<bool?> refreshRegisterStatus({
-    bool showSnackbarOnFailure = false,
-  }) async {
-    final apiBaseUrlInput = _prepareApiBaseUrlInput(
-      showSnackbar: showSnackbarOnFailure,
-    );
-    if (apiBaseUrlInput == null) {
-      registerEnabled.value = null;
-      registerStatusMessage.value = '请先配置可用的服务器地址';
-      return null;
-    }
-
-    try {
-      isCheckingRegisterStatus.value = true;
-      registerStatusMessage.value = null;
-      await _syncApiBaseUrl(apiBaseUrlInput);
-      final status = await Get.find<AuthService>().getRegisterStatus();
-      registerEnabled.value = status.enabled;
-      registerStatusMessage.value = status.enabled
-          ? '将创建普通用户账号，注册成功后请返回登录。'
-          : '当前服务端未开放注册';
-      return status.enabled;
-    } catch (error) {
-      registerEnabled.value = null;
-      registerStatusMessage.value = error.toString();
-      if (showSnackbarOnFailure) {
-        Get.snackbar(
-          '提示',
-          error.toString(),
-          duration: const Duration(seconds: 2),
-        );
-      }
-      return null;
-    } finally {
-      isCheckingRegisterStatus.value = false;
     }
   }
 
@@ -309,9 +165,6 @@ class LoginController extends GetxController {
 
   void selectDiscoveredServer(DiscoveredServer server) {
     _applySelectedServer(server, userInitiated: true);
-    if (isRegisterMode.value) {
-      Future<void>.microtask(refreshRegisterStatus);
-    }
   }
 
   void toggleManualEntryMode(bool enabled) {
@@ -370,10 +223,6 @@ class LoginController extends GetxController {
     _hasUserSelectedServer = false;
     selectedServer.value = null;
 
-    if (isRegisterMode.value) {
-      registerEnabled.value = null;
-      registerStatusMessage.value = '服务器地址已变更，提交前会重新检查注册状态';
-    }
   }
 
   bool _shouldIgnoreDiscoveryResult(int requestVersion) {
@@ -464,7 +313,6 @@ class LoginController extends GetxController {
     apiBaseUrlController.dispose();
     nameController.dispose();
     passwordController.dispose();
-    confirmPasswordController.dispose();
     super.onClose();
   }
 }

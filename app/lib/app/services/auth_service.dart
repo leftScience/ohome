@@ -2,7 +2,6 @@ import 'package:get/get.dart';
 import 'package:ohome/app/data/api/auth.dart';
 import 'package:ohome/app/data/models/password_status.dart';
 import 'package:ohome/app/data/models/login_result.dart';
-import 'package:ohome/app/data/models/register_status.dart';
 import 'package:ohome/app/data/models/token_pair.dart';
 import 'package:ohome/app/data/models/user_model.dart';
 import 'package:ohome/app/data/api/user.dart';
@@ -61,14 +60,6 @@ class AuthService extends GetxService {
     // 存储用户信息
     await _applyUser(res.user);
     _shouldShowDefaultBackendNotice = true;
-  }
-
-  Future<void> register({required String name, required String password}) {
-    return _authApi.register(name: name, password: password);
-  }
-
-  Future<RegisterStatus> getRegisterStatus() {
-    return _authApi.getRegisterStatus();
   }
 
   // 刷新token

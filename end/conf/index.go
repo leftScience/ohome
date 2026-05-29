@@ -18,7 +18,7 @@ func InitConfig() {
 	viper.SetDefault("DB.ImportInitSQLOnFirstRun", true)
 	viper.SetDefault("drops.itemReminderDays", "7,3,1,0")
 	viper.SetDefault("drops.eventReminderDays", "7,3,1,0")
-	viper.SetDefault("config.allowUserRegistration", true)
+	viper.SetDefault("config.allowUserRegistration", false)
 	viper.SetDefault("quark.transfer.workers", 2)
 	viper.SetDefault("quark.transfer.queueSize", 32)
 	viper.SetDefault("quark.stream.concurrency", 3)

@@ -89,8 +89,6 @@ class LoginView extends GetView<LoginController> {
                                     const _CredentialsFields(),
                                     SizedBox(height: 28.h),
                                     const _SubmitButton(),
-                                    SizedBox(height: 14.h),
-                                    const _RegisterEntryButton(),
                                   ],
                                 ),
                               ),
@@ -371,46 +369,6 @@ class _SubmitButton extends GetView<LoginController> {
                     letterSpacing: 1.2,
                   ),
                 ),
-        ),
-      ),
-    );
-  }
-}
-
-class _RegisterEntryButton extends GetView<LoginController> {
-  const _RegisterEntryButton();
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: TextButton(
-        onPressed: controller.openRegister,
-        style: TextButton.styleFrom(
-          alignment: Alignment.centerRight,
-          padding: EdgeInsets.zero,
-          minimumSize: Size.zero,
-          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        ),
-        child: Text.rich(
-          TextSpan(
-            style: TextStyle(
-              fontSize: 13.sp,
-              color: Colors.white70,
-              fontWeight: FontWeight.w500,
-            ),
-            children: const [
-              TextSpan(text: '没有账号？ '),
-              TextSpan(
-                text: '立即注册',
-                style: TextStyle(
-                  color: AppThemeColors.primary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          textAlign: TextAlign.right,
         ),
       ),
     );

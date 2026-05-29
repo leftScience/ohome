@@ -48,7 +48,7 @@ func (m *UserService) Login(iUser dto.UserLoginDto) (model.User, string, string,
 }
 
 func (m *UserService) IsRegistrationEnabled() bool {
-	return viper.GetBool("config.allowUserRegistration")
+	return false
 }
 
 func (m *UserService) Register(iUserRegisterDTO *dto.UserRegisterDTO) error {
