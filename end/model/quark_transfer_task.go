@@ -22,6 +22,7 @@ type QuarkTransferTask struct {
 	DisplayName   string     `json:"displayName" gorm:"size:255;not null;default:''"`
 	ShareURL      string     `json:"shareUrl" gorm:"size:1000;not null;default:''"`
 	SavePath      string     `json:"savePath" gorm:"size:255;not null;default:''"`
+	Passcode      string     `json:"passcode" gorm:"size:32;not null;default:''"`
 	Application   string     `json:"application" gorm:"size:100;not null;default:''"`
 	SourceType    string     `json:"sourceType" gorm:"size:50;not null;default:''"`
 	SourceTaskID  *uint      `json:"sourceTaskId"`

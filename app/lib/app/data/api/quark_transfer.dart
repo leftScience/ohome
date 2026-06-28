@@ -23,6 +23,7 @@ class QuarkTransferRepository {
     required String savePath,
     required String application,
     required String resourceName,
+    String passcode = '',
   }) {
     return _httpClient
         .post<dynamic>(
@@ -31,6 +32,7 @@ class QuarkTransferRepository {
           data: <String, dynamic>{
             'shareUrl': shareUrl.trim(),
             'savePath': savePath.trim(),
+            'passcode': passcode.trim(),
             'application': application.trim(),
             'resourceName': resourceName.trim(),
           },

@@ -116,6 +116,10 @@ func precheckQuarkTransfer(task quarkSaveTask) error {
 		return err
 	}
 
+	if manualPasscode := strings.TrimSpace(task.Passcode); manualPasscode != "" {
+		passcode = manualPasscode
+	}
+
 	stoken, err := client.getStoken(ctx, pwdID, passcode)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {

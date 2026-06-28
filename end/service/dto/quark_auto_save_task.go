@@ -36,6 +36,7 @@ func (d *QuarkAutoSaveTaskUpdateDTO) ConvertToModel(m *model.QuarkAutoSaveTask) 
 type QuarkAutoSaveTransferDTO struct {
 	ShareURL     string `json:"shareUrl" form:"shareUrl"`
 	SavePath     string `json:"savePath" form:"savePath"`
+	Passcode     string `json:"passcode" form:"passcode"`
 	Application  string `json:"application" form:"application"`
 	ResourceName string `json:"resourceName" form:"resourceName"`
 }

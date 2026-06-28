@@ -52,11 +52,13 @@ class QuarkTransferTasksView extends GetView<QuarkTransferTasksController> {
             required String title,
             required String shareUrl,
             required String savePath,
+            required String passcode,
           }) {
             return controller.submitManualTransfer(
               title: title,
               shareUrl: shareUrl,
               savePath: savePath,
+              passcode: passcode,
             );
           },
     );

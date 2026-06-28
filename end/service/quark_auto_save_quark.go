@@ -22,6 +22,7 @@ type quarkSaveTask struct {
 	TaskName         string
 	ShareURL         string
 	SavePath         string
+	Passcode         string
 	RenameTopLevelTo string
 }
 
@@ -166,6 +167,10 @@ func (c *quarkClient) saveFromShare(ctx context.Context, task quarkSaveTask) (qu
 	pwdID, passcode, pdirFid, err := extractShareParams(task.ShareURL)
 	if err != nil {
 		return quarkSaveResult{Status: "fail", Message: err.Error()}, err
+	}
+
+	if manualPasscode := strings.TrimSpace(task.Passcode); manualPasscode != "" {
+		passcode = manualPasscode
 	}
 
 	stoken, err := c.getStoken(ctx, pwdID, passcode)

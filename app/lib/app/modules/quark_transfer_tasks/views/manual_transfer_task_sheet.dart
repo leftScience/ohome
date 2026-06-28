@@ -13,6 +13,7 @@ typedef ManualTransferSheetSubmit =
       required String title,
       required String shareUrl,
       required String savePath,
+      required String passcode,
     });
 
 typedef ManualTransferSavePathLoader =
@@ -82,6 +83,7 @@ class _ManualTransferTaskSheetState extends State<_ManualTransferTaskSheet> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _titleController;
   late final TextEditingController _shareUrlController;
+  late final TextEditingController _passcodeController;
   late final TextEditingController _savePathController;
 
   bool _submitting = false;
@@ -92,6 +94,7 @@ class _ManualTransferTaskSheetState extends State<_ManualTransferTaskSheet> {
     super.initState();
     _titleController = TextEditingController();
     _shareUrlController = TextEditingController();
+    _passcodeController = TextEditingController();
     _savePathController = TextEditingController();
   }
 
@@ -99,6 +102,7 @@ class _ManualTransferTaskSheetState extends State<_ManualTransferTaskSheet> {
   void dispose() {
     _titleController.dispose();
     _shareUrlController.dispose();
+    _passcodeController.dispose();
     _savePathController.dispose();
     super.dispose();
   }
@@ -202,6 +206,7 @@ class _ManualTransferTaskSheetState extends State<_ManualTransferTaskSheet> {
                       controller: _shareUrlController,
                       minLines: 3,
                       maxLines: 5,
+                      textInputAction: TextInputAction.next,
                       style: TextStyle(fontSize: 14.sp, color: Colors.white),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
@@ -210,6 +215,31 @@ class _ManualTransferTaskSheetState extends State<_ManualTransferTaskSheet> {
                         return null;
                       },
                       decoration: _inputDecoration('请输入夸克分享链接'),
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+                  _buildField(
+                    label: '提取码（可选）',
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TextFormField(
+                          controller: _passcodeController,
+                          textInputAction: TextInputAction.next,
+                          textCapitalization: TextCapitalization.characters,
+                          style: TextStyle(fontSize: 14.sp, color: Colors.white),
+                          decoration: _inputDecoration('如链接中已包含提取码可留空'),
+                        ),
+                        SizedBox(height: 8.h),
+                        Text(
+                          '若分享链接未附带提取码，请在此填写。',
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            color: Colors.white54,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   SizedBox(height: 16.h),
@@ -451,6 +481,7 @@ class _ManualTransferTaskSheetState extends State<_ManualTransferTaskSheet> {
       title: _titleController.text,
       shareUrl: _shareUrlController.text,
       savePath: _normalizeSavePath(_savePathController.text),
+      passcode: _passcodeController.text,
     );
 
     if (!mounted) return;

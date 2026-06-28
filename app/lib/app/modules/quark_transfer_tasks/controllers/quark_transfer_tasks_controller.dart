@@ -131,6 +131,7 @@ class QuarkTransferTasksController extends GetxController {
     required String title,
     required String shareUrl,
     required String savePath,
+    String passcode = '',
   }) async {
     if (submittingManualTask.value) return false;
 
@@ -149,6 +150,7 @@ class QuarkTransferTasksController extends GetxController {
         savePath: path,
         application: '',
         resourceName: taskTitle,
+        passcode: passcode,
       );
       Get.snackbar('提示', '已加入转存任务');
       await loadTasks(refresh: true);
