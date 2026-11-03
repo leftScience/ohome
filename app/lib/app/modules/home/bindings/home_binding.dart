@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 
 import '../../messages/controllers/messages_controller.dart';
 import '../controllers/home_controller.dart';
+import '../controllers/home_recommend_controller.dart';
 
 class HomeBinding extends Bindings {
   @override
@@ -11,6 +12,9 @@ class HomeBinding extends Bindings {
     }
     if (!Get.isRegistered<HomeController>()) {
       Get.put<HomeController>(HomeController());
+    }
+    if (!Get.isRegistered<HomeRecommendController>()) {
+      Get.lazyPut<HomeRecommendController>(() => HomeRecommendController());
     }
   }
 }

@@ -6,6 +6,7 @@ import '../../../routes/app_pages.dart';
 import '../../../theme/app_theme.dart';
 import '../../../widgets/home_style_backdrop.dart';
 import '../controllers/home_controller.dart';
+import '../widgets/home_recommend_section.dart';
 
 class HomeView extends GetView<HomeController> {
   const HomeView({super.key});
@@ -37,6 +38,8 @@ class HomeView extends GetView<HomeController> {
                 _buildSearchBar(),
                 SizedBox(height: 28.h),
                 _buildResourceGrid(),
+                SizedBox(height: 28.h),
+                const HomeRecommendSection(),
               ],
             ),
           ),
