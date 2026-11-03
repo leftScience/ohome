@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:media_kit/media_kit.dart';
@@ -39,7 +40,22 @@ class PlayerController extends GetxController {
            SkipSettingsStorage(keyPrefix: 'video_skip_settings_');
 
   final player = Player();
-  late final VideoController videoController = VideoController(player);
+  late final VideoController videoController = VideoController(
+    player,
+    configuration: _videoControllerConfiguration,
+  );
+
+  static VideoControllerConfiguration get _videoControllerConfiguration {
+    if (defaultTargetPlatform != TargetPlatform.android) {
+      return const VideoControllerConfiguration();
+    }
+    // Android 默认 vo=gpu 会单独创建 EGL 上下文，部分设备的 GL 属性不被接受，
+    // 表现为只有声音没有画面。改用 MediaCodec 直接把画面渲染到 Surface。
+    return const VideoControllerConfiguration(
+      vo: 'mediacodec_embed',
+      hwdec: 'mediacodec',
+    );
+  }
 
   final currentIndex = 0.obs;
   final episodesAscending = true.obs;

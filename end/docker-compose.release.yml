@@ -1,6 +1,6 @@
 services:
   server:
-    image: ${OHOME_RUNTIME_IMAGE:-hanlinwang0606/ohome:runtime-v2026.03.1}
+    image: ${OHOME_RUNTIME_IMAGE:-hanlinwang0606/ohome:runtime-v2026.11.03}
     container_name: ohome-server
     environment:
       GIN_MODE: release

@@ -55,9 +55,6 @@
 2. 再安装 Android 客户端
 3. 在客户端登录页通过局域网发现或手动输入服务端地址完成连接
 
-## 演示视频
-
-- B站视频：[我开发了一款家庭专用播放以及物资管理软件](https://www.bilibili.com/video/BV1BGXRB7Exc/?share_source=copy_web&vd_source=d89bee5685527bb00d6328b67f985401)
 
 > 视频录制于早期版本，部分界面和功能已经调整，请以当前版本为准。
 
@@ -68,7 +65,7 @@
 ```bash
 mkdir -p /opt/ohome/conf /opt/ohome/data /opt/ohome/log 
 
-docker run -d --name ohome-server --restart unless-stopped -p 18090:18090  --add-host host.docker.internal:host-gateway -v /opt/ohome/conf:/app/conf -v /opt/ohome/data:/app/data -v /opt/ohome/log:/app/log hanlinwang0606/ohome:runtime-v2026.04.01  
+docker run -d --name ohome-server --restart unless-stopped -p 18090:18090  --add-host host.docker.internal:host-gateway -v /opt/ohome/conf:/app/conf -v /opt/ohome/data:/app/data -v /opt/ohome/log:/app/log hanlinwang0606/ohome:runtime-v2026.11.03  
 ```
 
 #### 独立运行包（Windows / macOS / Linux）
