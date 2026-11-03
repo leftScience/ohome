@@ -81,36 +81,74 @@ class HomeHistoryBanner extends GetView<HomeController> {
       }
 
       final playing = hasActiveAudio && visiblyPlaying;
+      final canPlay =
+          (hasActiveAudio || entry != null) && !initializingPlayback;
       final bannerRadius = BorderRadius.circular(18.r);
+      final leadingIcon = _resolveLeadingIcon(
+        hasActiveAudio: hasActiveAudio,
+        applicationType: entry?.applicationType,
+      );
 
       return GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: onBannerTap,
+        onTap: onBannerTap ?? (entry != null ? onContinue : onList),
         child: DecoratedBox(
           decoration: BoxDecoration(
             borderRadius: bannerRadius,
-            boxShadow: AppThemeColors.floatingShadow,
+            boxShadow: AppThemeColors.cardShadow,
           ),
           child: ClipRRect(
             borderRadius: bannerRadius,
             child: Container(
               width: double.infinity,
               height: MainTabContentInsets.historyBannerHeight.h,
-              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
               decoration: BoxDecoration(
                 color: AppThemeColors.surface,
                 borderRadius: bannerRadius,
-                border: Border.all(color: AppThemeColors.borderStrong),
+                border: Border.all(color: AppThemeColors.border, width: 1),
               ),
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  Container(
+                    width: 38.w,
+                    height: 38.w,
+                    decoration: BoxDecoration(
+                      gradient: hasActiveAudio
+                          ? const LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                AppThemeColors.primary,
+                                AppThemeColors.primaryDeep,
+                              ],
+                            )
+                          : null,
+                      color: hasActiveAudio
+                          ? null
+                          : entry != null
+                          ? AppThemeColors.primary.withValues(alpha: 0.09)
+                          : AppThemeColors.surfaceSunken,
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    child: Icon(
+                      leadingIcon,
+                      size: 20.w,
+                      color: hasActiveAudio
+                          ? Colors.white
+                          : entry != null
+                          ? AppThemeColors.primary
+                          : AppThemeColors.textMuted,
+                    ),
+                  ),
+                  SizedBox(width: 10.w),
                   Expanded(
                     child: GestureDetector(
                       behavior: HitTestBehavior.opaque,
                       onTap: hasActiveAudio || entry != null
                           ? onContinue
-                          : null,
+                          : onList,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -118,33 +156,33 @@ class HomeHistoryBanner extends GetView<HomeController> {
                         children: [
                           Row(
                             children: [
-                              Expanded(
+                              Flexible(
                                 child: Text(
                                   title,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
+                                  style: TextStyle(
+                                    fontSize: 13.5.sp,
+                                    fontWeight: FontWeight.w700,
                                     color: AppThemeColors.textPrimary,
                                     height: 1.15,
                                   ),
                                 ),
                               ),
                               if (hasActiveAudio) ...[
-                                const SizedBox(width: 6),
+                                SizedBox(width: 6.w),
                                 _PlaybackStatusBadge(playing: visiblyPlaying),
                               ],
                             ],
                           ),
-                          const SizedBox(height: 1),
+                          SizedBox(height: 2.5.h),
                           Text(
                             initializingPlayback ? '正在加载播放列表...' : summary,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 11,
-                              color: AppThemeColors.textSecondary,
+                            style: TextStyle(
+                              fontSize: 11.sp,
+                              color: AppThemeColors.textMuted,
                               height: 1.15,
                             ),
                           ),
@@ -152,32 +190,32 @@ class HomeHistoryBanner extends GetView<HomeController> {
                       ),
                     ),
                   ),
-                  SizedBox(width: 6.w),
+                  SizedBox(width: 8.w),
                   _BannerIconButton(
                     tooltip: playing ? '暂停' : '播放',
-                    onPressed:
-                        (hasActiveAudio || entry != null) &&
-                            !initializingPlayback
-                        ? onPlayButtonTap
-                        : null,
+                    isPrimary: canPlay,
+                    onPressed: canPlay ? onPlayButtonTap : null,
                     icon: initializingPlayback
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2.4),
+                        ? SizedBox(
+                            width: 16.w,
+                            height: 16.w,
+                            child: const CircularProgressIndicator(
+                              strokeWidth: 2.2,
+                            ),
                           )
                         : Icon(
                             playing
-                                ? Icons.pause_circle_outline_rounded
-                                : Icons.play_circle_outline_rounded,
-                            size: 28,
+                                ? Icons.pause_rounded
+                                : Icons.play_arrow_rounded,
+                            size: 20.w,
                           ),
                   ),
-                  SizedBox(width: 2.w),
+                  SizedBox(width: 6.w),
                   _BannerIconButton(
                     tooltip: '历史记录',
+                    isPrimary: false,
                     onPressed: onList,
-                    icon: const Icon(Icons.queue_music_rounded, size: 28),
+                    icon: Icon(Icons.queue_music_rounded, size: 19.w),
                   ),
                 ],
               ),
@@ -186,6 +224,27 @@ class HomeHistoryBanner extends GetView<HomeController> {
         ),
       );
     });
+  }
+
+  static IconData _resolveLeadingIcon({
+    required bool hasActiveAudio,
+    required String? applicationType,
+  }) {
+    if (hasActiveAudio) {
+      return Icons.graphic_eq_rounded;
+    }
+    switch ((applicationType ?? '').trim().toLowerCase()) {
+      case 'tv':
+        return Icons.movie_filter_rounded;
+      case 'playlet':
+        return Icons.live_tv_rounded;
+      case 'music':
+        return Icons.podcasts_rounded;
+      case 'read':
+        return Icons.menu_book_rounded;
+      default:
+        return Icons.history_rounded;
+    }
   }
 
   static MusicPlayerController? _activeMusicController() {
@@ -339,36 +398,50 @@ class _PlaybackStatusBadge extends StatelessWidget {
 class _BannerIconButton extends StatelessWidget {
   const _BannerIconButton({
     required this.tooltip,
+    required this.isPrimary,
     required this.onPressed,
     required this.icon,
   });
 
   final String tooltip;
+  final bool isPrimary;
   final VoidCallback? onPressed;
   final Widget icon;
 
   @override
   Widget build(BuildContext context) {
-    final buttonSize = 34.r;
+    final buttonSize = 34.w;
+    final enabled = onPressed != null;
 
-    return SizedBox(
-      width: 38.w,
-      child: Center(
-        child: IconButton(
-          tooltip: tooltip,
-          onPressed: onPressed,
-          padding: EdgeInsets.zero,
-          constraints: BoxConstraints.tightFor(
-            width: buttonSize,
-            height: buttonSize,
-          ),
-          style: IconButton.styleFrom(
-            foregroundColor: AppThemeColors.primary,
-            disabledForegroundColor: AppThemeColors.textDisabled,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
-          icon: icon,
+    return Semantics(
+      button: true,
+      enabled: enabled,
+      label: tooltip,
+      child: IconButton(
+        tooltip: tooltip,
+        onPressed: onPressed,
+        padding: EdgeInsets.zero,
+        constraints: BoxConstraints.tightFor(
+          width: buttonSize,
+          height: buttonSize,
         ),
+        style: IconButton.styleFrom(
+          backgroundColor: isPrimary && enabled
+              ? AppThemeColors.primary.withValues(alpha: 0.10)
+              : AppThemeColors.surfaceSunken,
+          disabledBackgroundColor: AppThemeColors.surfaceSunken.withValues(
+            alpha: 0.65,
+          ),
+          foregroundColor: isPrimary
+              ? AppThemeColors.primary
+              : AppThemeColors.textSecondary,
+          disabledForegroundColor: AppThemeColors.textDisabled,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(11.r),
+          ),
+        ),
+        icon: icon,
       ),
     );
   }

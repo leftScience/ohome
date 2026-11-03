@@ -5,11 +5,11 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 class MainTabContentInsets {
   const MainTabContentInsets._();
 
-  static const double tabBarHeight = 64;
-  static const double floatingBottomSpacing = 16;
+  static const double tabBarHeight = 60;
+  static const double floatingBottomSpacing = 14;
   static const double historyBannerGap = 10;
-  static const double historyBannerHeight = 56;
-  static const double _contentGap = 8;
+  static const double historyBannerHeight = 58;
+  static const double _contentGap = 10;
 
   /// 历史记录条悬浮时，推荐列表需要额外留出的底部滚动空间。
   static double get historyBannerOverlap =>

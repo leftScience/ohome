@@ -15,13 +15,11 @@ class HomeRecommendController extends GetxController {
   final RxBool recommendLoading = false.obs;
   final RxString recommendError = ''.obs;
   final RxList<dynamic> hotMovies = <dynamic>[].obs;
-  final RxList<dynamic> tvAnimes = <dynamic>[].obs;
-  final RxList<dynamic> hotVarieties = <dynamic>[].obs;
   final RxList<dynamic> hotCnDramas = <dynamic>[].obs;
   int _recommendToken = 0;
   final RxInt recommendTabIndex = 0.obs;
   static const int _recommendPageSize = 20;
-  static const int _recommendTabCount = 4;
+  static const int _recommendTabCount = 2;
 
   final RxList<bool> recommendHasMore = List<bool>.filled(
     _recommendTabCount,
@@ -41,9 +39,7 @@ class HomeRecommendController extends GetxController {
       List<_ResolvedRecommendTab?>.filled(_recommendTabCount, null);
   static const List<_RecommendTabSpec> _recommendSpecs = <_RecommendTabSpec>[
     _RecommendTabSpec(isMovie: true, group: '热门电影', sub: '全部'),
-    _RecommendTabSpec(isMovie: false, group: '最近热门剧集', sub: '动画'),
-    _RecommendTabSpec(isMovie: false, group: '最近热门综艺', sub: '综合'),
-    _RecommendTabSpec(isMovie: false, group: '最近热门剧集', sub: '国产剧'),
+    _RecommendTabSpec(isMovie: false, group: '最近热门剧集', sub: '综合'),
   ];
 
   @override
@@ -182,10 +178,6 @@ class HomeRecommendController extends GetxController {
       case 0:
         return hotMovies;
       case 1:
-        return tvAnimes;
-      case 2:
-        return hotVarieties;
-      case 3:
         return hotCnDramas;
       default:
         return hotMovies;
@@ -204,8 +196,6 @@ class HomeRecommendController extends GetxController {
 
   void _clearRecommendItems() {
     hotMovies.clear();
-    tvAnimes.clear();
-    hotVarieties.clear();
     hotCnDramas.clear();
   }
 

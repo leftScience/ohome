@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
 import '../../home/controllers/home_controller.dart';
@@ -20,11 +21,10 @@ class MainView extends GetView<MainController> {
     MeView(),
   ];
   static const double _tabBarHeight = MainTabContentInsets.tabBarHeight;
-  static const double _floatingHorizontalPadding = 24;
   static const double _floatingBottomSpacing =
       MainTabContentInsets.floatingBottomSpacing;
   static const double _historyBannerGap = MainTabContentInsets.historyBannerGap;
-  static const double _tabBarInnerHorizontalPadding = 8;
+  static const double _tabBarInnerHorizontalPadding = 10;
 
   @override
   Widget build(BuildContext context) {
@@ -51,12 +51,7 @@ class MainView extends GetView<MainController> {
       ),
       bottomNavigationBar: SafeArea(
         top: false,
-        minimum: const EdgeInsets.fromLTRB(
-          _floatingHorizontalPadding,
-          0,
-          _floatingHorizontalPadding,
-          _floatingBottomSpacing,
-        ),
+        minimum: EdgeInsets.fromLTRB(16.w, 0, 16.w, _floatingBottomSpacing),
         child: Obx(() {
           final showHistoryBanner =
               controller.index.value == 0 && Get.isRegistered<HomeController>();
@@ -68,7 +63,10 @@ class MainView extends GetView<MainController> {
                 const HomeHistoryBanner(),
                 const SizedBox(height: _historyBannerGap),
               ],
-              _buildFloatingTabBar(),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 12.w),
+                child: _buildFloatingTabBar(),
+              ),
             ],
           );
         }),
@@ -83,27 +81,30 @@ class MainView extends GetView<MainController> {
         horizontal: _tabBarInnerHorizontalPadding,
       ),
       decoration: BoxDecoration(
-        color: AppThemeColors.surface,
-        borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: AppThemeColors.border, width: 1.2),
+        color: AppThemeColors.surface.withValues(alpha: 0.96),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: AppThemeColors.border, width: 1),
         boxShadow: AppThemeColors.floatingShadow,
       ),
       child: Row(
         children: [
           _buildTabItem(
             index: 0,
+            label: '首页',
             icon: Icons.home_outlined,
-            activeIcon: Icons.home,
+            activeIcon: Icons.home_rounded,
           ),
           _buildTabItem(
             index: 1,
+            label: '任务',
             icon: Icons.task_alt_rounded,
             activeIcon: Icons.task_alt_rounded,
           ),
           _buildTabItem(
             index: 2,
+            label: '设置',
             icon: Icons.settings_outlined,
-            activeIcon: Icons.settings,
+            activeIcon: Icons.settings_rounded,
           ),
         ],
       ),
@@ -112,31 +113,78 @@ class MainView extends GetView<MainController> {
 
   Widget _buildTabItem({
     required int index,
+    required String label,
     required IconData icon,
     required IconData activeIcon,
   }) {
     final isSelected = controller.index.value == index;
 
     return Expanded(
-      child: GestureDetector(
-        onTap: () => controller.setIndex(index),
-        behavior: HitTestBehavior.opaque,
-        child: SizedBox.expand(
-          child: Center(
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeInOut,
-              padding: const EdgeInsets.all(11),
-              decoration: BoxDecoration(
-                color: isSelected ? AppThemeColors.primary : Colors.transparent,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                isSelected ? activeIcon : icon,
-                color: isSelected
-                    ? AppThemeColors.textOnAccent
-                    : AppThemeColors.textMuted,
-                size: 28,
+      child: Semantics(
+        button: true,
+        selected: isSelected,
+        label: label,
+        child: GestureDetector(
+          onTap: () => controller.setIndex(index),
+          behavior: HitTestBehavior.opaque,
+          child: SizedBox.expand(
+            child: Center(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOutCubic,
+                padding: EdgeInsets.symmetric(
+                  horizontal: isSelected ? 16.w : 12.w,
+                  vertical: 9,
+                ),
+                decoration: BoxDecoration(
+                  gradient: isSelected
+                      ? const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            AppThemeColors.primary,
+                            AppThemeColors.primaryDeep,
+                          ],
+                        )
+                      : null,
+                  color: isSelected ? null : Colors.transparent,
+                  borderRadius: BorderRadius.circular(999),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: AppThemeColors.primary.withValues(
+                              alpha: 0.28,
+                            ),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isSelected ? activeIcon : icon,
+                      color: isSelected
+                          ? AppThemeColors.textOnAccent
+                          : AppThemeColors.textMuted,
+                      size: 22,
+                    ),
+                    if (isSelected) ...[
+                      SizedBox(width: 6.w),
+                      Text(
+                        label,
+                        style: TextStyle(
+                          fontSize: 12.5.sp,
+                          fontWeight: FontWeight.w700,
+                          color: AppThemeColors.textOnAccent,
+                          height: 1.1,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
             ),
           ),

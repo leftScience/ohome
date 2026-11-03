@@ -13,28 +13,68 @@ import '../widgets/home_recommend_section.dart';
 class HomeView extends GetView<HomeController> {
   const HomeView({super.key});
 
-  /// 根据当前时段返回问候语
-  String get _greeting {
+  /// 根据当前时段返回问候语与矢量图标信息
+  _GreetingInfo get _greetingInfo {
     final hour = DateTime.now().hour;
-    if (hour < 6) return '夜深了 🌙';
-    if (hour < 12) return '早上好 ☀️';
-    if (hour < 14) return '中午好 🌤️';
-    if (hour < 18) return '下午好 ⛅';
-    return '晚上好 🌙';
+    if (hour < 6) {
+      return const _GreetingInfo(
+        text: '夜深了，注意休息',
+        icon: Icons.nights_stay_rounded,
+        iconColor: Color(0xFF6366F1),
+      );
+    }
+    if (hour < 12) {
+      return const _GreetingInfo(
+        text: '早上好',
+        icon: Icons.wb_sunny_rounded,
+        iconColor: Color(0xFFF59E0B),
+      );
+    }
+    if (hour < 14) {
+      return const _GreetingInfo(
+        text: '中午好',
+        icon: Icons.light_mode_rounded,
+        iconColor: Color(0xFFF97316),
+      );
+    }
+    if (hour < 18) {
+      return const _GreetingInfo(
+        text: '下午好',
+        icon: Icons.wb_twilight_rounded,
+        iconColor: Color(0xFFEA580C),
+      );
+    }
+    return const _GreetingInfo(
+      text: '晚上好',
+      icon: Icons.dark_mode_rounded,
+      iconColor: Color(0xFF4F46E5),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return _HomeBody(greeting: _greeting, controller: controller);
+    return _HomeBody(greetingInfo: _greetingInfo, controller: controller);
   }
+}
+
+class _GreetingInfo {
+  const _GreetingInfo({
+    required this.text,
+    required this.icon,
+    required this.iconColor,
+  });
+
+  final String text;
+  final IconData icon;
+  final Color iconColor;
 }
 
 /// 首页采用「头部信息 + 搜索 + 快捷入口 + 推荐面板」结构，
 /// 推荐列表向上滚动时自动收起顶部区域，为内容让出空间。
 class _HomeBody extends StatefulWidget {
-  const _HomeBody({required this.greeting, required this.controller});
+  const _HomeBody({required this.greetingInfo, required this.controller});
 
-  final String greeting;
+  final _GreetingInfo greetingInfo;
   final HomeController controller;
 
   @override
@@ -49,6 +89,10 @@ class _HomeBodyState extends State<_HomeBody> {
 
   bool _onScroll(ScrollNotification notification) {
     if (notification.metrics.axis != Axis.vertical) return false;
+    if (notification.metrics.pixels <= 0 && _progress > 0) {
+      setState(() => _progress = 0);
+      return false;
+    }
     if (notification is! ScrollUpdateNotification) return false;
     final delta = notification.scrollDelta;
     if (delta == null || delta == 0) return false;
@@ -61,10 +105,16 @@ class _HomeBodyState extends State<_HomeBody> {
 
   @override
   Widget build(BuildContext context) {
-    final bottomInset = MainTabContentInsets.bottom(context);
-    final t = Curves.easeOutCubic.transform(_progress);
-    final topPad = lerpDouble(16.h, 4.h, t)!;
-    final headerGap = lerpDouble(14.h, 0, t)!;
+    final bottomInset = MainTabContentInsets.bottom(
+      context,
+      withHistoryBanner: true,
+    );
+    final disableAnimations = MediaQuery.disableAnimationsOf(context);
+    final t = disableAnimations
+        ? (_progress >= 0.5 ? 1.0 : 0.0)
+        : Curves.easeOutCubic.transform(_progress);
+    final topPad = lerpDouble(12.h, 4.h, t)!;
+    final sectionGap = lerpDouble(12.h, 0, t)!;
     final chromeOpacity = (1 - t * 1.15).clamp(0.0, 1.0);
     final chromeFactor = (1 - t).clamp(0.0, 1.0);
 
@@ -96,9 +146,9 @@ class _HomeBodyState extends State<_HomeBody> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            SizedBox(height: headerGap <= 0 ? 0 : headerGap),
+                            SizedBox(height: sectionGap <= 0 ? 0 : sectionGap),
                             _buildSearchBar(),
-                            SizedBox(height: headerGap <= 0 ? 0 : headerGap),
+                            SizedBox(height: sectionGap <= 0 ? 0 : sectionGap),
                             _buildResourceMenu(),
                           ],
                         ),
@@ -111,7 +161,7 @@ class _HomeBodyState extends State<_HomeBody> {
           ),
           Expanded(
             child: Padding(
-              padding: EdgeInsets.fromLTRB(16.w, 2.h, 16.w, bottomInset),
+              padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, bottomInset),
               child: NotificationListener<ScrollNotification>(
                 onNotification: _onScroll,
                 child: const HomeRecommendSection(),
@@ -124,10 +174,14 @@ class _HomeBodyState extends State<_HomeBody> {
   }
 
   Widget _buildHeader({required double t}) {
-    final titleSize = lerpDouble(23.sp, 18.sp, t)!;
+    final titleSize = lerpDouble(22.sp, 17.5.sp, t)!;
     final greetingFactor = (1 - t * 1.35).clamp(0.0, 1.0);
 
     return Obx(() {
+      final displayName = widget.controller.name.trim().isEmpty
+          ? '欢迎回来'
+          : widget.controller.name.trim();
+
       return Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -142,29 +196,41 @@ class _HomeBodyState extends State<_HomeBody> {
                     child: Opacity(
                       opacity: greetingFactor,
                       child: Padding(
-                        padding: EdgeInsets.only(bottom: 3.h),
-                        child: Text(
-                          widget.greeting,
-                          style: TextStyle(
-                            fontSize: 13.sp,
-                            color: AppThemeColors.textMuted,
-                            letterSpacing: 0.3,
-                          ),
+                        padding: EdgeInsets.only(bottom: 2.h),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              widget.greetingInfo.icon,
+                              size: 14.sp,
+                              color: widget.greetingInfo.iconColor,
+                            ),
+                            SizedBox(width: 5.w),
+                            Text(
+                              widget.greetingInfo.text,
+                              style: TextStyle(
+                                fontSize: 12.5.sp,
+                                fontWeight: FontWeight.w500,
+                                color: AppThemeColors.textSecondary,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
                   ),
                 ),
                 Text(
-                  widget.controller.name,
+                  displayName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: titleSize,
-                    height: 1.25,
-                    fontWeight: FontWeight.bold,
+                    height: 1.2,
+                    fontWeight: FontWeight.w800,
                     color: AppThemeColors.textPrimary,
-                    letterSpacing: 0.5,
+                    letterSpacing: 0.3,
                   ),
                 ),
               ],
@@ -180,62 +246,79 @@ class _HomeBodyState extends State<_HomeBody> {
   Widget _buildMessageButton({required double t}) {
     return Obx(() {
       final unreadCount = widget.controller.unreadMessageCount;
-      final size = lerpDouble(46.w, 38.w, t)!;
-      final iconSize = lerpDouble(23.w, 20.w, t)!;
+      final size = lerpDouble(42.w, 36.w, t)!;
+      final iconSize = lerpDouble(21.w, 19.w, t)!;
+      final radius = BorderRadius.circular(14.r);
 
-      return Stack(
-        clipBehavior: Clip.none,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(18.r),
-            child: Material(
-              color: AppThemeColors.surface,
-              borderRadius: BorderRadius.circular(18.r),
-              child: InkWell(
-                onTap: widget.controller.openMessages,
-                borderRadius: BorderRadius.circular(18.r),
-                child: Ink(
-                  width: size,
-                  height: size,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(18.r),
-                    border: Border.all(color: AppThemeColors.border),
+      return Semantics(
+        button: true,
+        label: unreadCount > 0 ? '通知消息，$unreadCount条未读' : '通知消息',
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: radius,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppThemeColors.shadowSoft.withValues(alpha: 0.04),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
                   ),
-                  child: Center(
-                    child: Icon(
-                      Icons.notifications_none_rounded,
-                      color: AppThemeColors.textSecondary,
-                      size: iconSize,
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: radius,
+                child: Material(
+                  color: AppThemeColors.surface,
+                  borderRadius: radius,
+                  child: InkWell(
+                    onTap: widget.controller.openMessages,
+                    borderRadius: radius,
+                    child: Ink(
+                      width: size,
+                      height: size,
+                      decoration: BoxDecoration(
+                        borderRadius: radius,
+                        border: Border.all(color: AppThemeColors.border),
+                      ),
+                      child: Center(
+                        child: Icon(
+                          Icons.notifications_none_rounded,
+                          color: AppThemeColors.textPrimary,
+                          size: iconSize,
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-          if (unreadCount > 0)
-            Positioned(
-              right: -2.w,
-              top: -2.h,
-              child: Container(
-                constraints: BoxConstraints(minWidth: 18.w, minHeight: 18.h),
-                padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 1.h),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFFF5252), Color(0xFFD32F2F)],
-                  ),
-                  borderRadius: BorderRadius.circular(999.r),
-                  border: Border.all(color: AppThemeColors.surface, width: 1.5),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFFF5252).withValues(alpha: 0.4),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
+            if (unreadCount > 0)
+              Positioned(
+                right: -3.w,
+                top: -3.h,
+                child: Container(
+                  constraints: BoxConstraints(minWidth: 17.w, minHeight: 17.h),
+                  padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 1.h),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFFF5252), Color(0xFFD32F2F)],
                     ),
-                  ],
-                ),
-                child: Center(
-                  child: Padding(
-                    padding: EdgeInsets.only(bottom: 0.5.h),
+                    borderRadius: BorderRadius.circular(999.r),
+                    border: Border.all(
+                      color: AppThemeColors.surface,
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFFF5252).withValues(alpha: 0.35),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Center(
                     child: Text(
                       unreadCount > 99 ? '99+' : '$unreadCount',
                       style: TextStyle(
@@ -243,20 +326,19 @@ class _HomeBodyState extends State<_HomeBody> {
                         fontWeight: FontWeight.w800,
                         color: Colors.white,
                         height: 1.0,
-                        leadingDistribution: TextLeadingDistribution.even,
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       );
     });
   }
 
   Widget _buildSearchBar() {
-    final radius = BorderRadius.circular(18.r);
+    final radius = BorderRadius.circular(16.r);
     return Semantics(
       button: true,
       label: '搜索影视、短剧、播客和阅读资源',
@@ -273,11 +355,11 @@ class _HomeBodyState extends State<_HomeBody> {
               onTap: () => Get.toNamed(Routes.SEARCH),
               borderRadius: radius,
               child: Ink(
-                height: 56.h,
+                height: 50.h,
                 padding: EdgeInsets.symmetric(horizontal: 10.w),
                 decoration: BoxDecoration(
                   borderRadius: radius,
-                  border: Border.all(color: AppThemeColors.border, width: 1.1),
+                  border: Border.all(color: AppThemeColors.border, width: 1),
                 ),
                 child: Row(
                   children: [
@@ -285,8 +367,8 @@ class _HomeBodyState extends State<_HomeBody> {
                       width: 34.w,
                       height: 34.w,
                       decoration: BoxDecoration(
-                        color: AppThemeColors.primary.withValues(alpha: 0.10),
-                        borderRadius: BorderRadius.circular(12.r),
+                        color: AppThemeColors.primary.withValues(alpha: 0.09),
+                        borderRadius: BorderRadius.circular(11.r),
                       ),
                       child: Icon(
                         Icons.search_rounded,
@@ -296,48 +378,15 @@ class _HomeBodyState extends State<_HomeBody> {
                     ),
                     SizedBox(width: 10.w),
                     Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '搜索资源',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: AppThemeColors.textPrimary,
-                              fontSize: 14.sp,
-                              height: 1.12,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          SizedBox(height: 3.h),
-                          Text(
-                            '影视 · 短剧 · 播客 · 阅读',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: AppThemeColors.textMuted,
-                              fontSize: 10.5.sp,
-                              height: 1.1,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(width: 8.w),
-                    Container(
-                      width: 28.w,
-                      height: 28.w,
-                      decoration: const BoxDecoration(
-                        color: AppThemeColors.primary,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.arrow_forward_ios_rounded,
-                        color: Colors.white,
-                        size: 13.w,
+                      child: Text(
+                        '搜索资源',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: AppThemeColors.textMuted,
+                          fontSize: 13.5.sp,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ],
@@ -355,41 +404,41 @@ class _HomeBodyState extends State<_HomeBody> {
   Widget _buildResourceMenu() {
     final entries = [
       _ResourceEntry(
-        icon: Icons.movie_rounded,
+        icon: Icons.movie_filter_rounded,
         label: '影视',
-        iconBackground: const Color(0xFFF8D2B5),
-        iconColor: const Color(0xFFC75C32),
+        gradientColors: const [Color(0xFFEAF2FF), Color(0xFFD8E7FF)],
+        iconColor: const Color(0xFF186EEF),
         onTap: () => Get.toNamed(Routes.TV),
       ),
       _ResourceEntry(
         icon: Icons.live_tv_rounded,
         label: '短剧',
-        iconBackground: const Color(0xFFF4DDA3),
-        iconColor: const Color(0xFFB97918),
+        gradientColors: const [Color(0xFFFFF4E5), Color(0xFFFFE6C2)],
+        iconColor: const Color(0xFFE66A00),
         onTap: () => Get.toNamed(Routes.PLAYLET),
       ),
       _ResourceEntry(
         icon: Icons.podcasts_rounded,
         label: '播客',
-        iconBackground: const Color(0xFFF2C6BE),
-        iconColor: const Color(0xFFB84E3B),
+        gradientColors: const [Color(0xFFFFEDF1), Color(0xFFFFDAE3)],
+        iconColor: const Color(0xFFE11D48),
         onTap: () => Get.toNamed(Routes.MUSIC),
       ),
       _ResourceEntry(
         icon: Icons.menu_book_rounded,
         label: '阅读',
-        iconBackground: const Color(0xFFDDE0B5),
-        iconColor: const Color(0xFF737A36),
+        gradientColors: const [Color(0xFFE7F8F2), Color(0xFFD0F0E4)],
+        iconColor: const Color(0xFF0D9488),
         onTap: () => Get.toNamed(Routes.READ),
       ),
     ];
 
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 10.h),
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 10.h),
       decoration: BoxDecoration(
         color: AppThemeColors.surface,
         borderRadius: BorderRadius.circular(18.r),
-        border: Border.all(color: AppThemeColors.border, width: 1.1),
+        border: Border.all(color: AppThemeColors.border, width: 1),
         boxShadow: AppThemeColors.cardShadow,
       ),
       child: Row(
@@ -409,20 +458,24 @@ class _HomeBodyState extends State<_HomeBody> {
         color: Colors.transparent,
         child: InkWell(
           onTap: entry.onTap,
-          borderRadius: BorderRadius.circular(16.r),
+          borderRadius: BorderRadius.circular(14.r),
           child: Padding(
             padding: EdgeInsets.symmetric(vertical: 2.h),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  width: 42.w,
-                  height: 42.w,
+                  width: 44.w,
+                  height: 44.w,
                   decoration: BoxDecoration(
-                    color: entry.iconBackground,
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: entry.gradientColors,
+                    ),
                     borderRadius: BorderRadius.circular(14.r),
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.7),
+                      color: entry.iconColor.withValues(alpha: 0.12),
                     ),
                   ),
                   child: Icon(entry.icon, color: entry.iconColor, size: 22.w),
@@ -433,8 +486,8 @@ class _HomeBodyState extends State<_HomeBody> {
                   maxLines: 1,
                   style: TextStyle(
                     fontSize: 12.sp,
-                    height: 1.1,
-                    fontWeight: FontWeight.w700,
+                    height: 1.15,
+                    fontWeight: FontWeight.w600,
                     color: AppThemeColors.textPrimary,
                   ),
                 ),
@@ -451,14 +504,14 @@ class _ResourceEntry {
   const _ResourceEntry({
     required this.icon,
     required this.label,
-    required this.iconBackground,
+    required this.gradientColors,
     required this.iconColor,
     this.onTap,
   });
 
   final IconData icon;
   final String label;
-  final Color iconBackground;
+  final List<Color> gradientColors;
   final Color iconColor;
   final VoidCallback? onTap;
 }
