@@ -70,6 +70,15 @@ func (d *QuarkTransferTaskDao) GetList(listDTO *dto.QuarkTransferTaskListDTO, ow
 	var total int64
 
 	filtered := global.DB.Model(&model.QuarkTransferTask{}).Where("owner_user_id = ?", ownerUserID)
+	if listDTO.Keyword != "" {
+		keyword := "%" + listDTO.Keyword + "%"
+		filtered = filtered.Where(
+			"(display_name LIKE ? OR share_url LIKE ? OR save_path LIKE ?)",
+			keyword,
+			keyword,
+			keyword,
+		)
+	}
 	if listDTO.Status != "" {
 		filtered = filtered.Where("status = ?", listDTO.Status)
 	}

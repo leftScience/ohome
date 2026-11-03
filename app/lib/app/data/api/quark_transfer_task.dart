@@ -8,6 +8,7 @@ class QuarkTransferTaskApi {
   final HttpClient _httpClient;
 
   Future<QuarkTransferTaskListResult> getTaskList({
+    String? keyword,
     String? status,
     String? sourceType,
     int page = 1,
@@ -15,6 +16,9 @@ class QuarkTransferTaskApi {
     bool showErrorToast = true,
   }) {
     final payload = <String, dynamic>{'page': page, 'limit': limit};
+    if (keyword != null && keyword.trim().isNotEmpty) {
+      payload['keyword'] = keyword.trim();
+    }
     if (status != null && status.trim().isNotEmpty) {
       payload['status'] = status.trim();
     }

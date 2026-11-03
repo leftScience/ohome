@@ -9,7 +9,10 @@ import '../controllers/quark_transfer_tasks_controller.dart';
 import 'manual_transfer_task_sheet.dart';
 
 class QuarkTransferTasksView extends GetView<QuarkTransferTasksController> {
-  const QuarkTransferTasksView({super.key});
+  const QuarkTransferTasksView({super.key, this.embedded = false});
+
+  /// 作为底部 tab 内嵌时隐藏 AppBar，并使用自定义悬浮按钮位置。
+  final bool embedded;
 
   static const List<_StatusFilterOption> _filters = <_StatusFilterOption>[
     _StatusFilterOption(label: '全部', value: ''),
@@ -21,26 +24,103 @@ class QuarkTransferTasksView extends GetView<QuarkTransferTasksController> {
 
   @override
   Widget build(BuildContext context) {
+    final body = Column(
+      children: [
+        Padding(
+          padding: EdgeInsets.fromLTRB(16.w, embedded ? 12.h : 16.h, 16.w, 0),
+          child: _buildSearchBar(),
+        ),
+        Padding(
+          padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 12.h),
+          child: _buildFilters(),
+        ),
+        Expanded(child: _buildTaskList()),
+      ],
+    );
+
+    if (embedded) {
+      return SafeArea(
+        bottom: false,
+        child: Stack(
+          children: [
+            Positioned.fill(child: body),
+            Positioned(
+              right: AppFloatingActionButtonPosition.rightMargin,
+              bottom: MediaQuery.paddingOf(context).bottom + 92.h,
+              child: _buildCreateButton(context),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppThemeColors.pageBackground,
       appBar: AppBar(title: const Text('转存任务')),
       floatingActionButtonLocation:
           AppFloatingActionButtonPosition.scaffoldLocation,
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _openCreateSheet(context),
-        backgroundColor: AppThemeColors.primary,
-        foregroundColor: Colors.white,
-        child: Icon(Icons.add_rounded, size: 26.w),
+      floatingActionButton: _buildCreateButton(context),
+      body: body,
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return TextField(
+      controller: controller.keywordController,
+      textInputAction: TextInputAction.search,
+      onSubmitted: (_) => controller.search(),
+      style: TextStyle(fontSize: 14.sp, color: AppThemeColors.textPrimary),
+      decoration: InputDecoration(
+        hintText: '搜索任务名称、链接或保存路径',
+        hintStyle: TextStyle(
+          fontSize: 13.sp,
+          color: AppThemeColors.textDisabled,
+        ),
+        prefixIcon: Icon(
+          Icons.search_rounded,
+          size: 20.w,
+          color: AppThemeColors.textDisabled,
+        ),
+        suffixIcon: ValueListenableBuilder<TextEditingValue>(
+          valueListenable: controller.keywordController,
+          builder: (context, value, _) {
+            if (value.text.isEmpty) return const SizedBox.shrink();
+            return IconButton(
+              onPressed: controller.resetKeyword,
+              icon: Icon(
+                Icons.close_rounded,
+                size: 18.w,
+                color: AppThemeColors.textDisabled,
+              ),
+            );
+          },
+        ),
+        filled: true,
+        fillColor: AppThemeColors.surface,
+        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14.r),
+          borderSide: const BorderSide(color: AppThemeColors.border),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14.r),
+          borderSide: const BorderSide(color: AppThemeColors.border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14.r),
+          borderSide: const BorderSide(color: AppThemeColors.primary),
+        ),
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 12.h),
-            child: _buildFilters(),
-          ),
-          Expanded(child: _buildTaskList()),
-        ],
-      ),
+    );
+  }
+
+  Widget _buildCreateButton(BuildContext context) {
+    return FloatingActionButton(
+      heroTag: 'quark-transfer-create-fab',
+      onPressed: () => _openCreateSheet(context),
+      backgroundColor: AppThemeColors.primary,
+      foregroundColor: Colors.white,
+      child: Icon(Icons.add_rounded, size: 26.w),
     );
   }
 
@@ -121,7 +201,9 @@ class QuarkTransferTasksView extends GetView<QuarkTransferTasksController> {
                   SizedBox(height: 14.h),
                   Center(
                     child: Text(
-                      '暂无转存任务',
+                      controller.keyword.value.trim().isEmpty
+                          ? '暂无转存任务'
+                          : '没有找到相关转存任务',
                       style: TextStyle(
                         fontSize: 15.sp,
                         fontWeight: FontWeight.w600,

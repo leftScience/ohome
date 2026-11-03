@@ -8,7 +8,10 @@ import '../../../widgets/app_floating_action_button_position.dart';
 import '../controllers/quark_sync_controller.dart';
 
 class QuarkSyncView extends GetView<QuarkSyncController> {
-  const QuarkSyncView({super.key});
+  const QuarkSyncView({super.key, this.embedded = false});
+
+  /// 作为底部 tab 内嵌时隐藏 AppBar，并使用自定义悬浮按钮位置。
+  final bool embedded;
 
   static const Map<int, String> _weekLabels = <int, String>{
     1: '周一',
@@ -22,25 +25,103 @@ class QuarkSyncView extends GetView<QuarkSyncController> {
 
   @override
   Widget build(BuildContext context) {
+    final body = Column(
+      children: [
+        Padding(
+          padding: EdgeInsets.fromLTRB(
+            16.w,
+            embedded ? 12.h : 16.h,
+            16.w,
+            12.h,
+          ),
+          child: embedded ? _buildCompactSearchBar() : _buildSearchCard(),
+        ),
+        Expanded(child: _buildTaskList()),
+      ],
+    );
+
+    if (embedded) {
+      return SafeArea(
+        bottom: false,
+        child: Stack(
+          children: [
+            Positioned.fill(child: body),
+            Positioned(
+              right: AppFloatingActionButtonPosition.rightMargin,
+              bottom: MediaQuery.paddingOf(context).bottom + 92.h,
+              child: _buildCreateButton(),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppThemeColors.pageBackground,
       appBar: AppBar(title: const Text('同步任务')),
       floatingActionButtonLocation:
           AppFloatingActionButtonPosition.scaffoldLocation,
-      floatingActionButton: FloatingActionButton(
-        onPressed: controller.openCreatePage,
-        backgroundColor: AppThemeColors.primary,
-        foregroundColor: Colors.white,
-        child: const Icon(Icons.add),
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 12.h),
-            child: _buildSearchCard(),
-          ),
-          Expanded(child: _buildTaskList()),
-        ],
+      floatingActionButton: _buildCreateButton(),
+      body: body,
+    );
+  }
+
+  Widget _buildCreateButton() {
+    return FloatingActionButton(
+      heroTag: 'quark-sync-create-fab',
+      onPressed: controller.openCreatePage,
+      backgroundColor: AppThemeColors.primary,
+      foregroundColor: Colors.white,
+      child: const Icon(Icons.add),
+    );
+  }
+
+  Widget _buildCompactSearchBar() {
+    return TextField(
+      controller: controller.taskNameController,
+      textInputAction: TextInputAction.search,
+      onSubmitted: (_) => controller.search(),
+      style: TextStyle(fontSize: 14.sp, color: AppThemeColors.textPrimary),
+      decoration: InputDecoration(
+        hintText: '搜索同步任务名称',
+        hintStyle: TextStyle(
+          fontSize: 13.sp,
+          color: AppThemeColors.textDisabled,
+        ),
+        prefixIcon: Icon(
+          Icons.search_rounded,
+          size: 20.w,
+          color: AppThemeColors.textDisabled,
+        ),
+        suffixIcon: ValueListenableBuilder<TextEditingValue>(
+          valueListenable: controller.taskNameController,
+          builder: (context, value, _) {
+            if (value.text.isEmpty) return const SizedBox.shrink();
+            return IconButton(
+              onPressed: controller.resetFilters,
+              icon: Icon(
+                Icons.close_rounded,
+                size: 18.w,
+                color: AppThemeColors.textDisabled,
+              ),
+            );
+          },
+        ),
+        filled: true,
+        fillColor: AppThemeColors.surface,
+        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14.r),
+          borderSide: const BorderSide(color: AppThemeColors.border),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14.r),
+          borderSide: const BorderSide(color: AppThemeColors.border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14.r),
+          borderSide: const BorderSide(color: AppThemeColors.primary),
+        ),
       ),
     );
   }
@@ -67,6 +148,7 @@ class QuarkSyncView extends GetView<QuarkSyncController> {
           SizedBox(height: 12.h),
           TextField(
             controller: controller.taskNameController,
+            textInputAction: TextInputAction.search,
             onSubmitted: (_) => controller.search(),
             decoration: InputDecoration(
               hintText: '按任务名称搜索',
@@ -78,6 +160,20 @@ class QuarkSyncView extends GetView<QuarkSyncController> {
                 Icons.search_rounded,
                 size: 20.w,
                 color: AppThemeColors.textDisabled,
+              ),
+              suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                valueListenable: controller.taskNameController,
+                builder: (context, value, _) {
+                  if (value.text.isEmpty) return const SizedBox.shrink();
+                  return IconButton(
+                    onPressed: controller.resetFilters,
+                    icon: Icon(
+                      Icons.close_rounded,
+                      size: 18.w,
+                      color: AppThemeColors.textDisabled,
+                    ),
+                  );
+                },
               ),
               filled: true,
               fillColor: AppThemeColors.surfaceMuted,
@@ -163,7 +259,9 @@ class QuarkSyncView extends GetView<QuarkSyncController> {
                   SizedBox(height: 14.h),
                   Center(
                     child: Text(
-                      '暂无同步任务',
+                      controller.taskNameController.text.trim().isEmpty
+                          ? '暂无同步任务'
+                          : '没有找到相关同步任务',
                       style: TextStyle(
                         fontSize: 15.sp,
                         fontWeight: FontWeight.w600,

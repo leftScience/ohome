@@ -27,10 +27,12 @@ class QuarkTransferTasksController extends GetxController {
   final WebdavApi _webdavApi;
 
   final scrollController = ScrollController();
+  final keywordController = TextEditingController();
   final tasks = <QuarkTransferTaskModel>[].obs;
   final loading = false.obs;
   final loadingMore = false.obs;
   final hasMore = true.obs;
+  final keyword = ''.obs;
   final statusFilter = ''.obs;
   final deletingTaskIds = <int>{}.obs;
   final submittingManualTask = false.obs;
@@ -47,6 +49,7 @@ class QuarkTransferTasksController extends GetxController {
 
   @override
   void onClose() {
+    keywordController.dispose();
     scrollController.dispose();
     super.onClose();
   }
@@ -70,6 +73,7 @@ class QuarkTransferTasksController extends GetxController {
 
     try {
       final result = await _taskApi.getTaskList(
+        keyword: _resolvedKeyword,
         status: _resolvedStatusFilter,
         page: _page,
         limit: _pageSize,
@@ -101,6 +105,20 @@ class QuarkTransferTasksController extends GetxController {
   }
 
   Future<void> refreshList() => loadTasks(refresh: true);
+
+  Future<void> search() {
+    keyword.value = keywordController.text.trim();
+    return loadTasks(refresh: true);
+  }
+
+  Future<void> resetKeyword() {
+    if (keywordController.text.isEmpty && keyword.value.isEmpty) {
+      return Future<void>.value();
+    }
+    keywordController.clear();
+    keyword.value = '';
+    return loadTasks(refresh: true);
+  }
 
   void changeStatusFilter(String status) {
     if (statusFilter.value == status) return;
@@ -220,6 +238,8 @@ class QuarkTransferTasksController extends GetxController {
       deletingTaskIds.remove(id);
     }
   }
+
+  String get _resolvedKeyword => keyword.value.trim();
 
   String get _resolvedStatusFilter => statusFilter.value.trim();
 

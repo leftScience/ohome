@@ -26,7 +26,6 @@ class MeController extends GetxController {
   final avatarUploading = false.obs;
   final profileUpdating = false.obs;
   final quarkAdminMenuExpanded = false.obs;
-  final quarkTransferMenuExpanded = false.obs;
 
   Rxn<UserModel> get user => _authService.user;
 
@@ -60,21 +59,9 @@ class MeController extends GetxController {
     Get.toNamed(Routes.QUARK_STREAM_SETTINGS);
   }
 
-  void openQuarkSync() {
-    Get.toNamed(Routes.QUARK_SYNC);
-  }
-
-  void openQuarkTransferTasks() {
-    Get.toNamed(Routes.QUARK_TRANSFER_TASKS);
-  }
-
   void toggleQuarkAdminMenu() {
     if (!_ensureSuperAdmin()) return;
     quarkAdminMenuExpanded.toggle();
-  }
-
-  void toggleQuarkTransferMenu() {
-    quarkTransferMenuExpanded.toggle();
   }
 
   Future<void> logout() async {

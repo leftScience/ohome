@@ -29,6 +29,7 @@ type quarkTransferTaskSubmission struct {
 }
 
 func (s *QuarkTransferTaskService) GetList(listDTO *dto.QuarkTransferTaskListDTO, ownerUserID uint) ([]model.QuarkTransferTask, int64, error) {
+	listDTO.Keyword = strings.TrimSpace(listDTO.Keyword)
 	listDTO.Status = strings.TrimSpace(listDTO.Status)
 	listDTO.SourceType = strings.TrimSpace(listDTO.SourceType)
 	return quarkTransferTaskDao.GetList(listDTO, ownerUserID)

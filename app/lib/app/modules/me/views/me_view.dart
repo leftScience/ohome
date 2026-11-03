@@ -34,42 +34,36 @@ class MeView extends GetView<MeController> {
               SizedBox(height: 20.h),
               _buildProfileCard(),
               SizedBox(height: 24.h),
-              Text(
-                '基础管理',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w600,
-                  color: AppThemeColors.textSecondary,
-                ),
-              ),
-              SizedBox(height: 12.h),
               Obx(() {
-                final isSuperAdmin = controller.isSuperAdmin;
+                if (!controller.isSuperAdmin) {
+                  return const SizedBox.shrink();
+                }
                 return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if (isSuperAdmin) ...[
-                      _SettingsMenuCard(
-                        icon: Icons.group_outlined,
-                        iconColor: const Color(0xFF00897B),
-                        title: '用户管理',
-                        subtitle: '新增、编辑、删除、重置密码',
-                        onTap: controller.openUserManagement,
+                    Text(
+                      '基础管理',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w600,
+                        color: AppThemeColors.textSecondary,
                       ),
-                      SizedBox(height: 12.h),
-                      _QuarkAdminMenuCard(
-                        expanded: controller.quarkAdminMenuExpanded.value,
-                        onTap: controller.toggleQuarkAdminMenu,
-                        onLoginTap: controller.openQuarkLogin,
-                        onSearchTap: controller.openQuarkSearchSettings,
-                        onStreamTap: controller.openQuarkStreamSettings,
-                      ),
-                      SizedBox(height: 12.h),
-                    ],
-                    _QuarkTransferMenuCard(
-                      expanded: controller.quarkTransferMenuExpanded.value,
-                      onTap: controller.toggleQuarkTransferMenu,
-                      onTransferTasksTap: controller.openQuarkTransferTasks,
-                      onSyncTasksTap: controller.openQuarkSync,
+                    ),
+                    SizedBox(height: 12.h),
+                    _SettingsMenuCard(
+                      icon: Icons.group_outlined,
+                      iconColor: const Color(0xFF00897B),
+                      title: '用户管理',
+                      subtitle: '新增、编辑、删除、重置密码',
+                      onTap: controller.openUserManagement,
+                    ),
+                    SizedBox(height: 12.h),
+                    _QuarkAdminMenuCard(
+                      expanded: controller.quarkAdminMenuExpanded.value,
+                      onTap: controller.toggleQuarkAdminMenu,
+                      onLoginTap: controller.openQuarkLogin,
+                      onSearchTap: controller.openQuarkSearchSettings,
+                      onStreamTap: controller.openQuarkStreamSettings,
                     ),
                   ],
                 );
@@ -322,149 +316,6 @@ class MeView extends GetView<MeController> {
         ),
       );
     });
-  }
-}
-
-class _QuarkTransferMenuCard extends StatelessWidget {
-  const _QuarkTransferMenuCard({
-    required this.expanded,
-    required this.onTap,
-    required this.onTransferTasksTap,
-    required this.onSyncTasksTap,
-  });
-
-  final bool expanded;
-  final VoidCallback? onTap;
-  final VoidCallback? onTransferTasksTap;
-  final VoidCallback? onSyncTasksTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22.r),
-        boxShadow: AppThemeColors.cardShadow,
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(22.r),
-        child: Material(
-          color: AppThemeColors.surface,
-          child: InkWell(
-            onTap: onTap,
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(22.r),
-                border: Border.all(color: AppThemeColors.border),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 40.w,
-                        height: 40.w,
-                        decoration: BoxDecoration(
-                          color: const Color(
-                            0xFF43A047,
-                          ).withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(14.r),
-                        ),
-                        child: Icon(
-                          Icons.sync_alt_rounded,
-                          color: const Color(0xFF43A047),
-                          size: 22.w,
-                        ),
-                      ),
-                      SizedBox(width: 14.w),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '夸克转存',
-                              style: TextStyle(
-                                fontSize: 15.sp,
-                                fontWeight: FontWeight.w600,
-                                color: AppThemeColors.textPrimary,
-                              ),
-                            ),
-                            SizedBox(height: 4.h),
-                            Text(
-                              '管理夸克转存任务和同步任务',
-                              style: TextStyle(
-                                fontSize: 12.sp,
-                                color: AppThemeColors.textMuted,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      AnimatedRotation(
-                        turns: expanded ? 0.5 : 0,
-                        duration: const Duration(milliseconds: 200),
-                        child: Icon(
-                          Icons.keyboard_arrow_down_rounded,
-                          size: 22.w,
-                          color: AppThemeColors.textDisabled,
-                        ),
-                      ),
-                    ],
-                  ),
-                  AnimatedSize(
-                    duration: const Duration(milliseconds: 220),
-                    curve: Curves.easeInOut,
-                    child: expanded
-                        ? Padding(
-                            padding: EdgeInsets.only(top: 14.h),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: AppThemeColors.surfaceMuted,
-                                borderRadius: BorderRadius.circular(18.r),
-                                border: Border.all(
-                                  color: AppThemeColors.border,
-                                ),
-                              ),
-                              child: Column(
-                                children: [
-                                  _SettingsSubMenuTile(
-                                    icon: Icons.task_alt_outlined,
-                                    iconColor: const Color(0xFF0288D1),
-                                    title: '转存任务',
-                                    subtitle: '管理搜索页转存生成的任务记录',
-                                    onTap: onTransferTasksTap,
-                                  ),
-                                  _buildDivider(),
-                                  _SettingsSubMenuTile(
-                                    icon: Icons.schedule_send_rounded,
-                                    iconColor: const Color(0xFF43A047),
-                                    title: '同步任务',
-                                    subtitle: '管理夸克自动转存同步任务',
-                                    onTap: onSyncTasksTap,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          )
-                        : const SizedBox.shrink(),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDivider() {
-    return Divider(
-      height: 1.h,
-      thickness: 1,
-      color: AppThemeColors.divider,
-      indent: 16.w,
-      endIndent: 16.w,
-    );
   }
 }
 

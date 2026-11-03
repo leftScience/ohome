@@ -5,6 +5,7 @@ import '../../home/controllers/home_controller.dart';
 import '../../home/views/home_view.dart';
 import '../../home/widgets/home_history_banner.dart';
 import '../../me/views/me_view.dart';
+import '../../quark_tasks/views/quark_tasks_view.dart';
 import '../../../theme/app_theme.dart';
 import '../../../widgets/home_style_backdrop.dart';
 import '../controllers/main_controller.dart';
@@ -12,13 +13,16 @@ import '../controllers/main_controller.dart';
 class MainView extends GetView<MainController> {
   const MainView({super.key});
 
-  static const List<Widget> _tabViews = <Widget>[HomeView(), MeView()];
+  static const List<Widget> _tabViews = <Widget>[
+    HomeView(),
+    QuarkTasksView(),
+    MeView(),
+  ];
   static const double _tabBarHeight = 64;
   static const double _floatingHorizontalPadding = 24;
   static const double _floatingBottomSpacing = 16;
   static const double _historyBannerGap = 10;
-  static const double _tabBarInnerHorizontalPadding = 14;
-  static const double _tabItemWidth = 72;
+  static const double _tabBarInnerHorizontalPadding = 8;
 
   @override
   Widget build(BuildContext context) {
@@ -83,7 +87,6 @@ class MainView extends GetView<MainController> {
         boxShadow: AppThemeColors.floatingShadow,
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           _buildTabItem(
             index: 0,
@@ -92,6 +95,11 @@ class MainView extends GetView<MainController> {
           ),
           _buildTabItem(
             index: 1,
+            icon: Icons.task_alt_rounded,
+            activeIcon: Icons.task_alt_rounded,
+          ),
+          _buildTabItem(
+            index: 2,
             icon: Icons.settings_outlined,
             activeIcon: Icons.settings,
           ),
@@ -107,8 +115,7 @@ class MainView extends GetView<MainController> {
   }) {
     final isSelected = controller.index.value == index;
 
-    return SizedBox(
-      width: _tabItemWidth,
+    return Expanded(
       child: GestureDetector(
         onTap: () => controller.setIndex(index),
         behavior: HitTestBehavior.opaque,
@@ -117,23 +124,17 @@ class MainView extends GetView<MainController> {
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               curve: Curves.easeInOut,
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(11),
               decoration: BoxDecoration(
-                color: isSelected
-                    ? AppThemeColors.primary
-                    : Colors.transparent,
+                color: isSelected ? AppThemeColors.primary : Colors.transparent,
                 shape: BoxShape.circle,
               ),
-              child: Stack(
-                children: [
-                  Icon(
-                    isSelected ? activeIcon : icon,
-                    color: isSelected
-                        ? AppThemeColors.textOnAccent
-                        : AppThemeColors.textMuted,
-                    size: 26,
-                  ),
-                ],
+              child: Icon(
+                isSelected ? activeIcon : icon,
+                color: isSelected
+                    ? AppThemeColors.textOnAccent
+                    : AppThemeColors.textMuted,
+                size: 28,
               ),
             ),
           ),
