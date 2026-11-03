@@ -95,6 +95,7 @@ class _QuarkSyncFormViewState extends State<QuarkSyncFormView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppThemeColors.pageBackground,
       appBar: AppBar(title: Text(_isEdit ? '编辑任务' : '新增任务')),
       body: SafeArea(
         child: Form(
@@ -135,7 +136,7 @@ class _QuarkSyncFormViewState extends State<QuarkSyncFormView> {
                     style: TextStyle(
                       fontSize: 15.sp,
                       fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                      color: AppThemeColors.textOnAccent,
                     ),
                   ),
           ),
@@ -148,9 +149,9 @@ class _QuarkSyncFormViewState extends State<QuarkSyncFormView> {
     return Container(
       padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: AppThemeColors.surface,
         borderRadius: BorderRadius.circular(22.r),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        border: Border.all(color: AppThemeColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -161,12 +162,12 @@ class _QuarkSyncFormViewState extends State<QuarkSyncFormView> {
                 width: 42.w,
                 height: 42.w,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF81C784).withValues(alpha: 0.12),
+                  color: const Color(0xFF43A047).withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(14.r),
                 ),
                 child: const Icon(
                   Icons.sync_alt_rounded,
-                  color: Color(0xFF81C784),
+                  color: Color(0xFF43A047),
                 ),
               ),
               SizedBox(width: 12.w),
@@ -179,7 +180,7 @@ class _QuarkSyncFormViewState extends State<QuarkSyncFormView> {
                       style: TextStyle(
                         fontSize: 16.sp,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        color: AppThemeColors.textPrimary,
                       ),
                     ),
                   ],
@@ -196,9 +197,9 @@ class _QuarkSyncFormViewState extends State<QuarkSyncFormView> {
     return Container(
       padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: AppThemeColors.surface,
         borderRadius: BorderRadius.circular(22.r),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        border: Border.all(color: AppThemeColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -273,17 +274,23 @@ class _QuarkSyncFormViewState extends State<QuarkSyncFormView> {
                       icon: const Icon(Icons.refresh_rounded),
                     ),
                   ),
-                  dropdownColor: const Color(0xFF1A1A1A),
+                  dropdownColor: AppThemeColors.surface,
                   isExpanded: true,
-                  iconEnabledColor: Colors.white54,
-                  style: TextStyle(fontSize: 14.sp, color: Colors.white),
+                  iconEnabledColor: AppThemeColors.textMuted,
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: AppThemeColors.textPrimary,
+                  ),
                 ),
                 SizedBox(height: 8.h),
                 Text(
                   _selectedSavePath.isEmpty
                       ? '保存路径来自夸克目录配置；如果列表为空，请先在系统里配置夸克目录。'
                       : '实际保存路径：$_selectedSavePath',
-                  style: TextStyle(fontSize: 12.sp, color: Colors.white54),
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: AppThemeColors.textMuted,
+                  ),
                 ),
               ],
             ),
@@ -370,18 +377,20 @@ class _QuarkSyncFormViewState extends State<QuarkSyncFormView> {
                             ),
                             checkmarkColor: AppThemeColors.primary,
                             labelStyle: TextStyle(
-                              color: selected ? Colors.white : Colors.white70,
+                              color: selected
+                                  ? AppThemeColors.primary
+                                  : AppThemeColors.textSecondary,
                               fontWeight: selected
                                   ? FontWeight.w600
                                   : FontWeight.w400,
                             ),
-                            backgroundColor: const Color(0xFF101010),
+                            backgroundColor: AppThemeColors.surfaceMuted,
                             side: BorderSide(
                               color: selected
                                   ? AppThemeColors.primary.withValues(
                                       alpha: 0.65,
                                     )
-                                  : Colors.white.withValues(alpha: 0.08),
+                                  : AppThemeColors.border,
                             ),
                           );
                         })
@@ -393,7 +402,7 @@ class _QuarkSyncFormViewState extends State<QuarkSyncFormView> {
                       '每周规则至少选择一天',
                       style: TextStyle(
                         fontSize: 12.sp,
-                        color: Colors.redAccent,
+                        color: AppThemeColors.danger,
                       ),
                     ),
                   ],
@@ -407,9 +416,9 @@ class _QuarkSyncFormViewState extends State<QuarkSyncFormView> {
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
               decoration: BoxDecoration(
-                color: const Color(0xFF101010),
+                color: AppThemeColors.surfaceMuted,
                 borderRadius: BorderRadius.circular(14.r),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                border: Border.all(color: AppThemeColors.border),
               ),
               child: Row(
                 children: [
@@ -422,7 +431,7 @@ class _QuarkSyncFormViewState extends State<QuarkSyncFormView> {
                           style: TextStyle(
                             fontSize: 14.sp,
                             fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                            color: AppThemeColors.textPrimary,
                           ),
                         ),
                         SizedBox(height: 4.h),
@@ -430,7 +439,7 @@ class _QuarkSyncFormViewState extends State<QuarkSyncFormView> {
                           _enabled ? '保存后任务会按调度规则自动执行' : '保存后任务不会进入自动调度',
                           style: TextStyle(
                             fontSize: 12.sp,
-                            color: Colors.white54,
+                            color: AppThemeColors.textMuted,
                           ),
                         ),
                       ],
@@ -466,7 +475,7 @@ class _QuarkSyncFormViewState extends State<QuarkSyncFormView> {
           style: TextStyle(
             fontSize: 13.sp,
             fontWeight: FontWeight.w600,
-            color: Colors.white70,
+            color: AppThemeColors.textSecondary,
           ),
         ),
         SizedBox(height: 8.h),
@@ -478,18 +487,18 @@ class _QuarkSyncFormViewState extends State<QuarkSyncFormView> {
   InputDecoration _inputDecoration(String hintText, {Widget? suffixIcon}) {
     return InputDecoration(
       hintText: hintText,
-      hintStyle: TextStyle(fontSize: 13.sp, color: Colors.white38),
+      hintStyle: TextStyle(fontSize: 13.sp, color: AppThemeColors.textDisabled),
       filled: true,
-      fillColor: const Color(0xFF101010),
+      fillColor: AppThemeColors.surfaceMuted,
       contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
       suffixIcon: suffixIcon,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14.r),
-        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+        borderSide: const BorderSide(color: AppThemeColors.border),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14.r),
-        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+        borderSide: const BorderSide(color: AppThemeColors.border),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14.r),
@@ -497,11 +506,11 @@ class _QuarkSyncFormViewState extends State<QuarkSyncFormView> {
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14.r),
-        borderSide: const BorderSide(color: Colors.redAccent),
+        borderSide: const BorderSide(color: AppThemeColors.danger),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14.r),
-        borderSide: const BorderSide(color: Colors.redAccent),
+        borderSide: const BorderSide(color: AppThemeColors.danger),
       ),
     );
   }
@@ -674,7 +683,7 @@ class _ScheduleTypeCard extends StatelessWidget {
     return Material(
       color: selected
           ? AppThemeColors.primary.withValues(alpha: 0.15)
-          : const Color(0xFF101010),
+          : AppThemeColors.surfaceMuted,
       borderRadius: BorderRadius.circular(14.r),
       child: InkWell(
         onTap: onTap,
@@ -686,7 +695,7 @@ class _ScheduleTypeCard extends StatelessWidget {
             border: Border.all(
               color: selected
                   ? AppThemeColors.primary.withValues(alpha: 0.6)
-                  : Colors.white.withValues(alpha: 0.08),
+                  : AppThemeColors.border,
             ),
           ),
           child: Center(
@@ -695,7 +704,9 @@ class _ScheduleTypeCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: 14.sp,
                 fontWeight: FontWeight.w600,
-                color: selected ? Colors.white : Colors.white70,
+                color: selected
+                    ? AppThemeColors.primary
+                    : AppThemeColors.textSecondary,
               ),
             ),
           ),

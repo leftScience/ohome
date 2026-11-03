@@ -103,7 +103,10 @@ class _DropsItemDetailViewState extends State<DropsItemDetailView> {
           ? const Center(child: CircularProgressIndicator())
           : item == null
           ? const Center(
-              child: Text('物资不存在', style: TextStyle(color: Colors.white54)),
+              child: Text(
+                '物资不存在',
+                style: TextStyle(color: AppThemeColors.textMuted),
+              ),
             )
           : SingleChildScrollView(
               padding: EdgeInsets.only(bottom: 40.h),
@@ -119,12 +122,12 @@ class _DropsItemDetailViewState extends State<DropsItemDetailView> {
                           children: item.photos.isEmpty
                               ? [
                                   Container(
-                                    color: const Color(0xFF101010),
+                                    color: AppThemeColors.surfaceSunken,
                                     child: Center(
                                       child: Icon(
                                         Icons.photo_camera_back_outlined,
                                         size: 64.w,
-                                        color: Colors.white24,
+                                        color: AppThemeColors.textDisabled,
                                       ),
                                     ),
                                   ),
@@ -173,18 +176,10 @@ class _DropsItemDetailViewState extends State<DropsItemDetailView> {
                       child: Container(
                         padding: EdgeInsets.all(20.w),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1A1A1A),
+                          color: AppThemeColors.surface,
                           borderRadius: BorderRadius.circular(24.r),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.04),
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.2),
-                              blurRadius: 15,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
+                          border: Border.all(color: AppThemeColors.border),
+                          boxShadow: AppThemeColors.cardShadow,
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -198,7 +193,7 @@ class _DropsItemDetailViewState extends State<DropsItemDetailView> {
                                     style: TextStyle(
                                       fontSize: 24.sp,
                                       fontWeight: FontWeight.w800,
-                                      color: Colors.white,
+                                      color: AppThemeColors.textPrimary,
                                       height: 1.2,
                                     ),
                                   ),
@@ -237,11 +232,9 @@ class _DropsItemDetailViewState extends State<DropsItemDetailView> {
                         vertical: 8.h,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1A1A1A),
+                        color: AppThemeColors.surface,
                         borderRadius: BorderRadius.circular(24.r),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.04),
-                        ),
+                        border: Border.all(color: AppThemeColors.border),
                       ),
                       child: Column(
                         children: [
@@ -295,14 +288,12 @@ class _DropsItemDetailViewState extends State<DropsItemDetailView> {
       decoration: isLast
           ? null
           : BoxDecoration(
-              border: Border(
-                bottom: BorderSide(color: Colors.white.withValues(alpha: 0.04)),
-              ),
+              border: Border(bottom: BorderSide(color: AppThemeColors.divider)),
             ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 20.w, color: Colors.white54),
+          Icon(icon, size: 20.w, color: AppThemeColors.textMuted),
           SizedBox(width: 12.w),
           SizedBox(
             width: 72.w,
@@ -311,7 +302,7 @@ class _DropsItemDetailViewState extends State<DropsItemDetailView> {
               style: TextStyle(
                 fontSize: 14.sp,
                 fontWeight: FontWeight.w500,
-                color: Colors.white54,
+                color: AppThemeColors.textMuted,
               ),
             ),
           ),
@@ -322,7 +313,7 @@ class _DropsItemDetailViewState extends State<DropsItemDetailView> {
               style: TextStyle(
                 fontSize: 14.sp,
                 fontWeight: FontWeight.w600,
-                color: Colors.white,
+                color: AppThemeColors.textPrimary,
               ),
             ),
           ),
@@ -344,7 +335,7 @@ class _Tag extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveColor = Colors.white54;
+    final effectiveColor = AppThemeColors.textMuted;
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
       decoration: BoxDecoration(

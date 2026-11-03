@@ -319,13 +319,13 @@ class MessagesController extends GetxController {
   Color sourceColor(String source) {
     switch (source.trim().toLowerCase()) {
       case 'drops':
-        return const Color(0xFFBB86FC);
+        return const Color(0xFF7C4DFF);
       case 'quark':
-        return const Color(0xFF42A5F5);
+        return const Color(0xFF1976D2);
       case 'system':
-        return const Color(0xFF26A69A);
+        return const Color(0xFF00897B);
       default:
-        return const Color(0xFF9E9E9E);
+        return const Color(0xFF757575);
     }
   }
 

@@ -11,6 +11,7 @@ class QuarkLoginView extends GetView<QuarkLoginController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppThemeColors.pageBackground,
       appBar: AppBar(title: const Text('夸克登录')),
       body: Obx(() {
         if (controller.loading.value) {
@@ -22,7 +23,7 @@ class QuarkLoginView extends GetView<QuarkLoginController> {
           children: [
             _buildLoginCard(
               icon: Icons.cookie_outlined,
-              iconColor: const Color(0xFF80CBC4),
+              iconColor: const Color(0xFF00897B),
               title: '夸克 Cookie',
               updatedAt: controller.cookieUpdatedAt,
               status: controller.cookieConfigured ? '已保存' : '未保存',
@@ -45,7 +46,7 @@ class QuarkLoginView extends GetView<QuarkLoginController> {
             SizedBox(height: 16.h),
             _buildLoginCard(
               icon: Icons.tv_rounded,
-              iconColor: const Color(0xFFFFB74D),
+              iconColor: const Color(0xFFF57C00),
               title: '夸克 TV',
               updatedAt: controller.tvUpdatedAt,
               status: controller.tvPending
@@ -92,9 +93,9 @@ class QuarkLoginView extends GetView<QuarkLoginController> {
     return Container(
       padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: AppThemeColors.surface,
         borderRadius: BorderRadius.circular(22.r),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        border: Border.all(color: AppThemeColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -120,13 +121,16 @@ class QuarkLoginView extends GetView<QuarkLoginController> {
                       style: TextStyle(
                         fontSize: 16.sp,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        color: AppThemeColors.textPrimary,
                       ),
                     ),
                     SizedBox(height: 4.h),
                     Text(
                       _formatUpdatedAt(updatedAt),
-                      style: TextStyle(fontSize: 12.sp, color: Colors.white54),
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: AppThemeColors.textMuted,
+                      ),
                     ),
                   ],
                 ),
@@ -136,13 +140,19 @@ class QuarkLoginView extends GetView<QuarkLoginController> {
           SizedBox(height: 12.h),
           Text(
             status,
-            style: TextStyle(fontSize: 13.sp, color: Colors.white70),
+            style: TextStyle(
+              fontSize: 13.sp,
+              color: AppThemeColors.textSecondary,
+            ),
           ),
           if (subtitle != null && subtitle.trim().isNotEmpty) ...[
             SizedBox(height: 6.h),
             Text(
               subtitle.trim(),
-              style: TextStyle(fontSize: 12.sp, color: Colors.white38),
+              style: TextStyle(
+                fontSize: 12.sp,
+                color: AppThemeColors.textDisabled,
+              ),
             ),
           ],
           SizedBox(height: 16.h),

@@ -25,11 +25,11 @@ const Map<String, String> dropsCalendarLabels = <String, String>{
 };
 
 const Map<String, Color> dropsCategoryColors = <String, Color>{
-  'kitchen': Color(0xFF80CBC4),
-  'food': Color(0xFFFFB74D),
-  'medicine': Color(0xFFE57373),
-  'clothing': Color(0xFF64B5F6),
-  'other': Color(0xFFB39DDB),
+  'kitchen': Color(0xFF00897B),
+  'food': Color(0xFFF57C00),
+  'medicine': Color(0xFFE53935),
+  'clothing': Color(0xFF1E88E5),
+  'other': Color(0xFF7E57C2),
 };
 
 String dropsScopeLabel(String value) => dropsScopeLabels[value] ?? '未知';

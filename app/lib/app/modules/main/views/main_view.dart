@@ -6,6 +6,7 @@ import '../../home/controllers/home_controller.dart';
 import '../../home/views/home_view.dart';
 import '../../home/widgets/home_history_banner.dart';
 import '../../me/views/me_view.dart';
+import '../../../theme/app_theme.dart';
 import '../../../widgets/home_style_backdrop.dart';
 import '../controllers/main_controller.dart';
 
@@ -27,7 +28,7 @@ class MainView extends GetView<MainController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0D14),
+      backgroundColor: AppThemeColors.pageBackground,
       resizeToAvoidBottomInset: false,
       extendBody: true,
       body: Stack(
@@ -81,16 +82,10 @@ class MainView extends GetView<MainController> {
         horizontal: _tabBarInnerHorizontalPadding,
       ),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
+        color: AppThemeColors.surface,
         borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: const Color(0xFF3E4055), width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.25),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        border: Border.all(color: AppThemeColors.border, width: 1.2),
+        boxShadow: AppThemeColors.floatingShadow,
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -134,7 +129,9 @@ class MainView extends GetView<MainController> {
               curve: Curves.easeInOut,
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: isSelected ? Colors.white : Colors.transparent,
+                color: isSelected
+                    ? AppThemeColors.primary
+                    : Colors.transparent,
                 shape: BoxShape.circle,
               ),
               child: Stack(
@@ -142,8 +139,8 @@ class MainView extends GetView<MainController> {
                   Icon(
                     isSelected ? activeIcon : icon,
                     color: isSelected
-                        ? const Color(0xFF1E1E1E)
-                        : Colors.grey[400],
+                        ? AppThemeColors.textOnAccent
+                        : AppThemeColors.textMuted,
                     size: 26,
                   ),
                 ],

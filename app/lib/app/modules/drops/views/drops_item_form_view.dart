@@ -182,6 +182,7 @@ class _DropsItemFormViewState extends State<DropsItemFormView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppThemeColors.pageBackground,
       appBar: AppBar(title: Text(widget.isEdit ? '编辑物资' : '新增物资')),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
@@ -208,13 +209,15 @@ class _DropsItemFormViewState extends State<DropsItemFormView> {
             onPressed: _submitting ? null : _submit,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppThemeColors.primary,
-              foregroundColor: Colors.white,
+              foregroundColor: AppThemeColors.textOnAccent,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16.r),
               ),
             ),
             child: _submitting
-                ? const CircularProgressIndicator()
+                ? const CircularProgressIndicator(
+                    color: AppThemeColors.textOnAccent,
+                  )
                 : Text(widget.isEdit ? '保存修改' : '创建物资'),
           ),
         ),
@@ -227,9 +230,9 @@ class _DropsItemFormViewState extends State<DropsItemFormView> {
     return Container(
       padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: AppThemeColors.surface,
         borderRadius: BorderRadius.circular(22.r),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        border: Border.all(color: AppThemeColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -241,7 +244,7 @@ class _DropsItemFormViewState extends State<DropsItemFormView> {
                 style: TextStyle(
                   fontSize: 16.sp,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white,
+                  color: AppThemeColors.textPrimary,
                 ),
               ),
               const Spacer(),
@@ -255,7 +258,7 @@ class _DropsItemFormViewState extends State<DropsItemFormView> {
           SizedBox(height: 8.h),
           Text(
             '新增物资至少 1 张，最多 3 张；编辑时可追加或删除，但始终至少保留 1 张。',
-            style: TextStyle(fontSize: 12.sp, color: Colors.white54),
+            style: TextStyle(fontSize: 12.sp, color: AppThemeColors.textMuted),
           ),
           SizedBox(height: 12.h),
           Wrap(
@@ -293,9 +296,9 @@ class _DropsItemFormViewState extends State<DropsItemFormView> {
     return Container(
       padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: AppThemeColors.surface,
         borderRadius: BorderRadius.circular(22.r),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.04)),
+        border: Border.all(color: AppThemeColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -313,7 +316,7 @@ class _DropsItemFormViewState extends State<DropsItemFormView> {
                 style: TextStyle(
                   fontSize: 16.sp,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white,
+                  color: AppThemeColors.textPrimary,
                 ),
               ),
             ],
@@ -362,9 +365,9 @@ class _DropsItemFormViewState extends State<DropsItemFormView> {
     return Container(
       padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: AppThemeColors.surface,
         borderRadius: BorderRadius.circular(22.r),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.04)),
+        border: Border.all(color: AppThemeColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -382,7 +385,7 @@ class _DropsItemFormViewState extends State<DropsItemFormView> {
                 style: TextStyle(
                   fontSize: 16.sp,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white,
+                  color: AppThemeColors.textPrimary,
                 ),
               ),
             ],
@@ -436,8 +439,8 @@ class _DropsItemFormViewState extends State<DropsItemFormView> {
         SizedBox(height: 8.h),
         DropdownButtonFormField<String>(
           initialValue: effectiveValue,
-          dropdownColor: const Color(0xFF1A1A1A),
-          style: const TextStyle(color: Colors.white),
+          dropdownColor: AppThemeColors.surface,
+          style: const TextStyle(color: AppThemeColors.textPrimary),
           decoration: _inputDecoration(),
           items: items.entries
               .map(
@@ -471,7 +474,7 @@ class _DropsItemFormViewState extends State<DropsItemFormView> {
           validator: validator,
           keyboardType: keyboardType,
           maxLines: maxLines,
-          style: const TextStyle(color: Colors.white),
+          style: const TextStyle(color: AppThemeColors.textPrimary),
           decoration: _inputDecoration(helperText: helperText),
         ),
       ],
@@ -490,15 +493,19 @@ class _DropsItemFormViewState extends State<DropsItemFormView> {
           child: Ink(
             padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 16.h),
             decoration: BoxDecoration(
-              color: const Color(0xFF101010),
+              color: AppThemeColors.surfaceMuted,
               borderRadius: BorderRadius.circular(14.r),
+              border: Border.all(color: AppThemeColors.border),
             ),
             child: Row(
               children: [
                 Expanded(
                   child: Text(
                     _expireAt == null ? '未设置日期' : _formatDate(_expireAt!),
-                    style: TextStyle(fontSize: 14.sp, color: Colors.white),
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      color: AppThemeColors.textPrimary,
+                    ),
                   ),
                 ),
                 IconButton(
@@ -519,12 +526,23 @@ class _DropsItemFormViewState extends State<DropsItemFormView> {
   InputDecoration _inputDecoration({String? helperText}) {
     return InputDecoration(
       helperText: helperText,
-      helperStyle: TextStyle(color: Colors.white38, fontSize: 11.sp),
+      helperStyle: TextStyle(
+        color: AppThemeColors.textDisabled,
+        fontSize: 11.sp,
+      ),
       filled: true,
-      fillColor: const Color(0xFF101010),
+      fillColor: AppThemeColors.surfaceMuted,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14.r),
-        borderSide: BorderSide.none,
+        borderSide: const BorderSide(color: AppThemeColors.border),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14.r),
+        borderSide: const BorderSide(color: AppThemeColors.border),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14.r),
+        borderSide: const BorderSide(color: AppThemeColors.primary),
       ),
     );
   }
@@ -535,7 +553,7 @@ class _DropsItemFormViewState extends State<DropsItemFormView> {
       style: TextStyle(
         fontSize: 13.sp,
         fontWeight: FontWeight.w600,
-        color: Colors.white70,
+        color: AppThemeColors.textSecondary,
       ),
     );
   }
@@ -574,10 +592,13 @@ class _PhotoTile extends StatelessWidget {
           child: Container(
             padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 3.h),
             decoration: BoxDecoration(
-              color: Colors.black54,
+              color: AppThemeColors.scrim,
               borderRadius: BorderRadius.circular(999.r),
             ),
-            child: Text(label, style: TextStyle(fontSize: 9.sp)),
+            child: Text(
+              label,
+              style: TextStyle(fontSize: 9.sp, color: Colors.white),
+            ),
           ),
         ),
         Positioned(
@@ -589,10 +610,14 @@ class _PhotoTile extends StatelessWidget {
               width: 24.w,
               height: 24.w,
               decoration: BoxDecoration(
-                color: Colors.black54,
+                color: AppThemeColors.scrim,
                 borderRadius: BorderRadius.circular(999.r),
               ),
-              child: const Icon(Icons.close_rounded, size: 16),
+              child: const Icon(
+                Icons.close_rounded,
+                size: 16,
+                color: Colors.white,
+              ),
             ),
           ),
         ),
@@ -650,14 +675,17 @@ class _PickedPhotoPreviewState extends State<_PickedPhotoPreview> {
 
     if (_error != null) {
       return Container(
-        color: const Color(0xFF101010),
+        color: AppThemeColors.surfaceSunken,
         alignment: Alignment.center,
-        child: const Icon(Icons.broken_image_outlined, color: Colors.white54),
+        child: const Icon(
+          Icons.broken_image_outlined,
+          color: AppThemeColors.textDisabled,
+        ),
       );
     }
 
     return Container(
-      color: const Color(0xFF101010),
+      color: AppThemeColors.surfaceSunken,
       alignment: Alignment.center,
       child: SizedBox(
         width: 20.w,

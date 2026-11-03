@@ -28,7 +28,7 @@ Future<void> showManualTransferTaskSheet({
     context: context,
     barrierDismissible: true,
     barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-    barrierColor: Colors.black54,
+    barrierColor: AppThemeColors.scrim,
     transitionDuration: const Duration(milliseconds: 220),
     pageBuilder: (_, _, _) {
       return Material(
@@ -118,7 +118,7 @@ class _ManualTransferTaskSheetState extends State<_ManualTransferTaskSheet> {
       child: Container(
         width: double.infinity,
         decoration: BoxDecoration(
-          color: const Color(0xFF171717),
+          color: AppThemeColors.surface,
           borderRadius: BorderRadius.vertical(top: Radius.circular(30.r)),
         ),
         child: SafeArea(
@@ -136,7 +136,7 @@ class _ManualTransferTaskSheetState extends State<_ManualTransferTaskSheet> {
                       width: 42.w,
                       height: 4.h,
                       decoration: BoxDecoration(
-                        color: Colors.white24,
+                        color: AppThemeColors.borderStrong,
                         borderRadius: BorderRadius.circular(999.r),
                       ),
                     ),
@@ -167,7 +167,7 @@ class _ManualTransferTaskSheetState extends State<_ManualTransferTaskSheet> {
                               style: TextStyle(
                                 fontSize: 20.sp,
                                 fontWeight: FontWeight.w700,
-                                color: Colors.white,
+                                color: AppThemeColors.textPrimary,
                               ),
                             ),
                             SizedBox(height: 4.h),
@@ -175,7 +175,7 @@ class _ManualTransferTaskSheetState extends State<_ManualTransferTaskSheet> {
                               '填写标题、分享链接和转存路径后立即开始转存',
                               style: TextStyle(
                                 fontSize: 12.sp,
-                                color: Colors.white54,
+                                color: AppThemeColors.textMuted,
                               ),
                             ),
                           ],
@@ -189,7 +189,10 @@ class _ManualTransferTaskSheetState extends State<_ManualTransferTaskSheet> {
                     child: TextFormField(
                       controller: _titleController,
                       textInputAction: TextInputAction.next,
-                      style: TextStyle(fontSize: 14.sp, color: Colors.white),
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: AppThemeColors.textPrimary,
+                      ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return '请输入标题';
@@ -207,7 +210,10 @@ class _ManualTransferTaskSheetState extends State<_ManualTransferTaskSheet> {
                       minLines: 3,
                       maxLines: 5,
                       textInputAction: TextInputAction.next,
-                      style: TextStyle(fontSize: 14.sp, color: Colors.white),
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: AppThemeColors.textPrimary,
+                      ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return '请输入分享链接';
@@ -227,7 +233,10 @@ class _ManualTransferTaskSheetState extends State<_ManualTransferTaskSheet> {
                           controller: _passcodeController,
                           textInputAction: TextInputAction.next,
                           textCapitalization: TextCapitalization.characters,
-                          style: TextStyle(fontSize: 14.sp, color: Colors.white),
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            color: AppThemeColors.textPrimary,
+                          ),
                           decoration: _inputDecoration('如链接中已包含提取码可留空'),
                         ),
                         SizedBox(height: 8.h),
@@ -235,7 +244,7 @@ class _ManualTransferTaskSheetState extends State<_ManualTransferTaskSheet> {
                           '若分享链接未附带提取码，请在此填写。',
                           style: TextStyle(
                             fontSize: 12.sp,
-                            color: Colors.white54,
+                            color: AppThemeColors.textMuted,
                             height: 1.4,
                           ),
                         ),
@@ -255,7 +264,7 @@ class _ManualTransferTaskSheetState extends State<_ManualTransferTaskSheet> {
                           onTap: _selectingPath ? null : _selectConfiguredPath,
                           style: TextStyle(
                             fontSize: 14.sp,
-                            color: Colors.white,
+                            color: AppThemeColors.textPrimary,
                           ),
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
@@ -286,7 +295,7 @@ class _ManualTransferTaskSheetState extends State<_ManualTransferTaskSheet> {
                           '转存路径只能从已配置目录中选择。',
                           style: TextStyle(
                             fontSize: 12.sp,
-                            color: Colors.white54,
+                            color: AppThemeColors.textMuted,
                             height: 1.4,
                           ),
                         ),
@@ -303,9 +312,7 @@ class _ManualTransferTaskSheetState extends State<_ManualTransferTaskSheet> {
                               : () => Navigator.of(context).pop(),
                           style: OutlinedButton.styleFrom(
                             padding: EdgeInsets.symmetric(vertical: 14.h),
-                            side: BorderSide(
-                              color: Colors.white.withValues(alpha: 0.18),
-                            ),
+                            side: BorderSide(color: AppThemeColors.border),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16.r),
                             ),
@@ -315,7 +322,7 @@ class _ManualTransferTaskSheetState extends State<_ManualTransferTaskSheet> {
                             style: TextStyle(
                               fontSize: 14.sp,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white70,
+                              color: AppThemeColors.textSecondary,
                             ),
                           ),
                         ),
@@ -371,7 +378,7 @@ class _ManualTransferTaskSheetState extends State<_ManualTransferTaskSheet> {
           style: TextStyle(
             fontSize: 13.sp,
             fontWeight: FontWeight.w600,
-            color: Colors.white70,
+            color: AppThemeColors.textSecondary,
           ),
         ),
         SizedBox(height: 8.h),
@@ -383,18 +390,18 @@ class _ManualTransferTaskSheetState extends State<_ManualTransferTaskSheet> {
   InputDecoration _inputDecoration(String hintText, {Widget? suffixIcon}) {
     return InputDecoration(
       hintText: hintText,
-      hintStyle: TextStyle(fontSize: 13.sp, color: Colors.white38),
+      hintStyle: TextStyle(fontSize: 13.sp, color: AppThemeColors.textDisabled),
       filled: true,
-      fillColor: const Color(0xFF101010),
+      fillColor: AppThemeColors.surfaceMuted,
       contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
       suffixIcon: suffixIcon,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14.r),
-        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+        borderSide: const BorderSide(color: AppThemeColors.border),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14.r),
-        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+        borderSide: const BorderSide(color: AppThemeColors.border),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14.r),
@@ -402,11 +409,11 @@ class _ManualTransferTaskSheetState extends State<_ManualTransferTaskSheet> {
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14.r),
-        borderSide: const BorderSide(color: Colors.redAccent),
+        borderSide: const BorderSide(color: AppThemeColors.danger),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14.r),
-        borderSide: const BorderSide(color: Colors.redAccent),
+        borderSide: const BorderSide(color: AppThemeColors.danger),
       ),
     );
   }
@@ -427,7 +434,7 @@ class _ManualTransferTaskSheetState extends State<_ManualTransferTaskSheet> {
           icon: Icons.folder_open_rounded,
           label: '已配置 ${configs.length} 个目录',
           accent: configs.isEmpty
-              ? const Color(0xFFF59E0B)
+              ? const Color(0xFFD97706)
               : AppThemeColors.primary,
         ),
         helperText: '点击目录后自动填入转存路径',

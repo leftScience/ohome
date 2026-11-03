@@ -11,6 +11,7 @@ class QuarkStreamSettingsView extends GetView<QuarkStreamSettingsController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppThemeColors.pageBackground,
       appBar: AppBar(title: const Text('夸克播放')),
       body: Obx(() {
         if (controller.loading.value) {
@@ -55,9 +56,9 @@ class QuarkStreamSettingsView extends GetView<QuarkStreamSettingsController> {
     return Container(
       padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: AppThemeColors.surface,
         borderRadius: BorderRadius.circular(22.r),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        border: Border.all(color: AppThemeColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -86,7 +87,7 @@ class QuarkStreamSettingsView extends GetView<QuarkStreamSettingsController> {
                       style: TextStyle(
                         fontSize: 15.sp,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        color: AppThemeColors.textPrimary,
                       ),
                     ),
                     SizedBox(height: 4.h),
@@ -96,7 +97,10 @@ class QuarkStreamSettingsView extends GetView<QuarkStreamSettingsController> {
                           QuarkStreamSettingsController.webProxyModeKey,
                         ),
                       ),
-                      style: TextStyle(fontSize: 12.sp, color: Colors.white54),
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: AppThemeColors.textMuted,
+                      ),
                     ),
                   ],
                 ),
@@ -141,12 +145,12 @@ class QuarkStreamSettingsView extends GetView<QuarkStreamSettingsController> {
           decoration: BoxDecoration(
             color: selected
                 ? AppThemeColors.primary.withValues(alpha: 0.12)
-                : const Color(0xFF111111),
+                : AppThemeColors.surfaceMuted,
             borderRadius: BorderRadius.circular(16.r),
             border: Border.all(
               color: selected
                   ? AppThemeColors.primary.withValues(alpha: 0.5)
-                  : Colors.white.withValues(alpha: 0.06),
+                  : AppThemeColors.border,
             ),
           ),
           child: Row(
@@ -159,7 +163,7 @@ class QuarkStreamSettingsView extends GetView<QuarkStreamSettingsController> {
                   border: Border.all(
                     color: selected
                         ? AppThemeColors.primary
-                        : Colors.white.withValues(alpha: 0.28),
+                        : AppThemeColors.borderStrong,
                     width: 2,
                   ),
                 ),
@@ -185,7 +189,7 @@ class QuarkStreamSettingsView extends GetView<QuarkStreamSettingsController> {
                       style: TextStyle(
                         fontSize: 14.sp,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        color: AppThemeColors.textPrimary,
                       ),
                     ),
                   ],

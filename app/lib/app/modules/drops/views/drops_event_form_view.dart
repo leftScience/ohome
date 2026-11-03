@@ -146,6 +146,7 @@ class _DropsEventFormViewState extends State<DropsEventFormView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppThemeColors.pageBackground,
       appBar: AppBar(title: Text(widget.isEdit ? '编辑重要日期' : '新增重要日期')),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
@@ -170,13 +171,15 @@ class _DropsEventFormViewState extends State<DropsEventFormView> {
             onPressed: _submitting ? null : _submit,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppThemeColors.primary,
-              foregroundColor: Colors.white,
+              foregroundColor: AppThemeColors.textOnAccent,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16.r),
               ),
             ),
             child: _submitting
-                ? const CircularProgressIndicator()
+                ? const CircularProgressIndicator(
+                    color: AppThemeColors.textOnAccent,
+                  )
                 : Text(widget.isEdit ? '保存修改' : '创建日期'),
           ),
         ),
@@ -188,9 +191,9 @@ class _DropsEventFormViewState extends State<DropsEventFormView> {
     return Container(
       padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: AppThemeColors.surface,
         borderRadius: BorderRadius.circular(22.r),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.04)),
+        border: Border.all(color: AppThemeColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -208,7 +211,7 @@ class _DropsEventFormViewState extends State<DropsEventFormView> {
                 style: TextStyle(
                   fontSize: 16.sp,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white,
+                  color: AppThemeColors.textPrimary,
                 ),
               ),
             ],
@@ -243,9 +246,9 @@ class _DropsEventFormViewState extends State<DropsEventFormView> {
     return Container(
       padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: AppThemeColors.surface,
         borderRadius: BorderRadius.circular(22.r),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.04)),
+        border: Border.all(color: AppThemeColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -263,7 +266,7 @@ class _DropsEventFormViewState extends State<DropsEventFormView> {
                 style: TextStyle(
                   fontSize: 16.sp,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white,
+                  color: AppThemeColors.textPrimary,
                 ),
               ),
             ],
@@ -322,15 +325,16 @@ class _DropsEventFormViewState extends State<DropsEventFormView> {
             child: Ink(
               padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 16.h),
               decoration: BoxDecoration(
-                color: const Color(0xFF101010),
+                color: AppThemeColors.surfaceMuted,
                 borderRadius: BorderRadius.circular(14.r),
+                border: Border.all(color: AppThemeColors.border),
               ),
               child: Row(
                 children: [
                   Expanded(
                     child: Text(
                       _solarDate == null ? '请选择日期' : _formatDate(_solarDate!),
-                      style: const TextStyle(color: Colors.white),
+                      style: const TextStyle(color: AppThemeColors.textPrimary),
                     ),
                   ),
                   const Icon(Icons.date_range_outlined),
@@ -398,8 +402,8 @@ class _DropsEventFormViewState extends State<DropsEventFormView> {
         SizedBox(height: 8.h),
         DropdownButtonFormField<String>(
           initialValue: effectiveValue,
-          dropdownColor: const Color(0xFF1A1A1A),
-          style: const TextStyle(color: Colors.white),
+          dropdownColor: AppThemeColors.surface,
+          style: const TextStyle(color: AppThemeColors.textPrimary),
           decoration: _inputDecoration(),
           items: items.entries
               .map(
@@ -428,8 +432,8 @@ class _DropsEventFormViewState extends State<DropsEventFormView> {
         SizedBox(height: 8.h),
         DropdownButtonFormField<int>(
           initialValue: value,
-          dropdownColor: const Color(0xFF1A1A1A),
-          style: const TextStyle(color: Colors.white),
+          dropdownColor: AppThemeColors.surface,
+          style: const TextStyle(color: AppThemeColors.textPrimary),
           decoration: _inputDecoration(),
           items: List.generate(
             max,
@@ -462,7 +466,7 @@ class _DropsEventFormViewState extends State<DropsEventFormView> {
           validator: validator,
           keyboardType: keyboardType,
           maxLines: maxLines,
-          style: const TextStyle(color: Colors.white),
+          style: const TextStyle(color: AppThemeColors.textPrimary),
           decoration: _inputDecoration(helperText: helperText),
         ),
       ],
@@ -472,12 +476,23 @@ class _DropsEventFormViewState extends State<DropsEventFormView> {
   InputDecoration _inputDecoration({String? helperText}) {
     return InputDecoration(
       helperText: helperText,
-      helperStyle: TextStyle(color: Colors.white38, fontSize: 11.sp),
+      helperStyle: TextStyle(
+        color: AppThemeColors.textDisabled,
+        fontSize: 11.sp,
+      ),
       filled: true,
-      fillColor: const Color(0xFF101010),
+      fillColor: AppThemeColors.surfaceMuted,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14.r),
-        borderSide: BorderSide.none,
+        borderSide: const BorderSide(color: AppThemeColors.border),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14.r),
+        borderSide: const BorderSide(color: AppThemeColors.border),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14.r),
+        borderSide: const BorderSide(color: AppThemeColors.primary),
       ),
     );
   }
@@ -488,7 +503,7 @@ class _DropsEventFormViewState extends State<DropsEventFormView> {
       style: TextStyle(
         fontSize: 13.sp,
         fontWeight: FontWeight.w600,
-        color: Colors.white70,
+        color: AppThemeColors.textSecondary,
       ),
     );
   }

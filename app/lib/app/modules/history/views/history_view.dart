@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 
 import '../../../data/models/media_history_entry.dart';
 import '../../../routes/app_pages.dart';
+import '../../../theme/app_theme.dart';
 import '../../music_player/controllers/music_player_controller.dart';
 import '../controllers/history_controller.dart';
 
@@ -37,6 +38,7 @@ class _HistoryViewState extends State<HistoryView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppThemeColors.pageBackground,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         centerTitle: false,
@@ -107,14 +109,15 @@ class _HistoryViewState extends State<HistoryView> {
                       curve: Curves.easeOut,
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1E1E1E),
+                        color: AppThemeColors.surface,
                         borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: AppThemeColors.border),
                       ),
                       child: Center(
                         child: Text(
                           labels[index],
                           style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.6),
+                            color: AppThemeColors.textSecondary,
                             fontWeight: FontWeight.w400,
                             fontSize: 13.sp,
                           ),
@@ -232,7 +235,7 @@ class _HistoryViewState extends State<HistoryView> {
                     child: Text(
                       '暂无历史记录',
                       style: TextStyle(
-                        color: Colors.grey[500],
+                        color: AppThemeColors.textMuted,
                         fontSize: 14.sp,
                       ),
                     ),
@@ -311,7 +314,7 @@ class _HistoryTile extends StatelessWidget {
     final iconColor = _typeColor(entry.applicationType);
 
     return Material(
-      color: isNowPlaying ? const Color(0xFF1C1833) : const Color(0xFF1A1A1A),
+      color: AppThemeColors.surface,
       borderRadius: BorderRadius.circular(14.r),
       child: InkWell(
         onTap: isLoading ? null : onTap,
@@ -322,8 +325,8 @@ class _HistoryTile extends StatelessWidget {
             borderRadius: BorderRadius.circular(14.r),
             border: Border.all(
               color: isNowPlaying
-                  ? const Color(0xFF7C4DFF).withValues(alpha: 0.5)
-                  : const Color(0xFF2B2B2B),
+                  ? AppThemeColors.accent.withValues(alpha: 0.45)
+                  : AppThemeColors.border,
               width: isNowPlaying ? 1.2 : 0.8,
             ),
           ),
@@ -347,14 +350,14 @@ class _HistoryTile extends StatelessWidget {
                       height: 42.w,
                       decoration: BoxDecoration(
                         color: isNowPlaying
-                            ? const Color(0xFF7C4DFF).withValues(alpha: 0.2)
+                            ? AppThemeColors.accent.withValues(alpha: 0.12)
                             : iconColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(12.r),
                       ),
                       child: isNowPlaying
                           ? const Icon(
                               Icons.equalizer_rounded,
-                              color: Color(0xFF9C6FFF),
+                              color: AppThemeColors.accent,
                             )
                           : Icon(iconData, color: iconColor, size: 22.w),
                     ),
@@ -372,8 +375,8 @@ class _HistoryTile extends StatelessWidget {
                         fontSize: 13.sp,
                         fontWeight: FontWeight.w600,
                         color: isNowPlaying
-                            ? const Color(0xFFCEA8FF)
-                            : Colors.white,
+                            ? AppThemeColors.accent
+                            : AppThemeColors.textPrimary,
                       ),
                     ),
                     SizedBox(height: 4.h),
@@ -381,7 +384,10 @@ class _HistoryTile extends StatelessWidget {
                       entry.itemTitle.trim().isEmpty ? '-' : entry.itemTitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 12.sp, color: Colors.white54),
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: AppThemeColors.textMuted,
+                      ),
                     ),
                     SizedBox(height: 4.h),
                     Row(
@@ -433,7 +439,7 @@ class _HistoryTile extends StatelessWidget {
                           playedAt,
                           style: TextStyle(
                             fontSize: 11.sp,
-                            color: Colors.white30,
+                            color: AppThemeColors.textDisabled,
                           ),
                         ),
                       ],
@@ -445,7 +451,7 @@ class _HistoryTile extends StatelessWidget {
               if (isNowPlaying)
                 Icon(
                   Icons.chevron_right_rounded,
-                  color: const Color(0xFF7C4DFF).withValues(alpha: 0.8),
+                  color: AppThemeColors.accent.withValues(alpha: 0.8),
                   size: 22.w,
                 )
               else if (!isLoading)
@@ -456,7 +462,7 @@ class _HistoryTile extends StatelessWidget {
                   constraints: BoxConstraints(minWidth: 36.w, minHeight: 36.w),
                   icon: Icon(
                     Icons.delete_outline_rounded,
-                    color: Colors.white.withValues(alpha: 0.3),
+                    color: AppThemeColors.textDisabled,
                   ),
                 )
               else
@@ -481,15 +487,15 @@ class _HistoryTile extends StatelessWidget {
   static Color _typeColor(String value) {
     switch (value.trim().toLowerCase()) {
       case 'tv':
-        return const Color(0xFFCE93D8);
+        return const Color(0xFF8E24AA);
       case 'playlet':
-        return const Color(0xFFFFAB91);
+        return const Color(0xFFF57C00);
       case 'music':
-        return const Color(0xFF90CAF9);
+        return const Color(0xFF1976D2);
       case 'read':
-        return const Color(0xFFA5D6A7);
+        return const Color(0xFF43A047);
       default:
-        return const Color(0xFF80CBC4);
+        return const Color(0xFF00897B);
     }
   }
 

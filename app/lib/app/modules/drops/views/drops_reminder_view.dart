@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import '../../../data/api/drops.dart';
 import '../../../data/models/drops_event_model.dart';
 import '../../../data/models/drops_item_model.dart';
+import '../../../theme/app_theme.dart';
 import '../controllers/drops_controller.dart';
 import 'drops_item_detail_view.dart';
 import 'drops_shared_widgets.dart';
@@ -127,6 +128,7 @@ class _DropsReminderViewState extends State<DropsReminderView> {
     final isItems = widget.type == DropsReminderType.expiringItems;
     final isEmpty = isItems ? _items.isEmpty : _events.isEmpty;
     return Scaffold(
+      backgroundColor: AppThemeColors.pageBackground,
       appBar: AppBar(title: Text(isItems ? '临期提醒' : '临近提醒')),
       body: RefreshIndicator(
         onRefresh: _load,
@@ -140,7 +142,10 @@ class _DropsReminderViewState extends State<DropsReminderView> {
                   Center(
                     child: Text(
                       isItems ? '暂无临期物资' : '暂无临近日期',
-                      style: TextStyle(fontSize: 14.sp, color: Colors.white54),
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: AppThemeColors.textMuted,
+                      ),
                     ),
                   ),
                 ],

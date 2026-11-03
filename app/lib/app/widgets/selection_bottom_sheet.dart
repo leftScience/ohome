@@ -3,6 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../theme/app_theme.dart';
+
 String quarkApplicationLabel(String application) {
   switch (application.trim().toLowerCase()) {
     case 'playlet':
@@ -35,14 +37,14 @@ IconData quarkApplicationIcon(String application) {
 Color quarkApplicationAccent(String application) {
   switch (application.trim().toLowerCase()) {
     case 'playlet':
-      return const Color(0xFFFB7185);
+      return const Color(0xFFE11D48);
     case 'music':
-      return const Color(0xFF22C55E);
+      return const Color(0xFF16A34A);
     case 'read':
-      return const Color(0xFF14B8A6);
+      return const Color(0xFF0D9488);
     case 'tv':
     default:
-      return const Color(0xFF8B5CF6);
+      return const Color(0xFF7C3AED);
   }
 }
 
@@ -86,13 +88,13 @@ Future<T?> showSelectionBottomSheet<T>({
   required String emptyTitle,
   required String emptyDescription,
   IconData emptyIcon = Icons.folder_off_rounded,
-  Color emptyAccent = const Color(0xFFF59E0B),
+  Color emptyAccent = const Color(0xFFD97706),
 }) {
   return showGeneralDialog<T>(
     context: context,
     barrierDismissible: true,
     barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-    barrierColor: Colors.black54,
+    barrierColor: AppThemeColors.scrim,
     transitionDuration: const Duration(milliseconds: 220),
     pageBuilder: (_, _, _) {
       return Material(
@@ -164,7 +166,7 @@ class SelectionBottomSheet<T> extends StatelessWidget {
     return Container(
       height: maxHeight,
       decoration: BoxDecoration(
-        color: const Color(0xFF111111),
+        color: AppThemeColors.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(30.r)),
       ),
       child: SafeArea(
@@ -179,7 +181,7 @@ class SelectionBottomSheet<T> extends StatelessWidget {
                   width: 42.w,
                   height: 4.h,
                   decoration: BoxDecoration(
-                    color: Colors.white24,
+                    color: AppThemeColors.borderStrong,
                     borderRadius: BorderRadius.circular(999.r),
                   ),
                 ),
@@ -198,7 +200,7 @@ class SelectionBottomSheet<T> extends StatelessWidget {
                       helperText,
                       textAlign: TextAlign.right,
                       style: TextStyle(
-                        color: Colors.white54,
+                        color: AppThemeColors.textMuted,
                         fontSize: 12.sp,
                         fontWeight: FontWeight.w500,
                       ),
@@ -251,7 +253,7 @@ class SelectionBottomSheet<T> extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              color: Colors.white,
+              color: accent,
               fontSize: 11.sp,
               fontWeight: FontWeight.w600,
             ),
@@ -267,9 +269,9 @@ class SelectionBottomSheet<T> extends StatelessWidget {
         width: double.infinity,
         padding: EdgeInsets.all(20.w),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.04),
+          color: AppThemeColors.surfaceMuted,
           borderRadius: BorderRadius.circular(22.r),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+          border: Border.all(color: AppThemeColors.border),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -287,7 +289,7 @@ class SelectionBottomSheet<T> extends StatelessWidget {
             Text(
               emptyTitle,
               style: TextStyle(
-                color: Colors.white,
+                color: AppThemeColors.textPrimary,
                 fontSize: 16.sp,
                 fontWeight: FontWeight.w700,
               ),
@@ -297,7 +299,7 @@ class SelectionBottomSheet<T> extends StatelessWidget {
               emptyDescription,
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Colors.white60,
+                color: AppThemeColors.textSecondary,
                 fontSize: 12.sp,
                 height: 1.45,
               ),
@@ -324,13 +326,13 @@ class SelectionBottomSheet<T> extends StatelessWidget {
           width: double.infinity,
           decoration: BoxDecoration(
             color: option.enabled
-                ? Colors.white.withValues(alpha: 0.05)
-                : Colors.white.withValues(alpha: 0.025),
+                ? AppThemeColors.surface
+                : AppThemeColors.surfaceMuted,
             borderRadius: BorderRadius.circular(20.r),
             border: Border.all(
               color: option.enabled
                   ? option.accent.withValues(alpha: 0.32)
-                  : Colors.white.withValues(alpha: 0.06),
+                  : AppThemeColors.border,
             ),
           ),
           child: Listener(
@@ -346,12 +348,14 @@ class SelectionBottomSheet<T> extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: option.enabled
                           ? option.accent.withValues(alpha: 0.16)
-                          : Colors.white.withValues(alpha: 0.06),
+                          : AppThemeColors.surfaceSunken,
                       borderRadius: BorderRadius.circular(14.r),
                     ),
                     child: Icon(
                       option.icon,
-                      color: option.enabled ? option.accent : Colors.white38,
+                      color: option.enabled
+                          ? option.accent
+                          : AppThemeColors.textDisabled,
                       size: 22.w,
                     ),
                   ),
@@ -367,8 +371,8 @@ class SelectionBottomSheet<T> extends StatelessWidget {
                                 option.title,
                                 style: TextStyle(
                                   color: option.enabled
-                                      ? Colors.white
-                                      : Colors.white38,
+                                      ? AppThemeColors.textPrimary
+                                      : AppThemeColors.textDisabled,
                                   fontSize: 15.sp,
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -382,7 +386,7 @@ class SelectionBottomSheet<T> extends StatelessWidget {
                               decoration: BoxDecoration(
                                 color: option.enabled
                                     ? option.accent.withValues(alpha: 0.14)
-                                    : Colors.white.withValues(alpha: 0.05),
+                                    : AppThemeColors.surfaceSunken,
                                 borderRadius: BorderRadius.circular(999.r),
                               ),
                               child: Text(
@@ -390,7 +394,7 @@ class SelectionBottomSheet<T> extends StatelessWidget {
                                 style: TextStyle(
                                   color: option.enabled
                                       ? option.accent
-                                      : Colors.white38,
+                                      : AppThemeColors.textDisabled,
                                   fontSize: 10.sp,
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -406,11 +410,9 @@ class SelectionBottomSheet<T> extends StatelessWidget {
                             vertical: 9.h,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.20),
+                            color: AppThemeColors.surfaceMuted,
                             borderRadius: BorderRadius.circular(14.r),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.05),
-                            ),
+                            border: Border.all(color: AppThemeColors.border),
                           ),
                           child: Row(
                             children: [
@@ -419,8 +421,8 @@ class SelectionBottomSheet<T> extends StatelessWidget {
                                     ? Icons.drive_folder_upload_rounded
                                     : Icons.block_rounded,
                                 color: option.enabled
-                                    ? Colors.white70
-                                    : Colors.white30,
+                                    ? AppThemeColors.textSecondary
+                                    : AppThemeColors.textDisabled,
                                 size: 16.w,
                               ),
                               SizedBox(width: 8.w),
@@ -431,8 +433,8 @@ class SelectionBottomSheet<T> extends StatelessWidget {
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
                                     color: option.enabled
-                                        ? Colors.white70
-                                        : Colors.white30,
+                                        ? AppThemeColors.textSecondary
+                                        : AppThemeColors.textDisabled,
                                     fontSize: 11.sp,
                                     height: 1.35,
                                   ),
@@ -449,7 +451,9 @@ class SelectionBottomSheet<T> extends StatelessWidget {
                     option.enabled
                         ? Icons.arrow_forward_ios_rounded
                         : Icons.remove_rounded,
-                    color: option.enabled ? Colors.white38 : Colors.white24,
+                    color: option.enabled
+                        ? AppThemeColors.textMuted
+                        : AppThemeColors.textDisabled,
                     size: option.enabled ? 16.w : 20.w,
                   ),
                 ],

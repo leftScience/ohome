@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../theme/app_theme.dart';
+
 class HomeStyleBackdrop extends StatelessWidget {
   const HomeStyleBackdrop({super.key});
 
@@ -8,25 +10,27 @@ class HomeStyleBackdrop extends StatelessWidget {
   Widget build(BuildContext context) {
     return Positioned.fill(
       child: DecoratedBox(
-        decoration: const BoxDecoration(color: Color(0xFF0B0D14)),
+        decoration: const BoxDecoration(
+          color: AppThemeColors.pageBackground,
+        ),
         child: Stack(
           children: [
             Positioned(
               top: 0,
               left: 0,
               right: 0,
-              height: 400.h,
+              height: 420.h,
               child: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      const Color(0xFF0B0D14),
-                      const Color(0xFF15182A).withValues(alpha: 0.44),
-                      Colors.transparent,
+                      const Color(0xFFE9F1FE),
+                      const Color(0xFFF4F6FB).withValues(alpha: 0.7),
+                      const Color(0xFFF4F6FB).withValues(alpha: 0),
                     ],
-                    stops: const [0.0, 0.5, 1.0],
+                    stops: const [0.0, 0.55, 1.0],
                   ),
                 ),
               ),
@@ -36,8 +40,8 @@ class HomeStyleBackdrop extends StatelessWidget {
               right: -28.w,
               child: _BackdropGlow(
                 size: 248.w,
-                color: const Color(0xFF6F42F5).withValues(alpha: 0.14),
-                innerAlpha: 0.025,
+                color: const Color(0xFF7C4DFF).withValues(alpha: 0.1),
+                innerAlpha: 0.02,
                 stop: 0.36,
               ),
             ),
@@ -46,8 +50,8 @@ class HomeStyleBackdrop extends StatelessWidget {
               left: -72.w,
               child: _BackdropGlow(
                 size: 208.w,
-                color: const Color(0xFF3E7BFA).withValues(alpha: 0.1),
-                innerAlpha: 0.018,
+                color: const Color(0xFF3E7BFA).withValues(alpha: 0.08),
+                innerAlpha: 0.015,
                 stop: 0.46,
               ),
             ),
@@ -83,7 +87,7 @@ class _BackdropGlow extends StatelessWidget {
             colors: [
               color,
               color.withValues(alpha: innerAlpha),
-              Colors.transparent,
+              color.withValues(alpha: 0),
             ],
             stops: [0.0, stop, 1.0],
           ),

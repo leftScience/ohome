@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
 import '../../../services/app_update_service.dart';
+import '../../../theme/app_theme.dart';
 import '../controllers/server_update_controller.dart';
 
 class ServerUpdateView extends GetView<ServerUpdateController> {
@@ -16,7 +17,7 @@ class ServerUpdateView extends GetView<ServerUpdateController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF111218),
+      backgroundColor: AppThemeColors.pageBackground,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: const Text('关于oHome'),
@@ -43,7 +44,7 @@ class ServerUpdateView extends GetView<ServerUpdateController> {
                   gradient: RadialGradient(
                     colors: [
                       const Color(0xFF7C4DFF).withValues(alpha: 0.16),
-                      Colors.transparent,
+                      const Color(0xFF7C4DFF).withValues(alpha: 0),
                     ],
                   ),
                 ),
@@ -60,7 +61,7 @@ class ServerUpdateView extends GetView<ServerUpdateController> {
                   gradient: RadialGradient(
                     colors: [
                       const Color(0xFF448AFF).withValues(alpha: 0.12),
-                      Colors.transparent,
+                      const Color(0xFF448AFF).withValues(alpha: 0),
                     ],
                   ),
                 ),
@@ -123,7 +124,7 @@ class ServerUpdateView extends GetView<ServerUpdateController> {
                             controller.appUpdateMessage,
                             style: TextStyle(
                               fontSize: 12.sp,
-                              color: Colors.white70,
+                              color: AppThemeColors.textSecondary,
                               height: 1.5,
                             ),
                           ),
@@ -215,7 +216,7 @@ class ServerUpdateView extends GetView<ServerUpdateController> {
                                       '服务重启中，正在重连…',
                                       style: TextStyle(
                                         fontSize: 12.sp,
-                                        color: Colors.orangeAccent,
+                                        color: AppThemeColors.warning,
                                       ),
                                     ),
                                   ],
@@ -226,7 +227,7 @@ class ServerUpdateView extends GetView<ServerUpdateController> {
                                       check!.releaseNotes,
                                       style: TextStyle(
                                         fontSize: 12.sp,
-                                        color: Colors.white70,
+                                        color: AppThemeColors.textSecondary,
                                         height: 1.5,
                                       ),
                                     ),
@@ -236,7 +237,7 @@ class ServerUpdateView extends GetView<ServerUpdateController> {
                                     '点击“检查更新”后，会先检查版本，再由你确认是否开始升级。',
                                     style: TextStyle(
                                       fontSize: 12.sp,
-                                      color: Colors.white60,
+                                      color: AppThemeColors.textSecondary,
                                       height: 1.5,
                                     ),
                                   ),
@@ -248,7 +249,7 @@ class ServerUpdateView extends GetView<ServerUpdateController> {
                                       style: TextStyle(
                                         fontSize: 13.sp,
                                         fontWeight: FontWeight.w600,
-                                        color: Colors.white,
+                                        color: AppThemeColors.textPrimary,
                                       ),
                                     ),
                                     if (controller
@@ -259,7 +260,7 @@ class ServerUpdateView extends GetView<ServerUpdateController> {
                                         controller.serverTaskMessage,
                                         style: TextStyle(
                                           fontSize: 12.sp,
-                                          color: Colors.white70,
+                                          color: AppThemeColors.textSecondary,
                                           height: 1.5,
                                         ),
                                       ),
@@ -284,7 +285,7 @@ class ServerUpdateView extends GetView<ServerUpdateController> {
                                       '${task.progress}%',
                                       style: TextStyle(
                                         fontSize: 12.sp,
-                                        color: Colors.white60,
+                                        color: AppThemeColors.textSecondary,
                                       ),
                                     ),
                                   ],
@@ -330,9 +331,10 @@ class _AboutHeroCard extends StatelessWidget {
         child: Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.04),
+            color: AppThemeColors.surface,
             borderRadius: BorderRadius.circular(20.r),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+            border: Border.all(color: AppThemeColors.border),
+            boxShadow: AppThemeColors.cardShadow,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -343,15 +345,13 @@ class _AboutHeroCard extends StatelessWidget {
                     width: 48.w,
                     height: 48.w,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.08),
+                      color: AppThemeColors.surfaceMuted,
                       borderRadius: BorderRadius.circular(16.r),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.08),
-                      ),
+                      border: Border.all(color: AppThemeColors.border),
                     ),
                     child: Icon(
                       Icons.home_work_rounded,
-                      color: Colors.white,
+                      color: AppThemeColors.primary,
                       size: 24.w,
                     ),
                   ),
@@ -365,7 +365,7 @@ class _AboutHeroCard extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 20.sp,
                             fontWeight: FontWeight.w800,
-                            color: Colors.white,
+                            color: AppThemeColors.textPrimary,
                             letterSpacing: 0.5,
                           ),
                         ),
@@ -374,7 +374,7 @@ class _AboutHeroCard extends StatelessWidget {
                           '家庭场景下的个人 / 家庭资源管理项目',
                           style: TextStyle(
                             fontSize: 12.sp,
-                            color: Colors.white70,
+                            color: AppThemeColors.textSecondary,
                             height: 1.4,
                           ),
                         ),
@@ -389,7 +389,7 @@ class _AboutHeroCard extends StatelessWidget {
                   Expanded(
                     child: _CompactContactTile(
                       icon: Icons.code_rounded,
-                      iconColor: const Color(0xFF81C784),
+                      iconColor: const Color(0xFF43A047),
                       title: '复制 GitHub',
                       onTap: onCopyGithub,
                     ),
@@ -398,7 +398,7 @@ class _AboutHeroCard extends StatelessWidget {
                   Expanded(
                     child: _CompactContactTile(
                       icon: Icons.forum_rounded,
-                      iconColor: const Color(0xFF64B5F6),
+                      iconColor: const Color(0xFF1E88E5),
                       title: '复制 QQ',
                       onTap: onCopyQq,
                     ),
@@ -434,9 +434,9 @@ class _CompactContactTile extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.symmetric(vertical: 10.h),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.05),
+          color: AppThemeColors.surfaceMuted,
           borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+          border: Border.all(color: AppThemeColors.border),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -448,7 +448,7 @@ class _CompactContactTile extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12.sp,
                 fontWeight: FontWeight.w600,
-                color: Colors.white70,
+                color: AppThemeColors.textSecondary,
               ),
             ),
           ],
@@ -474,9 +474,10 @@ class _SectionCard extends StatelessWidget {
         child: Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.04),
+            color: AppThemeColors.surface,
             borderRadius: BorderRadius.circular(18.r),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+            border: Border.all(color: AppThemeColors.border),
+            boxShadow: AppThemeColors.cardShadow,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -487,7 +488,7 @@ class _SectionCard extends StatelessWidget {
                     width: 4.w,
                     height: 18.h,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF64B5F6),
+                      color: const Color(0xFF1E88E5),
                       borderRadius: BorderRadius.circular(999.r),
                     ),
                   ),
@@ -498,7 +499,7 @@ class _SectionCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 16.sp,
                         fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                        color: AppThemeColors.textPrimary,
                       ),
                     ),
                   ),
@@ -532,7 +533,10 @@ class _InfoRow extends StatelessWidget {
             width: 84.w,
             child: Text(
               label,
-              style: TextStyle(fontSize: 12.sp, color: Colors.white54),
+              style: TextStyle(
+                fontSize: 12.sp,
+                color: AppThemeColors.textMuted,
+              ),
             ),
           ),
           Expanded(
@@ -540,7 +544,7 @@ class _InfoRow extends StatelessWidget {
               value,
               style: TextStyle(
                 fontSize: 13.sp,
-                color: Colors.white,
+                color: AppThemeColors.textPrimary,
                 fontWeight: FontWeight.w500,
               ),
             ),

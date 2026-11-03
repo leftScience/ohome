@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -29,7 +28,7 @@ class MeView extends GetView<MeController> {
                 style: TextStyle(
                   fontSize: 24.sp,
                   fontWeight: FontWeight.w700,
-                  color: Colors.white,
+                  color: AppThemeColors.textPrimary,
                 ),
               ),
               SizedBox(height: 20.h),
@@ -40,7 +39,7 @@ class MeView extends GetView<MeController> {
                 style: TextStyle(
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white70,
+                  color: AppThemeColors.textSecondary,
                 ),
               ),
               SizedBox(height: 12.h),
@@ -51,7 +50,7 @@ class MeView extends GetView<MeController> {
                     if (isSuperAdmin) ...[
                       _SettingsMenuCard(
                         icon: Icons.group_outlined,
-                        iconColor: const Color(0xFF80CBC4),
+                        iconColor: const Color(0xFF00897B),
                         title: '用户管理',
                         subtitle: '新增、编辑、删除、重置密码',
                         onTap: controller.openUserManagement,
@@ -81,13 +80,13 @@ class MeView extends GetView<MeController> {
                 style: TextStyle(
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white70,
+                  color: AppThemeColors.textSecondary,
                 ),
               ),
               SizedBox(height: 12.h),
               _SettingsMenuCard(
                 icon: Icons.lock_reset_rounded,
-                iconColor: const Color(0xFFFFB74D),
+                iconColor: const Color(0xFFF57C00),
                 title: '修改密码',
                 subtitle: '更新当前账号的登录密码',
                 onTap: controller.openChangePassword,
@@ -96,7 +95,7 @@ class MeView extends GetView<MeController> {
               Obx(
                 () => _SettingsMenuCard(
                   icon: Icons.info_outline_rounded,
-                  iconColor: const Color(0xFF64B5F6),
+                  iconColor: const Color(0xFF1E88E5),
                   title: '关于oHome',
                   subtitle: controller.isSuperAdmin
                       ? '项目介绍、联系方式与 App / 服务端更新'
@@ -107,7 +106,7 @@ class MeView extends GetView<MeController> {
               SizedBox(height: 12.h),
               _SettingsMenuCard(
                 icon: Icons.logout_rounded,
-                iconColor: const Color(0xFFE57373),
+                iconColor: const Color(0xFFE53935),
                 title: '退出登录',
                 subtitle: '退出当前账号并返回登录页',
                 onTap: controller.logout,
@@ -139,7 +138,7 @@ class MeView extends GetView<MeController> {
           borderRadius: BorderRadius.circular(22.r),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF061A4A).withValues(alpha: 0.3),
+              color: AppThemeColors.primary.withValues(alpha: 0.22),
               blurRadius: 24,
               offset: const Offset(0, 12),
             ),
@@ -147,181 +146,177 @@ class MeView extends GetView<MeController> {
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(22.r),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-            child: Container(
-              padding: EdgeInsets.all(18.w),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF2496C7),
-                    Color(0xFF1565C0),
-                    Color(0xFF0B1F5E),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(22.r),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
-              ),
-              child: Stack(
-                children: [
-                  Positioned(
-                    left: -30.w,
-                    bottom: -42.h,
-                    child: IgnorePointer(
-                      child: Container(
-                        width: 130.w,
-                        height: 130.w,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: RadialGradient(
-                            colors: [
-                              Colors.white.withValues(alpha: 0.16),
-                              Colors.transparent,
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: -18.h,
-                    right: -10.w,
-                    child: IgnorePointer(
-                      child: Container(
-                        width: 88.w,
-                        height: 88.w,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: RadialGradient(
-                            colors: [
-                              const Color(0xFF9BE7FF).withValues(alpha: 0.34),
-                              Colors.transparent,
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      GestureDetector(
-                        onTap: uploading ? null : controller.uploadAvatar,
-                        child: Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            CircleAvatar(
-                              radius: 28.r,
-                              backgroundColor: Colors.white.withValues(
-                                alpha: 0.18,
-                              ),
-                              backgroundImage: avatarUrl.isNotEmpty
-                                  ? NetworkImage(avatarUrl)
-                                  : null,
-                              child: avatarUrl.isEmpty
-                                  ? Text(
-                                      avatarText,
-                                      style: TextStyle(
-                                        fontSize: 16.sp,
-                                        fontWeight: FontWeight.w700,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  : null,
-                            ),
-                            Positioned(
-                              right: -2.w,
-                              bottom: -2.h,
-                              child: Container(
-                                width: 22.w,
-                                height: 22.w,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF123A8E),
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.18),
-                                  ),
-                                ),
-                                child: Center(
-                                  child: uploading
-                                      ? SizedBox(
-                                          width: 10.w,
-                                          height: 10.w,
-                                          child:
-                                              const CircularProgressIndicator(
-                                                strokeWidth: 1.6,
-                                              ),
-                                        )
-                                      : Icon(
-                                          Icons.camera_alt_rounded,
-                                          size: 12.w,
-                                          color: Colors.white70,
-                                        ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(width: 14.w),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 18.sp,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
-                            ),
-                            SizedBox(height: 4.h),
-                            Text(
-                              subTitle,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 12.sp,
-                                color: Colors.white.withValues(alpha: 0.78),
-                              ),
-                            ),
-                            if (user != null) ...[
-                              SizedBox(height: 6.h),
-                              Text(
-                                '点击更换头像',
-                                style: TextStyle(
-                                  fontSize: 11.sp,
-                                  color: Colors.white.withValues(alpha: 0.62),
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                      if (user != null) ...[
-                        SizedBox(width: 12.w),
-                        _ProfileEditButton(
-                          loading: controller.profileUpdating.value,
-                          onTap: controller.profileUpdating.value
-                              ? null
-                              : () => Get.bottomSheet<void>(
-                                  _EditProfileSheet(
-                                    controller: controller,
-                                    initialUser: user,
-                                  ),
-                                  isScrollControlled: true,
-                                  backgroundColor: Colors.transparent,
-                                ),
-                        ),
-                      ],
-                    ],
-                  ),
+          child: Container(
+            padding: EdgeInsets.all(18.w),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF2496C7),
+                  Color(0xFF1565C0),
+                  Color(0xFF0B1F5E),
                 ],
               ),
+              borderRadius: BorderRadius.circular(22.r),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
+            ),
+            child: Stack(
+              children: [
+                Positioned(
+                  left: -30.w,
+                  bottom: -42.h,
+                  child: IgnorePointer(
+                    child: Container(
+                      width: 130.w,
+                      height: 130.w,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            Colors.white.withValues(alpha: 0.16),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: -18.h,
+                  right: -10.w,
+                  child: IgnorePointer(
+                    child: Container(
+                      width: 88.w,
+                      height: 88.w,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            const Color(0xFF9BE7FF).withValues(alpha: 0.34),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Row(
+                  children: [
+                    GestureDetector(
+                      onTap: uploading ? null : controller.uploadAvatar,
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          CircleAvatar(
+                            radius: 28.r,
+                            backgroundColor: Colors.white.withValues(
+                              alpha: 0.18,
+                            ),
+                            backgroundImage: avatarUrl.isNotEmpty
+                                ? NetworkImage(avatarUrl)
+                                : null,
+                            child: avatarUrl.isEmpty
+                                ? Text(
+                                    avatarText,
+                                    style: TextStyle(
+                                      fontSize: 16.sp,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : null,
+                          ),
+                          Positioned(
+                            right: -2.w,
+                            bottom: -2.h,
+                            child: Container(
+                              width: 22.w,
+                              height: 22.w,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF123A8E),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.18),
+                                ),
+                              ),
+                              child: Center(
+                                child: uploading
+                                    ? SizedBox(
+                                        width: 10.w,
+                                        height: 10.w,
+                                        child: const CircularProgressIndicator(
+                                          strokeWidth: 1.6,
+                                        ),
+                                      )
+                                    : Icon(
+                                        Icons.camera_alt_rounded,
+                                        size: 12.w,
+                                        color: Colors.white70,
+                                      ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(width: 14.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 18.sp,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(height: 4.h),
+                          Text(
+                            subTitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              color: Colors.white.withValues(alpha: 0.78),
+                            ),
+                          ),
+                          if (user != null) ...[
+                            SizedBox(height: 6.h),
+                            Text(
+                              '点击更换头像',
+                              style: TextStyle(
+                                fontSize: 11.sp,
+                                color: Colors.white.withValues(alpha: 0.62),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    if (user != null) ...[
+                      SizedBox(width: 12.w),
+                      _ProfileEditButton(
+                        loading: controller.profileUpdating.value,
+                        onTap: controller.profileUpdating.value
+                            ? null
+                            : () => Get.bottomSheet<void>(
+                                _EditProfileSheet(
+                                  controller: controller,
+                                  initialUser: user,
+                                ),
+                                isScrollControlled: true,
+                                backgroundColor: Colors.transparent,
+                              ),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
             ),
           ),
         ),
@@ -348,123 +343,112 @@ class _QuarkTransferMenuCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        boxShadow: AppThemeColors.cardShadow,
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(22.r),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-          child: Material(
-            color: Colors.white.withValues(alpha: 0.04),
-            child: InkWell(
-              onTap: onTap,
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(22.r),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.12),
+        child: Material(
+          color: AppThemeColors.surface,
+          child: InkWell(
+            onTap: onTap,
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(22.r),
+                border: Border.all(color: AppThemeColors.border),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 40.w,
+                        height: 40.w,
+                        decoration: BoxDecoration(
+                          color: const Color(
+                            0xFF43A047,
+                          ).withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(14.r),
+                        ),
+                        child: Icon(
+                          Icons.sync_alt_rounded,
+                          color: const Color(0xFF43A047),
+                          size: 22.w,
+                        ),
+                      ),
+                      SizedBox(width: 14.w),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '夸克转存',
+                              style: TextStyle(
+                                fontSize: 15.sp,
+                                fontWeight: FontWeight.w600,
+                                color: AppThemeColors.textPrimary,
+                              ),
+                            ),
+                            SizedBox(height: 4.h),
+                            Text(
+                              '管理夸克转存任务和同步任务',
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                color: AppThemeColors.textMuted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      AnimatedRotation(
+                        turns: expanded ? 0.5 : 0,
+                        duration: const Duration(milliseconds: 200),
+                        child: Icon(
+                          Icons.keyboard_arrow_down_rounded,
+                          size: 22.w,
+                          color: AppThemeColors.textDisabled,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 40.w,
-                          height: 40.w,
-                          decoration: BoxDecoration(
-                            color: const Color(
-                              0xFF81C784,
-                            ).withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(14.r),
-                          ),
-                          child: Icon(
-                            Icons.sync_alt_rounded,
-                            color: const Color(0xFF81C784),
-                            size: 22.w,
-                          ),
-                        ),
-                        SizedBox(width: 14.w),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '夸克转存',
-                                style: TextStyle(
-                                  fontSize: 15.sp,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
+                  AnimatedSize(
+                    duration: const Duration(milliseconds: 220),
+                    curve: Curves.easeInOut,
+                    child: expanded
+                        ? Padding(
+                            padding: EdgeInsets.only(top: 14.h),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: AppThemeColors.surfaceMuted,
+                                borderRadius: BorderRadius.circular(18.r),
+                                border: Border.all(
+                                  color: AppThemeColors.border,
                                 ),
                               ),
-                              SizedBox(height: 4.h),
-                              Text(
-                                '管理夸克转存任务和同步任务',
-                                style: TextStyle(
-                                  fontSize: 12.sp,
-                                  color: Colors.white54,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        AnimatedRotation(
-                          turns: expanded ? 0.5 : 0,
-                          duration: const Duration(milliseconds: 200),
-                          child: Icon(
-                            Icons.keyboard_arrow_down_rounded,
-                            size: 22.w,
-                            color: Colors.white38,
-                          ),
-                        ),
-                      ],
-                    ),
-                    AnimatedSize(
-                      duration: const Duration(milliseconds: 220),
-                      curve: Curves.easeInOut,
-                      child: expanded
-                          ? Padding(
-                              padding: EdgeInsets.only(top: 14.h),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.04),
-                                  borderRadius: BorderRadius.circular(18.r),
-                                  border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.05),
+                              child: Column(
+                                children: [
+                                  _SettingsSubMenuTile(
+                                    icon: Icons.task_alt_outlined,
+                                    iconColor: const Color(0xFF0288D1),
+                                    title: '转存任务',
+                                    subtitle: '管理搜索页转存生成的任务记录',
+                                    onTap: onTransferTasksTap,
                                   ),
-                                ),
-                                child: Column(
-                                  children: [
-                                    _SettingsSubMenuTile(
-                                      icon: Icons.task_alt_outlined,
-                                      iconColor: const Color(0xFF4FC3F7),
-                                      title: '转存任务',
-                                      subtitle: '管理搜索页转存生成的任务记录',
-                                      onTap: onTransferTasksTap,
-                                    ),
-                                    _buildDivider(),
-                                    _SettingsSubMenuTile(
-                                      icon: Icons.schedule_send_rounded,
-                                      iconColor: const Color(0xFF81C784),
-                                      title: '同步任务',
-                                      subtitle: '管理夸克自动转存同步任务',
-                                      onTap: onSyncTasksTap,
-                                    ),
-                                  ],
-                                ),
+                                  _buildDivider(),
+                                  _SettingsSubMenuTile(
+                                    icon: Icons.schedule_send_rounded,
+                                    iconColor: const Color(0xFF43A047),
+                                    title: '同步任务',
+                                    subtitle: '管理夸克自动转存同步任务',
+                                    onTap: onSyncTasksTap,
+                                  ),
+                                ],
                               ),
-                            )
-                          : const SizedBox.shrink(),
-                    ),
-                  ],
-                ),
+                            ),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                ],
               ),
             ),
           ),
@@ -477,7 +461,7 @@ class _QuarkTransferMenuCard extends StatelessWidget {
     return Divider(
       height: 1.h,
       thickness: 1,
-      color: Colors.white.withValues(alpha: 0.05),
+      color: AppThemeColors.divider,
       indent: 16.w,
       endIndent: 16.w,
     );
@@ -504,133 +488,120 @@ class _QuarkAdminMenuCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        boxShadow: AppThemeColors.cardShadow,
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(22.r),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-          child: Material(
-            color: Colors.white.withValues(alpha: 0.04),
-            child: InkWell(
-              onTap: onTap,
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(22.r),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.12),
+        child: Material(
+          color: AppThemeColors.surface,
+          child: InkWell(
+            onTap: onTap,
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(22.r),
+                border: Border.all(color: AppThemeColors.border),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 40.w,
+                        height: 40.w,
+                        decoration: BoxDecoration(
+                          color: const Color(
+                            0xFF1E88E5,
+                          ).withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(14.r),
+                        ),
+                        child: Icon(
+                          Icons.folder_special_outlined,
+                          color: const Color(0xFF1E88E5),
+                          size: 22.w,
+                        ),
+                      ),
+                      SizedBox(width: 14.w),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '夸克配置',
+                              style: TextStyle(
+                                fontSize: 15.sp,
+                                fontWeight: FontWeight.w600,
+                                color: AppThemeColors.textPrimary,
+                              ),
+                            ),
+                            SizedBox(height: 4.h),
+                            Text(
+                              '统一管理夸克登录、搜索和播放设置',
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                color: AppThemeColors.textMuted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      AnimatedRotation(
+                        turns: expanded ? 0.5 : 0,
+                        duration: const Duration(milliseconds: 200),
+                        child: Icon(
+                          Icons.keyboard_arrow_down_rounded,
+                          size: 22.w,
+                          color: AppThemeColors.textDisabled,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 40.w,
-                          height: 40.w,
-                          decoration: BoxDecoration(
-                            color: const Color(
-                              0xFF64B5F6,
-                            ).withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(14.r),
-                          ),
-                          child: Icon(
-                            Icons.folder_special_outlined,
-                            color: const Color(0xFF64B5F6),
-                            size: 22.w,
-                          ),
-                        ),
-                        SizedBox(width: 14.w),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '夸克配置',
-                                style: TextStyle(
-                                  fontSize: 15.sp,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
+                  AnimatedSize(
+                    duration: const Duration(milliseconds: 220),
+                    curve: Curves.easeInOut,
+                    child: expanded
+                        ? Padding(
+                            padding: EdgeInsets.only(top: 14.h),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: AppThemeColors.surfaceMuted,
+                                borderRadius: BorderRadius.circular(18.r),
+                                border: Border.all(
+                                  color: AppThemeColors.border,
                                 ),
                               ),
-                              SizedBox(height: 4.h),
-                              Text(
-                                '统一管理夸克登录、搜索和播放设置',
-                                style: TextStyle(
-                                  fontSize: 12.sp,
-                                  color: Colors.white54,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        AnimatedRotation(
-                          turns: expanded ? 0.5 : 0,
-                          duration: const Duration(milliseconds: 200),
-                          child: Icon(
-                            Icons.keyboard_arrow_down_rounded,
-                            size: 22.w,
-                            color: Colors.white38,
-                          ),
-                        ),
-                      ],
-                    ),
-                    AnimatedSize(
-                      duration: const Duration(milliseconds: 220),
-                      curve: Curves.easeInOut,
-                      child: expanded
-                          ? Padding(
-                              padding: EdgeInsets.only(top: 14.h),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.04),
-                                  borderRadius: BorderRadius.circular(18.r),
-                                  border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.05),
+                              child: Column(
+                                children: [
+                                  _SettingsSubMenuTile(
+                                    icon: Icons.cookie_outlined,
+                                    iconColor: const Color(0xFFF57C00),
+                                    title: '夸克登录',
+                                    subtitle: '设置 quark_cookies 参数',
+                                    onTap: onLoginTap,
                                   ),
-                                ),
-                                child: Column(
-                                  children: [
-                                    _SettingsSubMenuTile(
-                                      icon: Icons.cookie_outlined,
-                                      iconColor: const Color(0xFFFFB74D),
-                                      title: '夸克登录',
-                                      subtitle: '设置 quark_cookies 参数',
-                                      onTap: onLoginTap,
-                                    ),
-                                    _buildDivider(),
-                                    _SettingsSubMenuTile(
-                                      icon: Icons.travel_explore_rounded,
-                                      iconColor: const Color(0xFF64B5F6),
-                                      title: '夸克搜索',
-                                      subtitle:
-                                          '配置 HTTP 代理、HTTPS 代理、TG 频道和启用插件',
-                                      onTap: onSearchTap,
-                                    ),
-                                    _buildDivider(),
-                                    _SettingsSubMenuTile(
-                                      icon: Icons.smart_display_outlined,
-                                      iconColor: const Color(0xFFBA68C8),
-                                      title: '夸克播放',
-                                      subtitle:
-                                          '配置 302 / 本地代理，更多代理参数请在后端配置文件设置',
-                                      onTap: onStreamTap,
-                                    ),
-                                  ],
-                                ),
+                                  _buildDivider(),
+                                  _SettingsSubMenuTile(
+                                    icon: Icons.travel_explore_rounded,
+                                    iconColor: const Color(0xFF1E88E5),
+                                    title: '夸克搜索',
+                                    subtitle: '配置 HTTP 代理、HTTPS 代理、TG 频道和启用插件',
+                                    onTap: onSearchTap,
+                                  ),
+                                  _buildDivider(),
+                                  _SettingsSubMenuTile(
+                                    icon: Icons.smart_display_outlined,
+                                    iconColor: const Color(0xFF8E24AA),
+                                    title: '夸克播放',
+                                    subtitle: '配置 302 / 本地代理，更多代理参数请在后端配置文件设置',
+                                    onTap: onStreamTap,
+                                  ),
+                                ],
                               ),
-                            )
-                          : const SizedBox.shrink(),
-                    ),
-                  ],
-                ),
+                            ),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                ],
               ),
             ),
           ),
@@ -643,7 +614,7 @@ class _QuarkAdminMenuCard extends StatelessWidget {
     return Divider(
       height: 1.h,
       thickness: 1,
-      color: Colors.white.withValues(alpha: 0.05),
+      color: AppThemeColors.divider,
       indent: 16.w,
       endIndent: 16.w,
     );
@@ -695,13 +666,16 @@ class _SettingsSubMenuTile extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 14.sp,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        color: AppThemeColors.textPrimary,
                       ),
                     ),
                     SizedBox(height: 4.h),
                     Text(
                       subtitle,
-                      style: TextStyle(fontSize: 11.sp, color: Colors.white54),
+                      style: TextStyle(
+                        fontSize: 11.sp,
+                        color: AppThemeColors.textMuted,
+                      ),
                     ),
                   ],
                 ),
@@ -709,7 +683,7 @@ class _SettingsSubMenuTile extends StatelessWidget {
               Icon(
                 Icons.chevron_right_rounded,
                 size: 20.w,
-                color: Colors.white38,
+                color: AppThemeColors.textDisabled,
               ),
             ],
           ),
@@ -745,7 +719,10 @@ class _ProfileEditButton extends StatelessWidget {
               SizedBox(
                 width: 14.w,
                 height: 14.w,
-                child: const CircularProgressIndicator(strokeWidth: 2),
+                child: const CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
               )
             else
               Icon(Icons.edit_outlined, size: 15.w, color: Colors.white70),
@@ -819,7 +796,7 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
 
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF171717),
+        color: AppThemeColors.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(30.r)),
       ),
       child: SafeArea(
@@ -837,7 +814,7 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                     width: 42.w,
                     height: 4.h,
                     decoration: BoxDecoration(
-                      color: Colors.white24,
+                      color: AppThemeColors.borderStrong,
                       borderRadius: BorderRadius.circular(999.r),
                     ),
                   ),
@@ -856,9 +833,7 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                       ],
                     ),
                     borderRadius: BorderRadius.circular(24.r),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.08),
-                    ),
+                    border: Border.all(color: AppThemeColors.border),
                   ),
                   child: Row(
                     children: [
@@ -866,12 +841,12 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                         width: 46.w,
                         height: 46.w,
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.08),
+                          color: AppThemeColors.primary.withValues(alpha: 0.10),
                           borderRadius: BorderRadius.circular(16.r),
                         ),
                         child: Icon(
                           Icons.manage_accounts_rounded,
-                          color: Colors.white,
+                          color: AppThemeColors.primary,
                           size: 24.w,
                         ),
                       ),
@@ -885,7 +860,7 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                               style: TextStyle(
                                 fontSize: 18.sp,
                                 fontWeight: FontWeight.w700,
-                                color: Colors.white,
+                                color: AppThemeColors.textPrimary,
                               ),
                             ),
                             SizedBox(height: 4.h),
@@ -893,7 +868,7 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                               '更新用户名和昵称',
                               style: TextStyle(
                                 fontSize: 12.sp,
-                                color: Colors.white70,
+                                color: AppThemeColors.textSecondary,
                               ),
                             ),
                           ],
@@ -936,9 +911,7 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                         onPressed: () => Get.back<void>(),
                         style: OutlinedButton.styleFrom(
                           minimumSize: Size.fromHeight(50.h),
-                          side: BorderSide(
-                            color: Colors.white.withValues(alpha: 0.12),
-                          ),
+                          side: BorderSide(color: AppThemeColors.border),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16.r),
                           ),
@@ -948,7 +921,7 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                           style: TextStyle(
                             fontSize: 14.sp,
                             fontWeight: FontWeight.w600,
-                            color: Colors.white70,
+                            color: AppThemeColors.textSecondary,
                           ),
                         ),
                       ),
@@ -973,6 +946,7 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                                   height: 18.w,
                                   child: const CircularProgressIndicator(
                                     strokeWidth: 2,
+                                    color: AppThemeColors.textOnAccent,
                                   ),
                                 )
                               : Text(
@@ -1021,35 +995,38 @@ class _ProfileTextField extends StatelessWidget {
           style: TextStyle(
             fontSize: 13.sp,
             fontWeight: FontWeight.w600,
-            color: Colors.white70,
+            color: AppThemeColors.textSecondary,
           ),
         ),
         SizedBox(height: 8.h),
         TextFormField(
           controller: controller,
           validator: validator,
-          style: TextStyle(fontSize: 14.sp, color: Colors.white),
+          style: TextStyle(fontSize: 14.sp, color: AppThemeColors.textPrimary),
           decoration: InputDecoration(
             hintText: hintText,
-            hintStyle: TextStyle(fontSize: 13.sp, color: Colors.white38),
-            prefixIcon: Icon(icon, color: Colors.white38, size: 20.w),
+            hintStyle: TextStyle(
+              fontSize: 13.sp,
+              color: AppThemeColors.textDisabled,
+            ),
+            prefixIcon: Icon(
+              icon,
+              color: AppThemeColors.textDisabled,
+              size: 20.w,
+            ),
             filled: true,
-            fillColor: const Color(0xFF111111),
+            fillColor: AppThemeColors.surfaceMuted,
             contentPadding: EdgeInsets.symmetric(
               horizontal: 14.w,
               vertical: 14.h,
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14.r),
-              borderSide: BorderSide(
-                color: Colors.white.withValues(alpha: 0.08),
-              ),
+              borderSide: const BorderSide(color: AppThemeColors.border),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14.r),
-              borderSide: BorderSide(
-                color: Colors.white.withValues(alpha: 0.08),
-              ),
+              borderSide: const BorderSide(color: AppThemeColors.border),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14.r),
@@ -1057,11 +1034,11 @@ class _ProfileTextField extends StatelessWidget {
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14.r),
-              borderSide: const BorderSide(color: Colors.redAccent),
+              borderSide: const BorderSide(color: AppThemeColors.danger),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14.r),
-              borderSide: const BorderSide(color: Colors.redAccent),
+              borderSide: const BorderSide(color: AppThemeColors.danger),
             ),
           ),
         ),
@@ -1090,72 +1067,61 @@ class _SettingsMenuCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        boxShadow: AppThemeColors.cardShadow,
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(22.r),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-          child: Material(
-            color: Colors.white.withValues(alpha: 0.04),
-            child: InkWell(
-              onTap: onTap,
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(22.r),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.12),
+        child: Material(
+          color: AppThemeColors.surface,
+          child: InkWell(
+            onTap: onTap,
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(22.r),
+                border: Border.all(color: AppThemeColors.border),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40.w,
+                    height: 40.w,
+                    decoration: BoxDecoration(
+                      color: iconColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(14.r),
+                    ),
+                    child: Icon(icon, color: iconColor, size: 22.w),
                   ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 40.w,
-                      height: 40.w,
-                      decoration: BoxDecoration(
-                        color: iconColor.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(14.r),
-                      ),
-                      child: Icon(icon, color: iconColor, size: 22.w),
-                    ),
-                    SizedBox(width: 14.w),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            title,
-                            style: TextStyle(
-                              fontSize: 15.sp,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
+                  SizedBox(width: 14.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: TextStyle(
+                            fontSize: 15.sp,
+                            fontWeight: FontWeight.w600,
+                            color: AppThemeColors.textPrimary,
                           ),
-                          SizedBox(height: 4.h),
-                          Text(
-                            subtitle,
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              color: Colors.white54,
-                            ),
+                        ),
+                        SizedBox(height: 4.h),
+                        Text(
+                          subtitle,
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            color: AppThemeColors.textMuted,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    Icon(
-                      Icons.chevron_right_rounded,
-                      size: 20.w,
-                      color: Colors.white38,
-                    ),
-                  ],
-                ),
+                  ),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 20.w,
+                    color: AppThemeColors.textDisabled,
+                  ),
+                ],
               ),
             ),
           ),

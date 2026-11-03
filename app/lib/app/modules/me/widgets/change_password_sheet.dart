@@ -113,7 +113,7 @@ class _ChangePasswordSheetState extends State<ChangePasswordSheet> {
 
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF171717),
+        color: AppThemeColors.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(30.r)),
       ),
       child: SafeArea(
@@ -131,7 +131,7 @@ class _ChangePasswordSheetState extends State<ChangePasswordSheet> {
                     width: 42.w,
                     height: 4.h,
                     decoration: BoxDecoration(
-                      color: Colors.white24,
+                      color: AppThemeColors.borderStrong,
                       borderRadius: BorderRadius.circular(999.r),
                     ),
                   ),
@@ -150,9 +150,7 @@ class _ChangePasswordSheetState extends State<ChangePasswordSheet> {
                       ],
                     ),
                     borderRadius: BorderRadius.circular(24.r),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.08),
-                    ),
+                    border: Border.all(color: AppThemeColors.border),
                   ),
                   child: Row(
                     children: [
@@ -160,12 +158,12 @@ class _ChangePasswordSheetState extends State<ChangePasswordSheet> {
                         width: 46.w,
                         height: 46.w,
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.08),
+                          color: AppThemeColors.primary.withValues(alpha: 0.10),
                           borderRadius: BorderRadius.circular(16.r),
                         ),
                         child: Icon(
                           Icons.lock_reset_rounded,
-                          color: Colors.white,
+                          color: AppThemeColors.primary,
                           size: 24.w,
                         ),
                       ),
@@ -179,7 +177,7 @@ class _ChangePasswordSheetState extends State<ChangePasswordSheet> {
                               style: TextStyle(
                                 fontSize: 18.sp,
                                 fontWeight: FontWeight.w700,
-                                color: Colors.white,
+                                color: AppThemeColors.textPrimary,
                               ),
                             ),
                             SizedBox(height: 4.h),
@@ -187,7 +185,7 @@ class _ChangePasswordSheetState extends State<ChangePasswordSheet> {
                               widget.description,
                               style: TextStyle(
                                 fontSize: 12.sp,
-                                color: Colors.white70,
+                                color: AppThemeColors.textSecondary,
                               ),
                             ),
                           ],
@@ -273,9 +271,7 @@ class _ChangePasswordSheetState extends State<ChangePasswordSheet> {
                         onPressed: _submitting ? null : () => Get.back<void>(),
                         style: OutlinedButton.styleFrom(
                           minimumSize: Size.fromHeight(50.h),
-                          side: BorderSide(
-                            color: Colors.white.withValues(alpha: 0.12),
-                          ),
+                          side: BorderSide(color: AppThemeColors.border),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16.r),
                           ),
@@ -285,7 +281,7 @@ class _ChangePasswordSheetState extends State<ChangePasswordSheet> {
                           style: TextStyle(
                             fontSize: 14.sp,
                             fontWeight: FontWeight.w600,
-                            color: Colors.white70,
+                            color: AppThemeColors.textSecondary,
                           ),
                         ),
                       ),
@@ -307,6 +303,7 @@ class _ChangePasswordSheetState extends State<ChangePasswordSheet> {
                                 height: 18.w,
                                 child: const CircularProgressIndicator(
                                   strokeWidth: 2,
+                                  color: AppThemeColors.textOnAccent,
                                 ),
                               )
                             : Text(
@@ -358,7 +355,7 @@ class _PasswordField extends StatelessWidget {
           style: TextStyle(
             fontSize: 13.sp,
             fontWeight: FontWeight.w600,
-            color: Colors.white70,
+            color: AppThemeColors.textSecondary,
           ),
         ),
         SizedBox(height: 8.h),
@@ -366,36 +363,39 @@ class _PasswordField extends StatelessWidget {
           controller: controller,
           validator: validator,
           obscureText: obscureText,
-          style: TextStyle(fontSize: 14.sp, color: Colors.white),
+          style: TextStyle(fontSize: 14.sp, color: AppThemeColors.textPrimary),
           decoration: InputDecoration(
             hintText: hintText,
-            hintStyle: TextStyle(fontSize: 13.sp, color: Colors.white38),
-            prefixIcon: Icon(icon, color: Colors.white38, size: 20.w),
+            hintStyle: TextStyle(
+              fontSize: 13.sp,
+              color: AppThemeColors.textDisabled,
+            ),
+            prefixIcon: Icon(
+              icon,
+              color: AppThemeColors.textDisabled,
+              size: 20.w,
+            ),
             suffixIcon: IconButton(
               onPressed: onToggleObscure,
               icon: Icon(
                 obscureText ? Icons.visibility_off : Icons.visibility,
                 size: 20.w,
-                color: Colors.white38,
+                color: AppThemeColors.textDisabled,
               ),
             ),
             filled: true,
-            fillColor: const Color(0xFF111111),
+            fillColor: AppThemeColors.surfaceMuted,
             contentPadding: EdgeInsets.symmetric(
               horizontal: 14.w,
               vertical: 14.h,
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14.r),
-              borderSide: BorderSide(
-                color: Colors.white.withValues(alpha: 0.08),
-              ),
+              borderSide: const BorderSide(color: AppThemeColors.border),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14.r),
-              borderSide: BorderSide(
-                color: Colors.white.withValues(alpha: 0.08),
-              ),
+              borderSide: const BorderSide(color: AppThemeColors.border),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14.r),
@@ -403,11 +403,11 @@ class _PasswordField extends StatelessWidget {
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14.r),
-              borderSide: const BorderSide(color: Colors.redAccent),
+              borderSide: const BorderSide(color: AppThemeColors.danger),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14.r),
-              borderSide: const BorderSide(color: Colors.redAccent),
+              borderSide: const BorderSide(color: AppThemeColors.danger),
             ),
           ),
         ),

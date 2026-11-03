@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 import '../../../services/video_cast_service.dart';
+import '../../../theme/app_theme.dart';
 
 class VideoCastView extends StatefulWidget {
   const VideoCastView({
@@ -165,7 +166,7 @@ class _VideoCastViewState extends State<VideoCastView> {
                         width: 42,
                         height: 4,
                         decoration: BoxDecoration(
-                          color: Colors.white24,
+                          color: AppThemeColors.borderStrong,
                           borderRadius: BorderRadius.circular(999),
                         ),
                       ),
@@ -176,7 +177,7 @@ class _VideoCastViewState extends State<VideoCastView> {
                     child: Text(
                       '投屏',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: AppThemeColors.textPrimary,
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
                       ),
@@ -185,13 +186,19 @@ class _VideoCastViewState extends State<VideoCastView> {
                 IconButton(
                   tooltip: '重新搜索',
                   onPressed: _url.isEmpty ? null : _onSearch,
-                  icon: const Icon(Icons.refresh, color: Colors.white),
+                  icon: const Icon(
+                    Icons.refresh,
+                    color: AppThemeColors.textPrimary,
+                  ),
                 ),
                 if (widget.asBottomSheet)
                   IconButton(
                     tooltip: '关闭',
                     onPressed: () => Get.back(),
-                    icon: const Icon(Icons.close, color: Colors.white70),
+                    icon: const Icon(
+                      Icons.close,
+                      color: AppThemeColors.textSecondary,
+                    ),
                   ),
               ],
             ),
@@ -200,9 +207,9 @@ class _VideoCastViewState extends State<VideoCastView> {
             margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.06),
+              color: AppThemeColors.surface,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white12),
+              border: Border.all(color: AppThemeColors.border),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -212,7 +219,7 @@ class _VideoCastViewState extends State<VideoCastView> {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppThemeColors.textPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                   ),
@@ -220,7 +227,10 @@ class _VideoCastViewState extends State<VideoCastView> {
                 const SizedBox(height: 8),
                 Text(
                   _url.isEmpty ? '当前视频没有可投屏地址' : '请选择同一局域网中的 DLNA 设备',
-                  style: const TextStyle(color: Colors.white70, fontSize: 13),
+                  style: const TextStyle(
+                    color: AppThemeColors.textSecondary,
+                    fontSize: 13,
+                  ),
                 ),
               ],
             ),
@@ -241,11 +251,11 @@ class _VideoCastViewState extends State<VideoCastView> {
             child: Container(
               height: MediaQuery.of(context).size.height * 0.76,
               decoration: BoxDecoration(
-                color: const Color(0xFF050505),
+                color: AppThemeColors.surface,
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(22),
                 ),
-                border: Border.all(color: Colors.white10),
+                border: Border.all(color: AppThemeColors.border),
               ),
               child: content,
             ),
@@ -255,9 +265,9 @@ class _VideoCastViewState extends State<VideoCastView> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF050505),
+      backgroundColor: AppThemeColors.pageBackground,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF050505),
+        backgroundColor: AppThemeColors.pageBackground,
         title: const Text('投屏'),
         actions: [
           IconButton(
@@ -279,7 +289,7 @@ class _VideoCastViewState extends State<VideoCastView> {
           child: Text(
             '当前视频没有可投屏地址',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white70),
+            style: TextStyle(color: AppThemeColors.textSecondary),
           ),
         ),
       );
@@ -297,18 +307,28 @@ class _VideoCastViewState extends State<VideoCastView> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.cast_outlined, size: 48, color: Colors.white38),
+              const Icon(
+                Icons.cast_outlined,
+                size: 48,
+                color: AppThemeColors.textDisabled,
+              ),
               const SizedBox(height: 12),
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white70, fontSize: 14),
+                style: const TextStyle(
+                  color: AppThemeColors.textSecondary,
+                  fontSize: 14,
+                ),
               ),
               const SizedBox(height: 8),
               const Text(
                 '确认手机和电视在同一局域网，并且电视已开启投屏/媒体渲染功能。',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white38, fontSize: 12),
+                style: TextStyle(
+                  color: AppThemeColors.textDisabled,
+                  fontSize: 12,
+                ),
               ),
             ],
           ),
@@ -326,7 +346,9 @@ class _VideoCastViewState extends State<VideoCastView> {
         final device = _deviceList[key]!;
         final selected = key == _castService.currentDeviceKey.value;
         return Material(
-          color: Colors.white.withValues(alpha: selected ? 0.12 : 0.05),
+          color: selected
+              ? AppThemeColors.primary.withValues(alpha: 0.12)
+              : AppThemeColors.surface,
           borderRadius: BorderRadius.circular(16),
           child: InkWell(
             borderRadius: BorderRadius.circular(16),
@@ -337,7 +359,9 @@ class _VideoCastViewState extends State<VideoCastView> {
                 children: [
                   Icon(
                     selected ? Icons.cast_connected : Icons.tv,
-                    color: selected ? const Color(0xFF4F8CFF) : Colors.white70,
+                    color: selected
+                        ? AppThemeColors.primary
+                        : AppThemeColors.textMuted,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -350,8 +374,8 @@ class _VideoCastViewState extends State<VideoCastView> {
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             color: selected
-                                ? const Color(0xFF8EB2FF)
-                                : Colors.white,
+                                ? AppThemeColors.primary
+                                : AppThemeColors.textPrimary,
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
                           ),
@@ -362,7 +386,7 @@ class _VideoCastViewState extends State<VideoCastView> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            color: Colors.white54,
+                            color: AppThemeColors.textMuted,
                             fontSize: 12,
                           ),
                         ),

@@ -1,9 +1,9 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
 import '../../../data/models/media_history_entry.dart';
+import '../../../theme/app_theme.dart';
 import '../../../routes/app_pages.dart';
 import '../../music_player/controllers/music_player_controller.dart';
 import '../controllers/home_controller.dart';
@@ -84,138 +84,127 @@ class HomeHistoryBanner extends GetView<HomeController> {
         onTap: onBannerTap,
         child: ClipRRect(
           borderRadius: BorderRadius.circular(20.r),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-            child: Container(
-              width: double.infinity,
-              height: 68.h,
-              padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 12.h),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(20.r),
-                border: Border.all(color: const Color(0xFF3E4055), width: 1.5),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: hasActiveAudio || entry != null
-                        ? onPlayButtonTap
-                        : null,
-                    child: SizedBox(
-                      width: 46.w,
-                      child: Center(
-                        child: initializingPlayback
-                            ? const SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.8,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.white,
-                                  ),
-                                ),
-                              )
-                            : Icon(
-                                hasActiveAudio && visiblyPlaying
-                                    ? Icons.pause_circle_rounded
-                                    : Icons.play_circle_rounded,
-                                size: 38,
-                                color: Colors.white,
-                              ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: hasActiveAudio || entry != null
-                          ? onContinue
-                          : null,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Row(
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  title,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
-                                  ),
+          child: Container(
+            width: double.infinity,
+            height: 68.h,
+            padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 12.h),
+            decoration: BoxDecoration(
+              color: AppThemeColors.surface,
+              borderRadius: BorderRadius.circular(20.r),
+              border: Border.all(color: AppThemeColors.border),
+              boxShadow: AppThemeColors.floatingShadow,
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: hasActiveAudio || entry != null
+                      ? onPlayButtonTap
+                      : null,
+                  child: SizedBox(
+                    width: 46.w,
+                    child: Center(
+                      child: initializingPlayback
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.8,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  AppThemeColors.primary,
                                 ),
                               ),
-                              if (hasActiveAudio && visiblyPlaying) ...[
-                                const SizedBox(width: 6),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 5,
-                                    vertical: 2,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [
-                                        Color(0xFF7C4DFF),
-                                        Color(0xFF448AFF),
-                                      ],
-                                    ),
-                                    borderRadius: BorderRadius.circular(4.r),
-                                  ),
-                                  child: const Text(
-                                    '正在播放',
-                                    style: TextStyle(
-                                      fontSize: 9,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            initializingPlayback ? '正在加载播放列表...' : summary,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.white70,
+                            )
+                          : Icon(
+                              hasActiveAudio && visiblyPlaying
+                                  ? Icons.pause_circle_rounded
+                                  : Icons.play_circle_rounded,
+                              size: 38,
+                              color: AppThemeColors.primary,
                             ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: hasActiveAudio || entry != null ? onContinue : null,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppThemeColors.textPrimary,
+                                ),
+                              ),
+                            ),
+                            if (hasActiveAudio && visiblyPlaying) ...[
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 5,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [
+                                      Color(0xFF7C4DFF),
+                                      Color(0xFF448AFF),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(4.r),
+                                ),
+                                child: const Text(
+                                  '正在播放',
+                                  style: TextStyle(
+                                    fontSize: 9,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          initializingPlayback ? '正在加载播放列表...' : summary,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppThemeColors.textSecondary,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
-                  SizedBox(width: 8.w),
-                  InkWell(
-                    borderRadius: BorderRadius.circular(16.r),
-                    onTap: onList,
-                    child: Padding(
-                      padding: EdgeInsets.all(6.r),
-                      child: Icon(
-                        Icons.format_list_bulleted_rounded,
-                        size: 30,
-                        color: Colors.white70,
-                      ),
+                ),
+                SizedBox(width: 8.w),
+                InkWell(
+                  borderRadius: BorderRadius.circular(16.r),
+                  onTap: onList,
+                  child: Padding(
+                    padding: EdgeInsets.all(6.r),
+                    child: Icon(
+                      Icons.format_list_bulleted_rounded,
+                      size: 30,
+                      color: AppThemeColors.textSecondary,
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),

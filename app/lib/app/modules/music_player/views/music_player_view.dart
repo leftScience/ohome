@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
+import '../../../theme/app_theme.dart';
 import '../../../widgets/media_player_header_title.dart';
 import '../../../widgets/playlist_loading_view.dart';
 import '../controllers/music_player_controller.dart';
@@ -30,13 +31,13 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF050505),
+      backgroundColor: AppThemeColors.pageBackground,
       appBar: AppBar(
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: AppThemeColors.textPrimary),
         title: Obx(
           () => MediaPlayerHeaderTitle(
             title: controller.playlistTitle.value,
-            titleColor: Colors.white,
+            titleColor: AppThemeColors.textPrimary,
             fallbackTitle: '播客',
           ),
         ),
@@ -51,7 +52,7 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF1F1144), Color(0xFF06030F)],
+            colors: [Color(0xFFF3F6FF), Color(0xFFF8F7FF)],
           ),
         ),
         child: SafeArea(
@@ -64,7 +65,10 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
             }
             if (controller.tracks.isEmpty) {
               return const Center(
-                child: Text('播放列表为空', style: TextStyle(color: Colors.white70)),
+                child: Text(
+                  '播放列表为空',
+                  style: TextStyle(color: AppThemeColors.textSecondary),
+                ),
               );
             }
             return Column(
@@ -120,18 +124,15 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
               height: 160.w,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(22.r),
-                gradient: LinearGradient(
-                  colors: [
-                    Theme.of(
-                      context,
-                    ).colorScheme.primary.withValues(alpha: .35),
-                    Theme.of(
-                      context,
-                    ).colorScheme.secondary.withValues(alpha: .35),
-                  ],
+                // 封面占位使用饱和品牌渐变，白色音符保持可读
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [AppThemeColors.primary, AppThemeColors.accent],
                 ),
               ),
               alignment: Alignment.center,
+              // 封面占位图保留品牌渐变色，图标保持白色
               child: Icon(Icons.music_note, size: 110.r, color: Colors.white),
             ),
             SizedBox(height: 24.h),
@@ -139,7 +140,7 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
               track?.title ?? '未选择音频',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: Colors.white,
+                color: AppThemeColors.textPrimary,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -166,10 +167,10 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
                     vertical: 4.h,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
+                    color: AppThemeColors.primary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(12.r),
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.4),
+                      color: AppThemeColors.primary.withValues(alpha: 0.32),
                     ),
                   ),
                   child: Text(
@@ -177,14 +178,17 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
                     style: TextStyle(
                       fontSize: 11.sp,
                       letterSpacing: 0.6,
-                      color: Colors.white,
+                      color: AppThemeColors.primary,
                     ),
                   ),
                 ),
                 SizedBox(width: 8.w),
                 Text(
                   '${controller.currentIndex.value + 1}/${controller.tracks.length}',
-                  style: TextStyle(color: Colors.white60, fontSize: 12.sp),
+                  style: TextStyle(
+                    color: AppThemeColors.textMuted,
+                    fontSize: 12.sp,
+                  ),
                 ),
               ],
             ),
@@ -194,7 +198,10 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
                 path,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: Colors.white70, fontSize: 12.sp),
+                style: TextStyle(
+                  color: AppThemeColors.textSecondary,
+                  fontSize: 12.sp,
+                ),
               ),
           ],
         ),
@@ -207,9 +214,10 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
       margin: EdgeInsets.symmetric(horizontal: 20.w),
       padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 12.h),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.06),
+        color: AppThemeColors.surface,
         borderRadius: BorderRadius.circular(24.r),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        border: Border.all(color: AppThemeColors.border),
+        boxShadow: AppThemeColors.cardShadow,
       ),
       child: _buildProgressSection(context),
     );
@@ -220,9 +228,10 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
       margin: EdgeInsets.symmetric(horizontal: 20.w),
       padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 12.h),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.35),
+        color: AppThemeColors.surface,
         borderRadius: BorderRadius.circular(24.r),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        border: Border.all(color: AppThemeColors.border),
+        boxShadow: AppThemeColors.cardShadow,
       ),
       child: _buildControls(context),
     );
@@ -243,10 +252,10 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
         children: [
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
-              activeTrackColor: Colors.white,
-              inactiveTrackColor: Colors.white24,
-              thumbColor: Colors.white,
-              overlayColor: Colors.white24,
+              activeTrackColor: AppThemeColors.primary,
+              inactiveTrackColor: AppThemeColors.borderStrong,
+              thumbColor: AppThemeColors.primary,
+              overlayColor: AppThemeColors.primary.withValues(alpha: 0.12),
             ),
             child: Slider(
               value: sliderValue,
@@ -264,11 +273,17 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
             children: [
               Text(
                 controller.formatDuration(position),
-                style: TextStyle(color: Colors.white, fontSize: 12.sp),
+                style: TextStyle(
+                  color: AppThemeColors.textSecondary,
+                  fontSize: 12.sp,
+                ),
               ),
               Text(
                 controller.formatDuration(total),
-                style: TextStyle(color: Colors.white, fontSize: 12.sp),
+                style: TextStyle(
+                  color: AppThemeColors.textSecondary,
+                  fontSize: 12.sp,
+                ),
               ),
             ],
           ),
@@ -308,7 +323,7 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
                       onPressed: canSkip ? controller.playPrevious : null,
                       icon: const Icon(
                         Icons.skip_previous_rounded,
-                        color: Colors.white,
+                        color: AppThemeColors.textPrimary,
                       ),
                     ),
                     SizedBox(width: actionSpacing),
@@ -354,7 +369,7 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
                           : null,
                       icon: const Icon(
                         Icons.skip_next_rounded,
-                        color: Colors.white,
+                        color: AppThemeColors.textPrimary,
                       ),
                     ),
                   ],
@@ -379,16 +394,25 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
         padding: EdgeInsets.fromLTRB(24.w, 4.h, 24.w, 0),
         child: Row(
           children: [
-            Icon(Icons.timer_outlined, size: 18.r, color: Colors.white70),
+            Icon(
+              Icons.timer_outlined,
+              size: 18.r,
+              color: AppThemeColors.textMuted,
+            ),
             SizedBox(width: 6.w),
             Expanded(
               child: Text(
                 '将在 ${controller.formatDuration(remaining)} 后停止播放',
-                style: TextStyle(color: Colors.white, fontSize: 12.sp),
+                style: TextStyle(
+                  color: AppThemeColors.textSecondary,
+                  fontSize: 12.sp,
+                ),
               ),
             ),
             TextButton(
-              style: TextButton.styleFrom(foregroundColor: Colors.amberAccent),
+              style: TextButton.styleFrom(
+                foregroundColor: AppThemeColors.warning,
+              ),
               onPressed: controller.cancelSleepTimer,
               child: const Text('取消'),
             ),
@@ -427,8 +451,8 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
       final tooltip = isActive
           ? '定时关闭：${controller.formatDuration(remaining)} 后'
           : '设置定时关闭';
-      final baseColor = Colors.white.withValues(alpha: 0.12);
-      final activeColor = Colors.amberAccent.withValues(alpha: 0.25);
+      final baseColor = AppThemeColors.surfaceMuted;
+      final activeColor = AppThemeColors.warning.withValues(alpha: 0.14);
       final enabled = controller.actionsReady.value;
       return Padding(
         padding: EdgeInsets.only(right: 6.w),
@@ -436,16 +460,23 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
           tooltip: tooltip,
           style: IconButton.styleFrom(
             backgroundColor: isActive ? activeColor : baseColor,
-            foregroundColor: Colors.white,
+            foregroundColor: AppThemeColors.textPrimary,
             minimumSize: Size(42.w, 42.h),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14.r),
+              side: BorderSide(
+                color: isActive
+                    ? AppThemeColors.warning.withValues(alpha: 0.4)
+                    : AppThemeColors.border,
+              ),
             ),
           ),
           onPressed: enabled ? () => _showSleepTimerSheet(context) : null,
           icon: Icon(
             Icons.timer_outlined,
-            color: isActive ? Colors.amberAccent : Colors.white,
+            color: isActive
+                ? AppThemeColors.warning
+                : AppThemeColors.textSecondary,
           ),
         ),
       );
@@ -460,8 +491,8 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
       final tooltip = isActive
           ? '跳过片头${intro > Duration.zero ? ' ${_formatBrief(intro)}' : ''} / 片尾${outro > Duration.zero ? ' ${_formatBrief(outro)}' : ''}'
           : '设置跳过片头/片尾';
-      final baseColor = Colors.white.withValues(alpha: 0.12);
-      final activeColor = Colors.lightBlueAccent.withValues(alpha: 0.25);
+      final baseColor = AppThemeColors.surfaceMuted;
+      final activeColor = AppThemeColors.primary.withValues(alpha: 0.12);
       final enabled = controller.actionsReady.value;
       return Padding(
         padding: EdgeInsets.only(right: 6.w),
@@ -469,16 +500,23 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
           tooltip: tooltip,
           style: IconButton.styleFrom(
             backgroundColor: isActive ? activeColor : baseColor,
-            foregroundColor: Colors.white,
+            foregroundColor: AppThemeColors.textPrimary,
             minimumSize: Size(42.w, 42.h),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14.r),
+              side: BorderSide(
+                color: isActive
+                    ? AppThemeColors.primary.withValues(alpha: 0.35)
+                    : AppThemeColors.border,
+              ),
             ),
           ),
           onPressed: enabled ? () => _showSkipSettingsSheet(context) : null,
           icon: Icon(
             Icons.content_cut_rounded,
-            color: isActive ? Colors.lightBlueAccent : Colors.white,
+            color: isActive
+                ? AppThemeColors.primary
+                : AppThemeColors.textSecondary,
           ),
         ),
       );
@@ -499,15 +537,16 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
         child: IconButton(
           tooltip: '音量',
           style: IconButton.styleFrom(
-            backgroundColor: Colors.white.withValues(alpha: 0.12),
-            foregroundColor: Colors.white,
+            backgroundColor: AppThemeColors.surfaceMuted,
+            foregroundColor: AppThemeColors.textPrimary,
             minimumSize: Size(42.w, 42.h),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14.r),
+              side: const BorderSide(color: AppThemeColors.border),
             ),
           ),
           onPressed: enabled ? () => _showVolumeSheet(context) : null,
-          icon: Icon(icon, color: Colors.white),
+          icon: Icon(icon, color: AppThemeColors.textPrimary),
         ),
       );
     });
@@ -518,7 +557,7 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
         .roundToDouble();
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: const Color(0xFF0A0A0A),
+      backgroundColor: AppThemeColors.surface,
       builder: (ctx) {
         return StatefulBuilder(
           builder: (ctx, setState) {
@@ -537,18 +576,18 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
                       children: [
                         const Icon(
                           Icons.volume_up_rounded,
-                          color: Colors.white,
+                          color: AppThemeColors.textPrimary,
                         ),
                         SizedBox(width: 8.w),
                         Text(
                           '音量 ${value.round()}%',
                           style:
                               Theme.of(ctx).textTheme.titleMedium?.copyWith(
-                                color: Colors.white,
+                                color: AppThemeColors.textPrimary,
                                 fontWeight: FontWeight.w600,
                               ) ??
                               const TextStyle(
-                                color: Colors.white,
+                                color: AppThemeColors.textPrimary,
                                 fontWeight: FontWeight.w600,
                               ),
                         ),
@@ -557,17 +596,19 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
                           onPressed: () => Navigator.of(ctx).pop(),
                           icon: const Icon(
                             Icons.close_rounded,
-                            color: Colors.white70,
+                            color: AppThemeColors.textMuted,
                           ),
                         ),
                       ],
                     ),
                     SliderTheme(
                       data: SliderTheme.of(ctx).copyWith(
-                        activeTrackColor: Colors.white,
-                        inactiveTrackColor: Colors.white24,
-                        thumbColor: Colors.white,
-                        overlayColor: Colors.white24,
+                        activeTrackColor: AppThemeColors.primary,
+                        inactiveTrackColor: AppThemeColors.borderStrong,
+                        thumbColor: AppThemeColors.primary,
+                        overlayColor: AppThemeColors.primary.withValues(
+                          alpha: 0.12,
+                        ),
                       ),
                       child: Slider(
                         value: value,
@@ -602,6 +643,7 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
 
     showModalBottomSheet<void>(
       context: context,
+      backgroundColor: AppThemeColors.surface,
       builder: (ctx) {
         final remaining = controller.sleepRemaining.value;
         final isActive = controller.isSleepTimerActive && remaining != null;
@@ -657,6 +699,7 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
 
     showModalBottomSheet<void>(
       context: context,
+      backgroundColor: AppThemeColors.surface,
       builder: (ctx) {
         return StatefulBuilder(
           builder: (ctx, setState) {
@@ -742,7 +785,7 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
             decoration: BoxDecoration(
               border: Border(
                 bottom: BorderSide(
-                  color: Colors.white.withValues(alpha: 0.08),
+                  color: AppThemeColors.divider,
                   width: 1,
                 ),
               ),
@@ -761,8 +804,8 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
                     color: isCurrent
                         ? Theme.of(
                             context,
-                          ).colorScheme.primary.withValues(alpha: 0.2)
-                        : Colors.white.withValues(alpha: 0.06),
+                          ).colorScheme.primary.withValues(alpha: 0.14)
+                        : AppThemeColors.surfaceMuted,
                     borderRadius: BorderRadius.circular(12.r),
                   ),
                   child: Icon(
@@ -771,7 +814,7 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
                         : Icons.music_note_outlined,
                     color: isCurrent
                         ? Theme.of(context).colorScheme.primary
-                        : Colors.white70,
+                        : AppThemeColors.textSecondary,
                   ),
                 ),
                 title: Text(
@@ -779,7 +822,7 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppThemeColors.textPrimary,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -791,7 +834,7 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 12.sp,
-                          color: Colors.white60,
+                          color: AppThemeColors.textMuted,
                         ),
                       ),
                 trailing: SizedBox(
@@ -804,7 +847,7 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
                             height: 22.w,
                             child: const CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: Colors.white,
+                              color: AppThemeColors.primary,
                             ),
                           )
                         : isCurrent
@@ -819,7 +862,7 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
                             constraints: const BoxConstraints(),
                             icon: const Icon(
                               Icons.play_arrow_rounded,
-                              color: Colors.white70,
+                              color: AppThemeColors.textSecondary,
                             ),
                             onPressed: () => controller.playAt(index),
                           ),
@@ -841,11 +884,12 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
       return IconButton(
         tooltip: '播放顺序：$label',
         style: IconButton.styleFrom(
-          backgroundColor: Colors.white.withValues(alpha: 0.12),
-          foregroundColor: Colors.white,
+          backgroundColor: AppThemeColors.surfaceMuted,
+          foregroundColor: AppThemeColors.textPrimary,
           minimumSize: Size(46.w, 46.h),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16.r),
+            side: const BorderSide(color: AppThemeColors.border),
           ),
         ),
         onPressed: controller.cyclePlayMode,
@@ -858,11 +902,12 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
     return IconButton(
       tooltip: '播放列表',
       style: IconButton.styleFrom(
-        backgroundColor: Colors.white.withValues(alpha: 0.12),
-        foregroundColor: Colors.white,
+        backgroundColor: AppThemeColors.surfaceMuted,
+        foregroundColor: AppThemeColors.textPrimary,
         minimumSize: Size(46.w, 46.h),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16.r),
+          side: const BorderSide(color: AppThemeColors.border),
         ),
       ),
       onPressed: () => _showPlaylistSheet(context),
@@ -892,7 +937,7 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
     scrollController.addListener(persistPlaylistOffset);
     final sheetFuture = showModalBottomSheet<void>(
       context: context,
-      backgroundColor: const Color(0xFF0A0A0A),
+      backgroundColor: AppThemeColors.surface,
       isScrollControlled: true,
       builder: (ctx) {
         void scrollToCurrentTrack() {
@@ -926,13 +971,16 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.queue_music, color: Colors.white),
+                      const Icon(
+                        Icons.queue_music,
+                        color: AppThemeColors.textPrimary,
+                      ),
                       SizedBox(width: 8.w),
                       Text(
                         '播放列表',
-                        style: Theme.of(
-                          ctx,
-                        ).textTheme.titleMedium?.copyWith(color: Colors.white),
+                        style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
+                          color: AppThemeColors.textPrimary,
+                        ),
                       ),
                       const Spacer(),
                       IconButton(
@@ -940,20 +988,20 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
                         onPressed: scrollToCurrentTrack,
                         icon: const Icon(
                           Icons.my_location_rounded,
-                          color: Colors.white70,
+                          color: AppThemeColors.textMuted,
                         ),
                       ),
                       IconButton(
                         onPressed: () => Navigator.of(ctx).pop(),
                         icon: const Icon(
                           Icons.close_rounded,
-                          color: Colors.white70,
+                          color: AppThemeColors.textMuted,
                         ),
                       ),
                     ],
                   ),
                 ),
-                const Divider(height: 1, color: Colors.white10),
+                const Divider(height: 1, color: AppThemeColors.divider),
                 Expanded(
                   child: _buildPlaylist(
                     ctx,
@@ -999,13 +1047,13 @@ class _MusicPlayerViewState extends State<MusicPlayerView> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.18),
+        color: AppThemeColors.surfaceMuted,
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
+        border: Border.all(color: AppThemeColors.border),
       ),
       child: Text(
         text,
-        style: TextStyle(fontSize: 12.sp, color: Colors.white),
+        style: TextStyle(fontSize: 12.sp, color: AppThemeColors.textSecondary),
       ),
     );
   }

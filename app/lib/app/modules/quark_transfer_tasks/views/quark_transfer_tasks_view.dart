@@ -22,6 +22,7 @@ class QuarkTransferTasksView extends GetView<QuarkTransferTasksController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppThemeColors.pageBackground,
       appBar: AppBar(title: const Text('转存任务')),
       floatingActionButtonLocation:
           AppFloatingActionButtonPosition.scaffoldLocation,
@@ -115,7 +116,7 @@ class QuarkTransferTasksView extends GetView<QuarkTransferTasksController> {
                   Icon(
                     Icons.task_alt_rounded,
                     size: 60.w,
-                    color: Colors.white24,
+                    color: AppThemeColors.textDisabled,
                   ),
                   SizedBox(height: 14.h),
                   Center(
@@ -124,7 +125,7 @@ class QuarkTransferTasksView extends GetView<QuarkTransferTasksController> {
                       style: TextStyle(
                         fontSize: 15.sp,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white70,
+                        color: AppThemeColors.textSecondary,
                       ),
                     ),
                   ),
@@ -180,9 +181,10 @@ class _TaskCard extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: AppThemeColors.surface,
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        border: Border.all(color: AppThemeColors.border),
+        boxShadow: AppThemeColors.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -198,7 +200,7 @@ class _TaskCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                    color: AppThemeColors.textPrimary,
                     height: 1.35,
                   ),
                 ),
@@ -263,7 +265,7 @@ class _TaskCard extends StatelessWidget {
                 ),
               _ActionChip(
                 label: deleting ? '删除中' : '删除',
-                color: const Color(0xFFE57373),
+                color: const Color(0xFFE53935),
                 icon: deleting
                     ? Icons.hourglass_top_rounded
                     : Icons.delete_outline_rounded,
@@ -305,7 +307,7 @@ class _TaskCard extends StatelessWidget {
       children: [
         Padding(
           padding: EdgeInsets.only(top: maxLines > 1 ? 2.h : 0),
-          child: Icon(icon, size: 16.w, color: Colors.white38),
+          child: Icon(icon, size: 16.w, color: AppThemeColors.textDisabled),
         ),
         SizedBox(width: 8.w),
         Expanded(
@@ -316,7 +318,7 @@ class _TaskCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 12.sp,
               height: maxLines > 1 ? 1.5 : null,
-              color: Colors.white60,
+              color: AppThemeColors.textSecondary,
             ),
           ),
         ),
@@ -327,15 +329,15 @@ class _TaskCard extends StatelessWidget {
   static Color _statusColor(String status) {
     switch (status) {
       case 'queued':
-        return const Color(0xFF64B5F6);
+        return const Color(0xFF1E88E5);
       case 'processing':
-        return const Color(0xFFFFB74D);
+        return const Color(0xFFF57C00);
       case 'success':
-        return const Color(0xFF81C784);
+        return const Color(0xFF43A047);
       case 'failed':
-        return const Color(0xFFE57373);
+        return const Color(0xFFE53935);
       default:
-        return Colors.white54;
+        return AppThemeColors.textMuted;
     }
   }
 
@@ -408,8 +410,8 @@ class _FilterButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: selected
-          ? AppThemeColors.primary.withValues(alpha: 0.18)
-          : const Color(0xFF1A1A1A),
+          ? AppThemeColors.primary.withValues(alpha: 0.12)
+          : AppThemeColors.surface,
       borderRadius: BorderRadius.circular(14.r),
       child: InkWell(
         onTap: onTap,
@@ -421,7 +423,7 @@ class _FilterButton extends StatelessWidget {
             border: Border.all(
               color: selected
                   ? AppThemeColors.primary.withValues(alpha: 0.7)
-                  : Colors.white.withValues(alpha: 0.08),
+                  : AppThemeColors.border,
             ),
           ),
           child: Center(
@@ -432,7 +434,9 @@ class _FilterButton extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12.sp,
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                color: selected ? Colors.white : Colors.white70,
+                color: selected
+                    ? AppThemeColors.primary
+                    : AppThemeColors.textSecondary,
               ),
             ),
           ),

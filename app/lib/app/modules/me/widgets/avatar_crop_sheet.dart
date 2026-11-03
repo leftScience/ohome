@@ -64,7 +64,7 @@ class _AvatarCropSheetState extends State<AvatarCropSheet> {
     return Container(
       height: math.min(screenHeight * 0.84, 760.h),
       decoration: BoxDecoration(
-        color: const Color(0xFF111111),
+        color: AppThemeColors.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(30.r)),
       ),
       child: SafeArea(
@@ -77,7 +77,7 @@ class _AvatarCropSheetState extends State<AvatarCropSheet> {
                 width: 42.w,
                 height: 4.h,
                 decoration: BoxDecoration(
-                  color: Colors.white24,
+                  color: AppThemeColors.borderStrong,
                   borderRadius: BorderRadius.circular(999.r),
                 ),
               ),
@@ -93,7 +93,7 @@ class _AvatarCropSheetState extends State<AvatarCropSheet> {
                           style: TextStyle(
                             fontSize: 20.sp,
                             fontWeight: FontWeight.w700,
-                            color: Colors.white,
+                            color: AppThemeColors.textPrimary,
                           ),
                         ),
                         SizedBox(height: 6.h),
@@ -101,7 +101,7 @@ class _AvatarCropSheetState extends State<AvatarCropSheet> {
                           '拖动或缩放图片，让头像落在圆形区域内。',
                           style: TextStyle(
                             fontSize: 12.sp,
-                            color: Colors.white60,
+                            color: AppThemeColors.textSecondary,
                           ),
                         ),
                       ],
@@ -112,7 +112,7 @@ class _AvatarCropSheetState extends State<AvatarCropSheet> {
                     icon: Icon(
                       Icons.close_rounded,
                       size: 22.w,
-                      color: Colors.white70,
+                      color: AppThemeColors.textSecondary,
                     ),
                   ),
                 ],
@@ -124,9 +124,7 @@ class _AvatarCropSheetState extends State<AvatarCropSheet> {
                   decoration: BoxDecoration(
                     color: const Color(0xFF090909),
                     borderRadius: BorderRadius.circular(26.r),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.08),
-                    ),
+                    border: Border.all(color: AppThemeColors.border),
                   ),
                   clipBehavior: Clip.antiAlias,
                   child: Crop(
@@ -180,9 +178,7 @@ class _AvatarCropSheetState extends State<AvatarCropSheet> {
                       onPressed: _cropping ? null : () => Get.back<void>(),
                       style: OutlinedButton.styleFrom(
                         minimumSize: Size.fromHeight(50.h),
-                        side: BorderSide(
-                          color: Colors.white.withValues(alpha: 0.12),
-                        ),
+                        side: BorderSide(color: AppThemeColors.border),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16.r),
                         ),
@@ -192,7 +188,7 @@ class _AvatarCropSheetState extends State<AvatarCropSheet> {
                         style: TextStyle(
                           fontSize: 14.sp,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white70,
+                          color: AppThemeColors.textSecondary,
                         ),
                       ),
                     ),
@@ -216,6 +212,7 @@ class _AvatarCropSheetState extends State<AvatarCropSheet> {
                               height: 18.w,
                               child: const CircularProgressIndicator(
                                 strokeWidth: 2,
+                                color: AppThemeColors.textOnAccent,
                               ),
                             )
                           : Text(
@@ -223,7 +220,7 @@ class _AvatarCropSheetState extends State<AvatarCropSheet> {
                               style: TextStyle(
                                 fontSize: 14.sp,
                                 fontWeight: FontWeight.w700,
-                                color: Colors.white,
+                                color: AppThemeColors.textOnAccent,
                               ),
                             ),
                     ),

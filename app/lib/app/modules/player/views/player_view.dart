@@ -9,6 +9,7 @@ import 'package:media_kit_video/media_kit_video.dart';
 import 'package:screen_brightness/screen_brightness.dart';
 import 'package:volume_controller/volume_controller.dart';
 
+import '../../../theme/app_theme.dart';
 import '../../../widgets/media_player_header_title.dart';
 import '../../../widgets/playlist_loading_view.dart';
 import '../../../services/android_pip_service.dart';
@@ -442,7 +443,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
     VoidCallback? onTap,
   }) {
     final textStyle = TextStyle(
-      color: Colors.white,
+      color: AppThemeColors.textPrimary,
       fontSize: 13.sp,
       height: 1,
       fontWeight: FontWeight.w600,
@@ -450,16 +451,16 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
     final child = Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.06),
+        color: AppThemeColors.surface,
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: AppThemeColors.border),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Icon(icon, size: 16.sp, color: Colors.white70),
+          Icon(icon, size: 16.sp, color: AppThemeColors.textMuted),
           SizedBox(width: 6.w),
           ConstrainedBox(
             constraints: BoxConstraints(maxWidth: 160.w),
@@ -468,7 +469,9 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                 children: [
                   TextSpan(
                     text: '$label ',
-                    style: textStyle.copyWith(color: Colors.white70),
+                    style: textStyle.copyWith(
+                      color: AppThemeColors.textSecondary,
+                    ),
                   ),
                   TextSpan(text: value, style: textStyle),
                 ],
@@ -513,13 +516,13 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
           padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
           decoration: BoxDecoration(
             color: selected
-                ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)
-                : Colors.white.withValues(alpha: 0.04),
+                ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)
+                : AppThemeColors.surface,
             borderRadius: BorderRadius.circular(14.r),
             border: Border.all(
               color: selected
                   ? Theme.of(context).colorScheme.primary
-                  : Colors.white12,
+                  : AppThemeColors.border,
               width: selected ? 1.2 : 1,
             ),
           ),
@@ -532,13 +535,15 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                 decoration: BoxDecoration(
                   color: selected
                       ? Theme.of(context).colorScheme.primary
-                      : Colors.white.withValues(alpha: 0.08),
+                      : AppThemeColors.surfaceSunken,
                   borderRadius: BorderRadius.circular(10.r),
                 ),
                 child: Text(
                   '${episodeIndex + 1}',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: selected
+                        ? Colors.white
+                        : AppThemeColors.textSecondary,
                     fontSize: 12.sp,
                     fontWeight: FontWeight.w700,
                   ),
@@ -555,7 +560,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        color: Colors.white,
+                        color: AppThemeColors.textPrimary,
                         fontSize: 14.sp,
                         fontWeight: selected
                             ? FontWeight.w700
@@ -569,7 +574,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          color: Colors.white60,
+                          color: AppThemeColors.textSecondary,
                           fontSize: 11.sp,
                           fontWeight: FontWeight.w500,
                         ),
@@ -585,7 +590,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                     : Icons.chevron_right_rounded,
                 color: selected
                     ? Theme.of(context).colorScheme.primary
-                    : Colors.white38,
+                    : AppThemeColors.textDisabled,
                 size: selected ? 22.sp : 20.sp,
               ),
             ],
@@ -613,7 +618,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                   child: Text(
                     '选集',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: AppThemeColors.textPrimary,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
@@ -624,7 +629,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                       _scrollEpisodeSheetToCurrent(scrollController),
                   icon: Icon(
                     Icons.my_location,
-                    color: Colors.white,
+                    color: AppThemeColors.textSecondary,
                     size: compact ? 18 : 20,
                   ),
                 ),
@@ -634,12 +639,15 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                     onPressed: controller.toggleEpisodeOrder,
                     icon: Icon(
                       asc ? Icons.arrow_downward : Icons.arrow_upward,
-                      color: Colors.white,
+                      color: AppThemeColors.textPrimary,
                       size: compact ? 16 : 18,
                     ),
                     label: Text(
                       asc ? '正序' : '倒序',
-                      style: TextStyle(color: Colors.white, fontSize: 15),
+                      style: TextStyle(
+                        color: AppThemeColors.textSecondary,
+                        fontSize: 15,
+                      ),
                     ),
                   );
                 }),
@@ -648,7 +656,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                     onPressed: () => Navigator.of(panelContext).pop(),
                     icon: Icon(
                       Icons.close,
-                      color: Colors.white,
+                      color: AppThemeColors.textSecondary,
                       size: compact ? 20 : 24,
                     ),
                   ),
@@ -657,7 +665,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
           ),
           Divider(
             height: 1,
-            color: sidePanel ? Colors.white12 : Colors.white24,
+            color: AppThemeColors.divider,
           ),
           Expanded(
             child: Obx(() {
@@ -677,9 +685,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                   final theme = Theme.of(context);
                   final bg = selected
                       ? theme.colorScheme.primary
-                      : sidePanel
-                      ? Colors.white10
-                      : Colors.white12;
+                      : AppThemeColors.surfaceMuted;
                   return Material(
                     color: Colors.transparent,
                     child: Ink(
@@ -692,7 +698,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                                     ? theme.colorScheme.primary.withValues(
                                         alpha: 0.28,
                                       )
-                                    : Colors.white.withValues(alpha: 0.08),
+                                    : AppThemeColors.border,
                               )
                             : null,
                       ),
@@ -725,7 +731,9 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                                           maxLines: 2,
                                           overflow: TextOverflow.ellipsis,
                                           style: TextStyle(
-                                            color: Colors.white,
+                                            color: selected
+                                                ? Colors.white
+                                                : AppThemeColors.textPrimary,
                                             fontWeight: selected
                                                 ? FontWeight.w600
                                                 : FontWeight.w500,
@@ -761,7 +769,9 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
                                             style: TextStyle(
-                                              color: Colors.white,
+                                              color: selected
+                                                  ? Colors.white
+                                                  : AppThemeColors.textPrimary,
                                               fontWeight: selected
                                                   ? FontWeight.w600
                                                   : FontWeight.w500,
@@ -800,7 +810,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
       if (sidePanel) {
         return Material(
           clipBehavior: Clip.antiAlias,
-          color: const Color(0xFF111111),
+          color: AppThemeColors.surface,
           borderRadius: BorderRadius.horizontal(left: Radius.circular(20.r)),
           child: panelBody,
         );
@@ -808,8 +818,8 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
 
       return Container(
         height: 0.82.sh,
-        decoration: const BoxDecoration(
-          color: Color(0xFF111111),
+        decoration: BoxDecoration(
+          color: AppThemeColors.surface,
           borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
         ),
         child: panelBody,
@@ -1370,7 +1380,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
 
   Widget _buildFullscreenDrawerContainer({required Widget child}) {
     return Material(
-      color: const Color(0xFF111111),
+      color: AppThemeColors.surface,
       borderRadius: BorderRadius.horizontal(left: Radius.circular(20.r)),
       child: SingleChildScrollView(
         padding: EdgeInsets.fromLTRB(8.w, 12.h, 8.w, 12.h),
@@ -1400,7 +1410,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  color: Colors.white,
+                  color: AppThemeColors.textPrimary,
                   fontSize: titleFontSize ?? 16,
                   fontWeight: FontWeight.w600,
                 ),
@@ -1413,7 +1423,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: Colors.white60,
+                    color: AppThemeColors.textSecondary,
                     fontSize: subtitleFontSize ?? 5.sp,
                     fontWeight: FontWeight.w500,
                   ),
@@ -1445,7 +1455,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
             padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 10.h),
             child: Row(
               children: [
-                Icon(icon, color: Colors.white60, size: 10.sp),
+                Icon(icon, color: AppThemeColors.textMuted, size: 10.sp),
                 SizedBox(width: 8.w),
                 Expanded(
                   child: Column(
@@ -1456,7 +1466,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          color: Colors.white,
+                          color: AppThemeColors.textPrimary,
                           fontSize: 6.sp,
                           fontWeight: FontWeight.w500,
                         ),
@@ -1467,7 +1477,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          color: Colors.white38,
+                          color: AppThemeColors.textDisabled,
                           fontSize: 4.5.sp,
                           fontWeight: FontWeight.w400,
                         ),
@@ -1477,7 +1487,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                 ),
                 Icon(
                   Icons.chevron_right_rounded,
-                  color: Colors.white24,
+                  color: AppThemeColors.textDisabled,
                   size: 10.sp,
                 ),
               ],
@@ -1488,7 +1498,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
           Divider(
             height: 1,
             thickness: 0.5,
-            color: Colors.white.withValues(alpha: 0.06),
+            color: AppThemeColors.divider,
           ),
       ],
     );
@@ -1604,9 +1614,9 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
             constraints: BoxConstraints(maxWidth: maxWidth ?? 320.w),
             child: Container(
               decoration: BoxDecoration(
-                color: const Color(0xFF141414),
+                color: AppThemeColors.surface,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                border: Border.all(color: AppThemeColors.border),
               ),
               padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 12.h + bottom),
               child: Column(
@@ -1619,7 +1629,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                       width: 42.w,
                       height: 4.h,
                       decoration: BoxDecoration(
-                        color: Colors.white24,
+                        color: AppThemeColors.borderStrong,
                         borderRadius: BorderRadius.circular(999.r),
                       ),
                     ),
@@ -1635,7 +1645,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            color: Colors.white,
+                            color: AppThemeColors.textPrimary,
                             fontSize: titleFontSize ?? 16.sp,
                             fontWeight: FontWeight.w700,
                           ),
@@ -1647,7 +1657,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              color: Colors.white60,
+                              color: AppThemeColors.textSecondary,
                               fontSize: subtitleFontSize ?? 12.sp,
                               fontWeight: FontWeight.w500,
                             ),
@@ -1690,12 +1700,12 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
             decoration: BoxDecoration(
               color: selected
                   ? primary.withValues(alpha: 0.14)
-                  : Colors.white.withValues(alpha: 0.04),
+                  : AppThemeColors.surfaceMuted,
               borderRadius: BorderRadius.circular(10.r),
               border: Border.all(
                 color: selected
                     ? primary.withValues(alpha: 0.45)
-                    : Colors.white.withValues(alpha: 0.08),
+                    : AppThemeColors.border,
               ),
             ),
             child: Row(
@@ -1709,7 +1719,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          color: Colors.white,
+                          color: AppThemeColors.textPrimary,
                           fontSize: titleFontSize ?? 14,
                           fontWeight: FontWeight.w600,
                         ),
@@ -1721,7 +1731,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            color: Colors.white60,
+                            color: AppThemeColors.textSecondary,
                             fontSize: subtitleFontSize ?? 12,
                             fontWeight: FontWeight.w500,
                           ),
@@ -1735,7 +1745,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                   selected
                       ? Icons.check_circle_rounded
                       : Icons.chevron_right_rounded,
-                  color: selected ? primary : Colors.white38,
+                  color: selected ? primary : AppThemeColors.textDisabled,
                   size: trailingIconSize ?? 20,
                 ),
               ],
@@ -1760,16 +1770,16 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
     return Container(
       padding: EdgeInsets.fromLTRB(10.w, 8.h, 10.w, 4.h),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
+        color: AppThemeColors.surfaceMuted,
         borderRadius: BorderRadius.circular(10.r),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        border: Border.all(color: AppThemeColors.border),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
-              Icon(icon, color: Colors.white70, size: iconSize ?? 20.sp),
+              Icon(icon, color: AppThemeColors.textMuted, size: iconSize ?? 20.sp),
               SizedBox(width: 6.w),
               Expanded(
                 child: Column(
@@ -1778,7 +1788,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                     Text(
                       title,
                       style: TextStyle(
-                        color: Colors.white,
+                        color: AppThemeColors.textPrimary,
                         fontSize: titleFontSize ?? 14.sp,
                         fontWeight: FontWeight.w600,
                       ),
@@ -1787,7 +1797,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                     Text(
                       '当前：$valueText',
                       style: TextStyle(
-                        color: Colors.white60,
+                        color: AppThemeColors.textSecondary,
                         fontSize: valueFontSize ?? 12.sp,
                         fontWeight: FontWeight.w500,
                       ),
@@ -1845,7 +1855,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
     final button = Opacity(
       opacity: enabled ? 1.0 : 0.38,
       child: Material(
-        color: Colors.white.withValues(alpha: 0.06),
+        color: AppThemeColors.surfaceSunken,
         borderRadius: BorderRadius.circular(14.r),
         child: InkWell(
           borderRadius: BorderRadius.circular(14.r),
@@ -1855,9 +1865,9 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
             height: 34,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(14.r),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+              border: Border.all(color: AppThemeColors.border),
             ),
-            child: Icon(icon, color: Colors.white, size: 18),
+            child: Icon(icon, color: AppThemeColors.textPrimary, size: 18),
           ),
         ),
       ),
@@ -1939,9 +1949,9 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF050505),
+      backgroundColor: AppThemeColors.pageBackground,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF050505),
+        backgroundColor: AppThemeColors.surface,
         toolbarHeight: 56,
         leadingWidth: 40,
         leading: IconButton(
@@ -1949,7 +1959,11 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
           constraints: const BoxConstraints(),
           visualDensity: VisualDensity.compact,
           onPressed: () => Navigator.of(context).maybePop(),
-          icon: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+          icon: const Icon(
+            Icons.arrow_back,
+            color: AppThemeColors.textPrimary,
+            size: 20,
+          ),
         ),
         titleSpacing: 0,
         title: Obx(
@@ -1957,7 +1971,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
             alignment: Alignment.centerLeft,
             child: MediaPlayerHeaderTitle(
               title: controller.resourceTitle.value,
-              titleColor: Colors.white,
+              titleColor: AppThemeColors.textPrimary,
               fallbackTitle: '影视',
             ),
           ),
@@ -2009,7 +2023,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                   child: Obx(() {
                     if (controller.isLoadingPlaylist.value) {
                       return Container(
-                        color: const Color(0xFF111111),
+                        color: AppThemeColors.surfaceSunken,
                         child: const PlaylistLoadingView(
                           message: '正在加载播放列表...',
                           accentColor: Color(0xFF2563FF),
@@ -2018,11 +2032,11 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                     }
                     if (controller.episodes.isEmpty) {
                       return Container(
-                        color: const Color(0xFF111111),
+                        color: AppThemeColors.surfaceSunken,
                         child: const Center(
                           child: Text(
                             '播放列表为空',
-                            style: TextStyle(color: Colors.white70),
+                            style: TextStyle(color: AppThemeColors.textSecondary),
                           ),
                         ),
                       );
@@ -2250,7 +2264,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                                 Text(
                                   '选集',
                                   style: TextStyle(
-                                    color: Colors.white,
+                                    color: AppThemeColors.textPrimary,
                                     fontSize: 16.sp,
                                     fontWeight: FontWeight.w700,
                                   ),
@@ -2265,13 +2279,13 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                                       asc
                                           ? Icons.arrow_downward_rounded
                                           : Icons.arrow_upward_rounded,
-                                      color: Colors.white,
+                                      color: AppThemeColors.textPrimary,
                                       size: 18.sp,
                                     ),
                                     label: Text(
                                       asc ? '正序' : '倒序',
                                       style: TextStyle(
-                                        color: Colors.white,
+                                        color: AppThemeColors.textSecondary,
                                         fontSize: 13.sp,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -2281,7 +2295,7 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                                         horizontal: 12.w,
                                         vertical: 8.h,
                                       ),
-                                      foregroundColor: Colors.white,
+                                      foregroundColor: AppThemeColors.primary,
                                     ),
                                   );
                                 }),
@@ -2292,13 +2306,13 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                                       : _scrollToCurrentEpisode,
                                   icon: Icon(
                                     Icons.my_location_rounded,
-                                    color: Colors.white70,
+                                    color: AppThemeColors.textMuted,
                                     size: 18.sp,
                                   ),
                                   label: Text(
                                     '定位',
                                     style: TextStyle(
-                                      color: Colors.white,
+                                      color: AppThemeColors.textSecondary,
                                       fontSize: 13.sp,
                                       fontWeight: FontWeight.w600,
                                     ),
@@ -2319,14 +2333,14 @@ class _PlayerViewState extends State<PlayerView> with WidgetsBindingObserver {
                                 padding: EdgeInsets.symmetric(vertical: 24.h),
                                 alignment: Alignment.center,
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.04),
+                                  color: AppThemeColors.surface,
                                   borderRadius: BorderRadius.circular(14.r),
-                                  border: Border.all(color: Colors.white12),
+                                  border: Border.all(color: AppThemeColors.border),
                                 ),
                                 child: Text(
                                   '暂无选集',
                                   style: TextStyle(
-                                    color: Colors.white60,
+                                    color: AppThemeColors.textSecondary,
                                     fontSize: 13.sp,
                                   ),
                                 ),

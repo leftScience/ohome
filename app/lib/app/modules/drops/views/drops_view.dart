@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -126,7 +125,7 @@ class _DropsViewState extends State<DropsView>
                       style: TextStyle(
                         fontSize: 24.sp,
                         fontWeight: FontWeight.w800,
-                        color: Colors.white,
+                        color: AppThemeColors.textPrimary,
                         letterSpacing: 0.2,
                       ),
                     ),
@@ -174,58 +173,55 @@ class _DropsViewState extends State<DropsView>
                 child: Container(
                   height: 48.h,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.05),
+                    color: AppThemeColors.surface,
                     borderRadius: BorderRadius.circular(24.r),
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.12),
+                      color: AppThemeColors.border,
                       width: 1.2,
                     ),
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(24.r),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-                      child: TabBar(
-                        controller: _tabController,
-                        onTap: (value) {
-                          if (value == 1) {
-                            _ensureEventsController();
-                          }
-                        },
-                        splashBorderRadius: BorderRadius.circular(24.r),
-                        dividerColor: Colors.transparent,
-                        indicatorSize: TabBarIndicatorSize.tab,
-                        indicatorPadding: EdgeInsets.all(4.w),
-                        indicator: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF2B78FF), Color(0xFF1967EA)],
-                          ),
-                          borderRadius: BorderRadius.circular(18.r),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppThemeColors.primary.withValues(
-                                alpha: 0.35,
-                              ),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
+                    child: TabBar(
+                      controller: _tabController,
+                      onTap: (value) {
+                        if (value == 1) {
+                          _ensureEventsController();
+                        }
+                      },
+                      splashBorderRadius: BorderRadius.circular(24.r),
+                      dividerColor: Colors.transparent,
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      indicatorPadding: EdgeInsets.all(4.w),
+                      indicator: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF2B78FF), Color(0xFF1967EA)],
+                        ),
+                        borderRadius: BorderRadius.circular(18.r),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppThemeColors.primary.withValues(
+                              alpha: 0.35,
                             ),
-                          ],
-                        ),
-                        labelColor: Colors.white,
-                        unselectedLabelColor: Colors.white54,
-                        labelStyle: TextStyle(
-                          fontSize: 15.sp,
-                          fontWeight: FontWeight.w700,
-                        ),
-                        unselectedLabelStyle: TextStyle(
-                          fontSize: 15.sp,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        tabs: const [
-                          Tab(text: '物资'),
-                          Tab(text: '日期'),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
                         ],
                       ),
+                      labelColor: Colors.white,
+                      unselectedLabelColor: AppThemeColors.textMuted,
+                      labelStyle: TextStyle(
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      unselectedLabelStyle: TextStyle(
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      tabs: const [
+                        Tab(text: '物资'),
+                        Tab(text: '日期'),
+                      ],
                     ),
                   ),
                 ),
@@ -323,156 +319,150 @@ class _ReminderEntryCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(20.r),
           boxShadow: [
             BoxShadow(
-              color: gradient[1].withValues(alpha: 0.35),
-              blurRadius: 18,
-              offset: const Offset(0, 8),
+              color: gradient[1].withValues(alpha: 0.2),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(20.r),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20.r),
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    gradient[0].withValues(alpha: 0.75),
-                    gradient[1].withValues(alpha: 0.55),
-                  ],
-                ),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  width: 1.2,
-                ),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20.r),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [gradient[0], gradient[1]],
               ),
-              child: Stack(
-                children: [
-                  // Left bottom big glow
-                  Positioned(
-                    left: -20.w,
-                    bottom: -24.h,
-                    child: Container(
-                      width: 100.w,
-                      height: 100.w,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: RadialGradient(
-                          colors: [
-                            Colors.white.withValues(alpha: 0.12),
-                            Colors.transparent,
-                          ],
-                        ),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.2),
+                width: 1.2,
+              ),
+            ),
+            child: Stack(
+              children: [
+                // Left bottom big glow
+                Positioned(
+                  left: -20.w,
+                  bottom: -24.h,
+                  child: Container(
+                    width: 100.w,
+                    height: 100.w,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          Colors.white.withValues(alpha: 0.12),
+                          Colors.transparent,
+                        ],
                       ),
                     ),
                   ),
-                  // Right top specific color glow
-                  Positioned(
-                    top: -12.h,
-                    right: -12.w,
-                    child: Container(
-                      width: 56.w,
-                      height: 56.w,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: RadialGradient(
-                          colors: [
-                            iconColor.withValues(alpha: 0.35),
-                            Colors.transparent,
-                          ],
-                        ),
+                ),
+                // Right top specific color glow
+                Positioned(
+                  top: -12.h,
+                  right: -12.w,
+                  child: Container(
+                    width: 56.w,
+                    height: 56.w,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          iconColor.withValues(alpha: 0.35),
+                          Colors.transparent,
+                        ],
                       ),
                     ),
                   ),
-                  Positioned.fill(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20.r),
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.white.withValues(alpha: 0.12),
-                            Colors.transparent,
-                          ],
-                          stops: const [0.0, 0.45],
-                        ),
+                ),
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20.r),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.white.withValues(alpha: 0.12),
+                          Colors.transparent,
+                        ],
+                        stops: const [0.0, 0.45],
                       ),
                     ),
                   ),
-                  // Content
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(14.w, 14.h, 14.w, 14.h),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 42.w,
-                          height: 42.w,
-                          decoration: BoxDecoration(
-                            color: iconColor.withValues(alpha: 0.22),
-                            borderRadius: BorderRadius.circular(14.r),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.15),
-                              width: 1,
-                            ),
-                          ),
-                          child: Icon(icon, color: Colors.white, size: 22.w),
-                        ),
-                        SizedBox(width: 12.w),
-                        Expanded(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                label,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 14.sp,
-                                  height: 1.0,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white.withValues(alpha: 0.85),
-                                  letterSpacing: 0.3,
-                                ),
-                              ),
-                              SizedBox(height: 6.h),
-                              Text(
-                                '$value',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 24.sp,
-                                  height: 1.1,
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          width: 26.w,
-                          height: 26.w,
-                          decoration: BoxDecoration(
+                ),
+                // Content
+                Padding(
+                  padding: EdgeInsets.fromLTRB(14.w, 14.h, 14.w, 14.h),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 42.w,
+                        height: 42.w,
+                        decoration: BoxDecoration(
+                          color: iconColor.withValues(alpha: 0.22),
+                          borderRadius: BorderRadius.circular(14.r),
+                          border: Border.all(
                             color: Colors.white.withValues(alpha: 0.15),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.arrow_forward_ios_rounded,
-                            color: Colors.white.withValues(alpha: 0.8),
-                            size: 13.w,
+                            width: 1,
                           ),
                         ),
-                      ],
-                    ),
+                        child: Icon(icon, color: Colors.white, size: 22.w),
+                      ),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              label,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 14.sp,
+                                height: 1.0,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white.withValues(alpha: 0.85),
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                            SizedBox(height: 6.h),
+                            Text(
+                              '$value',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 24.sp,
+                                height: 1.1,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        width: 26.w,
+                        height: 26.w,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.15),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          color: Colors.white.withValues(alpha: 0.8),
+                          size: 13.w,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),

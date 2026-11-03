@@ -7,6 +7,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
+import '../../../theme/app_theme.dart';
 import '../../../widgets/media_player_header_title.dart';
 import '../../player/controllers/player_controller.dart';
 
@@ -143,7 +144,7 @@ class _PlayletPlayerViewState extends State<PlayletPlayerView>
           child: Container(
             height: 0.62.sh,
             decoration: BoxDecoration(
-              color: const Color(0xFF17181C),
+              color: AppThemeColors.surface,
               borderRadius: BorderRadius.vertical(top: Radius.circular(18.r)),
             ),
             child: Column(
@@ -153,7 +154,7 @@ class _PlayletPlayerViewState extends State<PlayletPlayerView>
                   width: 52.w,
                   height: 4.h,
                   decoration: BoxDecoration(
-                    color: Colors.white24,
+                    color: AppThemeColors.borderStrong,
                     borderRadius: BorderRadius.circular(999.r),
                   ),
                 ),
@@ -168,7 +169,7 @@ class _PlayletPlayerViewState extends State<PlayletPlayerView>
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              color: Colors.white,
+                              color: AppThemeColors.textPrimary,
                               fontSize: 17.sp,
                               fontWeight: FontWeight.w700,
                             ),
@@ -180,17 +181,20 @@ class _PlayletPlayerViewState extends State<PlayletPlayerView>
                         onPressed: scrollToCurrentEpisode,
                         icon: const Icon(
                           Icons.my_location_rounded,
-                          color: Colors.white70,
+                          color: AppThemeColors.textMuted,
                         ),
                       ),
                       IconButton(
                         onPressed: () => Navigator.of(ctx).pop(),
-                        icon: const Icon(Icons.close, color: Colors.white70),
+                        icon: const Icon(
+                          Icons.close,
+                          color: AppThemeColors.textMuted,
+                        ),
                       ),
                     ],
                   ),
                 ),
-                const Divider(height: 1, color: Colors.white12),
+                const Divider(height: 1, color: AppThemeColors.divider),
                 Expanded(
                   child: Obx(() {
                     final total = controller.episodes.length;
@@ -223,15 +227,15 @@ class _PlayletPlayerViewState extends State<PlayletPlayerView>
                           child: Container(
                             decoration: BoxDecoration(
                               color: selected
-                                  ? const Color(
-                                      0xFFFF8E1F,
-                                    ).withValues(alpha: 0.2)
-                                  : const Color(0xFF23252A),
+                                  ? AppThemeColors.primary.withValues(
+                                      alpha: 0.1,
+                                    )
+                                  : AppThemeColors.surfaceMuted,
                               borderRadius: BorderRadius.circular(12.r),
                               border: Border.all(
                                 color: selected
-                                    ? const Color(0xFFFF8E1F)
-                                    : Colors.white10,
+                                    ? AppThemeColors.primary
+                                    : AppThemeColors.border,
                               ),
                             ),
                             alignment: Alignment.center,
@@ -239,8 +243,8 @@ class _PlayletPlayerViewState extends State<PlayletPlayerView>
                               '${index + 1}',
                               style: TextStyle(
                                 color: selected
-                                    ? const Color(0xFFFFA645)
-                                    : Colors.white,
+                                    ? AppThemeColors.primary
+                                    : AppThemeColors.textPrimary,
                                 fontSize: 17.sp,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -450,6 +454,7 @@ class _PlayletPlayerViewState extends State<PlayletPlayerView>
     final hint = index + 1 >= total
         ? '\u5df2\u662f\u6700\u540e\u4e00\u96c6'
         : '\u4e0a\u6ed1\u5207\u6362\u4e0b\u4e00\u96c6';
+    // 非当前集占位页属于视频区域，保持深色底色
     return Container(
       color: const Color(0xFF0C0C0C),
       child: Center(
@@ -527,7 +532,7 @@ class _PlayletPlayerViewState extends State<PlayletPlayerView>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF050505),
+      backgroundColor: AppThemeColors.pageBackground,
       body: Stack(
         fit: StackFit.expand,
         children: [
@@ -540,7 +545,10 @@ class _PlayletPlayerViewState extends State<PlayletPlayerView>
               return Center(
                 child: Text(
                   '\u6682\u65e0\u53ef\u64ad\u653e\u5267\u96c6',
-                  style: TextStyle(color: Colors.white54, fontSize: 13.sp),
+                  style: TextStyle(
+                    color: AppThemeColors.textMuted,
+                    fontSize: 13.sp,
+                  ),
                 ),
               );
             }
@@ -576,6 +584,7 @@ class _PlayletPlayerViewState extends State<PlayletPlayerView>
               },
             );
           }),
+          // 顶部标题直接悬浮在视频画面上，保持白字以保证可读性
           SafeArea(
             bottom: false,
             child: Align(
@@ -624,9 +633,10 @@ class _PlayletPlayerViewState extends State<PlayletPlayerView>
                       height: 40.h,
                       padding: EdgeInsets.symmetric(horizontal: 12.w),
                       decoration: BoxDecoration(
-                        color: Colors.black54,
+                        color: AppThemeColors.surface,
                         borderRadius: BorderRadius.circular(8.r),
-                        border: Border.all(color: Colors.white24),
+                        border: Border.all(color: AppThemeColors.border),
+                        boxShadow: AppThemeColors.floatingShadow,
                       ),
                       child: Row(
                         children: [
@@ -636,7 +646,7 @@ class _PlayletPlayerViewState extends State<PlayletPlayerView>
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                color: Colors.white,
+                                color: AppThemeColors.textPrimary,
                                 fontSize: 15.sp,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -644,7 +654,7 @@ class _PlayletPlayerViewState extends State<PlayletPlayerView>
                           ),
                           Icon(
                             Icons.keyboard_arrow_up_rounded,
-                            color: Colors.white70,
+                            color: AppThemeColors.textMuted,
                             size: 22.w,
                           ),
                         ],

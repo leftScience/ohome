@@ -3,20 +3,21 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
 import '../../../data/models/todo_item_model.dart';
+import '../../../theme/app_theme.dart';
 import '../controllers/home_controller.dart';
 
 class HomeTodoPanel extends StatelessWidget {
   const HomeTodoPanel({super.key});
 
   static const Color _panelAccent = Color(0xFF6C63FF);
-  static const Color _panelBackground = Color(0xFF13141F);
-  static const Color _panelBackgroundSoft = Color(0xFF1A1C29);
-  static const Color _panelBorder = Color(0xFF2E3045);
-  static const Color _tileBackgroundSoft = Color(0xFF1F2131);
-  static const Color _tilePendingStart = Color(0xFF33206B);
-  static const Color _tilePendingMiddle = Color(0xFF272A42);
-  static const Color _tilePendingEnd = Color(0xFF1C1E30);
-  static const Color _textMuted = Color(0xFF8E919A);
+  static const Color _panelBackground = Color(0xFFFFFFFF);
+  static const Color _panelBackgroundSoft = Color(0xFFF6F7FC);
+  static const Color _panelBorder = Color(0xFFE6EBF3);
+  static const Color _tileBackgroundSoft = Color(0xFFF6F7FC);
+  static const Color _tilePendingStart = Color(0xFFF1EDFF);
+  static const Color _tilePendingMiddle = Color(0xFFF7F8FE);
+  static const Color _tilePendingEnd = Color(0xFFFFFFFF);
+  static const Color _textMuted = Color(0xFF98A2B3);
 
   HomeController get controller => Get.find<HomeController>();
 
@@ -37,17 +38,17 @@ class HomeTodoPanel extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              const Color(0xFF191A21),
               _panelBackground,
-              const Color(0xFF111216),
+              _panelBackground,
+              const Color(0xFFF9FAFE),
             ],
           ),
           border: Border.all(color: _panelBorder, width: 1.2),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.26),
-              blurRadius: 18,
-              offset: const Offset(0, 12),
+              color: AppThemeColors.shadowSoft,
+              blurRadius: 20,
+              offset: const Offset(0, 10),
             ),
           ],
         ),
@@ -67,7 +68,7 @@ class HomeTodoPanel extends StatelessWidget {
                       gradient: RadialGradient(
                         colors: [
                           _panelAccent.withValues(alpha: 0.13),
-                          Colors.transparent,
+                          _panelAccent.withValues(alpha: 0),
                         ],
                       ),
                     ),
@@ -85,8 +86,8 @@ class HomeTodoPanel extends StatelessWidget {
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
                         colors: [
-                          Colors.white.withValues(alpha: 0.05),
-                          Colors.transparent,
+                          _panelAccent.withValues(alpha: 0.04),
+                          _panelAccent.withValues(alpha: 0),
                         ],
                       ),
                     ),
@@ -177,7 +178,7 @@ class HomeTodoPanel extends StatelessWidget {
             style: TextStyle(
               fontSize: 14.sp,
               fontWeight: FontWeight.w700,
-              color: Colors.white,
+              color: AppThemeColors.textPrimary,
               letterSpacing: 0.1,
             ),
           ),
@@ -192,12 +193,8 @@ class HomeTodoPanel extends StatelessWidget {
               height: 40.w,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: canCreate ? 0.06 : 0.03),
-                border: Border.all(
-                  color: Colors.white.withValues(
-                    alpha: canCreate ? 0.06 : 0.03,
-                  ),
-                ),
+                color: AppThemeColors.surfaceSunken,
+                border: Border.all(color: AppThemeColors.border),
               ),
               child: Center(
                 child: submitting
@@ -212,7 +209,9 @@ class HomeTodoPanel extends StatelessWidget {
                     : Icon(
                         Icons.add_rounded,
                         size: 19.w,
-                        color: canCreate ? Colors.white70 : Colors.white24,
+                        color: canCreate
+                            ? AppThemeColors.textSecondary
+                            : AppThemeColors.textDisabled,
                       ),
               ),
             ),
@@ -253,7 +252,7 @@ class HomeTodoPanel extends StatelessWidget {
                     borderRadius: BorderRadius.circular(20.r),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.26),
+                        color: AppThemeColors.shadowMedium,
                         blurRadius: 14,
                         offset: const Offset(0, 10),
                       ),
@@ -321,7 +320,7 @@ class HomeTodoPanel extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 11.5.sp,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white70,
+                        color: AppThemeColors.textSecondary,
                       ),
                     ),
                   ),
@@ -331,7 +330,7 @@ class HomeTodoPanel extends StatelessWidget {
                     child: Icon(
                       Icons.keyboard_arrow_down_rounded,
                       size: 18.w,
-                      color: Colors.white54,
+                      color: AppThemeColors.textMuted,
                     ),
                   ),
                 ],
@@ -396,7 +395,9 @@ class HomeTodoPanel extends StatelessWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: completed ? 0.12 : 0.18),
+                color: completed
+                    ? AppThemeColors.shadowSoft
+                    : AppThemeColors.shadowMedium,
                 blurRadius: 10,
                 offset: const Offset(0, 6),
               ),
@@ -422,7 +423,9 @@ class HomeTodoPanel extends StatelessWidget {
                     fontSize: 12.sp,
                     height: 1.2,
                     fontWeight: completed ? FontWeight.w600 : FontWeight.w700,
-                    color: completed ? _textMuted : Colors.white,
+                    color: completed
+                        ? _textMuted
+                        : AppThemeColors.textPrimary,
                     decoration: completed
                         ? TextDecoration.lineThrough
                         : TextDecoration.none,
@@ -499,7 +502,9 @@ class HomeTodoPanel extends StatelessWidget {
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 1.w, vertical: 1.h),
         child: _TodoGripDots(
-          color: item.completed ? Colors.white24 : Colors.white30,
+          color: item.completed
+              ? AppThemeColors.textDisabled
+              : AppThemeColors.textMuted,
         ),
       ),
     );
@@ -535,9 +540,9 @@ class HomeTodoPanel extends StatelessWidget {
             height: 30.w,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.white.withValues(alpha: 0.04),
+              color: AppThemeColors.surfaceSunken,
             ),
-            child: Icon(icon, color: Colors.white54, size: 16.w),
+            child: Icon(icon, color: AppThemeColors.textMuted, size: 16.w),
           ),
           SizedBox(width: 10.w),
           Expanded(
@@ -549,7 +554,7 @@ class HomeTodoPanel extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12.5.sp,
                     fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                    color: AppThemeColors.textPrimary,
                   ),
                 ),
                 SizedBox(height: 2.h),
@@ -558,7 +563,7 @@ class HomeTodoPanel extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 10.5.sp,
                     height: 1.35,
-                    color: Colors.white38,
+                    color: AppThemeColors.textMuted,
                   ),
                 ),
               ],
@@ -575,7 +580,7 @@ class HomeTodoPanel extends StatelessWidget {
       final title = await Get.dialog<String>(
         AlertDialog(
           scrollable: true,
-          backgroundColor: const Color(0xFF1C1E25),
+          backgroundColor: AppThemeColors.surface,
           surfaceTintColor: Colors.transparent,
           insetPadding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 24.h),
           shape: RoundedRectangleBorder(
@@ -614,7 +619,7 @@ class HomeTodoPanel extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 18.sp,
                         fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                        color: AppThemeColors.textPrimary,
                       ),
                     ),
                     SizedBox(height: 2.h),
@@ -623,7 +628,7 @@ class HomeTodoPanel extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 11.5.sp,
                         height: 1.35,
-                        color: Colors.white54,
+                        color: AppThemeColors.textMuted,
                       ),
                     ),
                   ],
@@ -640,24 +645,15 @@ class HomeTodoPanel extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12.sp,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white70,
+                  color: AppThemeColors.textSecondary,
                 ),
               ),
               SizedBox(height: 10.h),
               Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20.r),
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Colors.white.withValues(alpha: 0.06),
-                      Colors.white.withValues(alpha: 0.03),
-                    ],
-                  ),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.08),
-                  ),
+                  color: AppThemeColors.surfaceMuted,
+                  border: Border.all(color: AppThemeColors.border),
                 ),
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(14.w, 12.h, 14.w, 12.h),
@@ -671,12 +667,12 @@ class HomeTodoPanel extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 13.5.sp,
                       height: 1.45,
-                      color: Colors.white,
+                      color: AppThemeColors.textPrimary,
                     ),
                     decoration: InputDecoration(
                       hintText: '例如：整理今日片单、更新分类标签、回复重要消息',
                       hintStyle: TextStyle(
-                        color: Colors.white30,
+                        color: AppThemeColors.textDisabled,
                         fontSize: 12.sp,
                         height: 1.4,
                       ),
@@ -706,7 +702,7 @@ class HomeTodoPanel extends StatelessWidget {
                         height: 16.w,
                         child: const CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.white,
+                          color: AppThemeColors.textOnAccent,
                         ),
                       )
                     : const Text('添加任务'),
@@ -733,7 +729,7 @@ class HomeTodoPanel extends StatelessWidget {
     final action = await Get.bottomSheet<_TodoAction>(
       Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF1A1C22),
+          color: AppThemeColors.surface,
           borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
           border: Border(
             top: BorderSide(color: _panelBorder.withValues(alpha: 0.98)),
@@ -750,7 +746,7 @@ class HomeTodoPanel extends StatelessWidget {
                   width: 42.w,
                   height: 4.h,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.12),
+                    color: AppThemeColors.borderStrong,
                     borderRadius: BorderRadius.circular(999.r),
                   ),
                 ),
@@ -762,7 +758,7 @@ class HomeTodoPanel extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                    color: AppThemeColors.textPrimary,
                   ),
                 ),
                 SizedBox(height: 16.h),
@@ -797,7 +793,9 @@ class HomeTodoPanel extends StatelessWidget {
     required VoidCallback onTap,
     bool destructive = false,
   }) {
-    final foreground = destructive ? const Color(0xFFFF8A80) : Colors.white;
+    final foreground = destructive
+        ? AppThemeColors.danger
+        : AppThemeColors.textPrimary;
 
     return Material(
       color: Colors.transparent,
@@ -808,8 +806,8 @@ class HomeTodoPanel extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 15.h),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18.r),
-            color: Colors.white.withValues(alpha: 0.04),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+            color: AppThemeColors.surfaceMuted,
+            border: Border.all(color: AppThemeColors.border),
           ),
           child: Row(
             children: [
@@ -840,7 +838,7 @@ class HomeTodoPanel extends StatelessWidget {
     try {
       return await Get.dialog<String>(
         AlertDialog(
-          backgroundColor: const Color(0xFF1C1E25),
+          backgroundColor: AppThemeColors.surface,
           surfaceTintColor: Colors.transparent,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24.r),
@@ -854,7 +852,7 @@ class HomeTodoPanel extends StatelessWidget {
             style: TextStyle(
               fontSize: 18.sp,
               fontWeight: FontWeight.w700,
-              color: Colors.white,
+              color: AppThemeColors.textPrimary,
             ),
           ),
           content: TextField(
@@ -862,21 +860,22 @@ class HomeTodoPanel extends StatelessWidget {
             autofocus: true,
             textInputAction: TextInputAction.done,
             onSubmitted: (value) => Get.back(result: value),
-            style: TextStyle(fontSize: 14.sp, color: Colors.white),
+            style: TextStyle(
+              fontSize: 14.sp,
+              color: AppThemeColors.textPrimary,
+            ),
             decoration: InputDecoration(
               hintText: hintText,
-              hintStyle: TextStyle(color: Colors.white38, fontSize: 13.sp),
+              hintStyle: TextStyle(color: AppThemeColors.textMuted, fontSize: 13.sp),
               filled: true,
-              fillColor: Colors.white.withValues(alpha: 0.04),
+              fillColor: AppThemeColors.surfaceMuted,
               contentPadding: EdgeInsets.symmetric(
                 horizontal: 14.w,
                 vertical: 14.h,
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(18.r),
-                borderSide: BorderSide(
-                  color: Colors.white.withValues(alpha: 0.06),
-                ),
+                borderSide: const BorderSide(color: AppThemeColors.border),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(18.r),
@@ -929,7 +928,7 @@ class HomeTodoPanel extends StatelessWidget {
   Future<void> _confirmDelete(TodoItemModel item) async {
     final confirmed = await Get.dialog<bool>(
       AlertDialog(
-        backgroundColor: const Color(0xFF1C1E25),
+        backgroundColor: AppThemeColors.surface,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24.r),
@@ -940,7 +939,7 @@ class HomeTodoPanel extends StatelessWidget {
           style: TextStyle(
             fontSize: 18.sp,
             fontWeight: FontWeight.w700,
-            color: Colors.white,
+            color: AppThemeColors.textPrimary,
           ),
         ),
         content: Text(
@@ -948,7 +947,7 @@ class HomeTodoPanel extends StatelessWidget {
           style: TextStyle(
             fontSize: 14.sp,
             height: 1.45,
-            color: Colors.white70,
+            color: AppThemeColors.textSecondary,
           ),
         ),
         actions: [
@@ -958,7 +957,7 @@ class HomeTodoPanel extends StatelessWidget {
           ),
           FilledButton(
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFB71C1C),
+              backgroundColor: AppThemeColors.danger,
               foregroundColor: Colors.white,
             ),
             onPressed: () => Get.back(result: true),

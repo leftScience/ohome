@@ -144,6 +144,7 @@ class _QuarkCookieWebLoginViewState extends State<QuarkCookieWebLoginView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppThemeColors.pageBackground,
       appBar: AppBar(title: const Text('夸克网页登录')),
       body: Column(
         children: [
@@ -151,15 +152,15 @@ class _QuarkCookieWebLoginViewState extends State<QuarkCookieWebLoginView> {
             LinearProgressIndicator(
               value: _progress,
               minHeight: 2.h,
-              backgroundColor: Colors.white.withValues(alpha: 0.06),
+              backgroundColor: AppThemeColors.surfaceSunken,
               color: AppThemeColors.primary,
             ),
           Expanded(
             child: Container(
               margin: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 16.h),
               decoration: BoxDecoration(
-                color: const Color(0xFF0D0D0D),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                color: AppThemeColors.surface,
+                border: Border.all(color: AppThemeColors.border),
               ),
               child: InAppWebView(
                 initialUrlRequest: URLRequest(url: _blankUri),
@@ -258,7 +259,7 @@ class _QuarkCookieWebLoginViewState extends State<QuarkCookieWebLoginView> {
                 onPressed: _resetQuarkSession,
                 style: OutlinedButton.styleFrom(
                   minimumSize: Size.fromHeight(48.h),
-                  side: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+                  side: const BorderSide(color: AppThemeColors.borderStrong),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16.r),
                   ),

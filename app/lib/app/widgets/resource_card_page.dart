@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import '../data/api/quark.dart';
 import '../data/models/quark_file_entry.dart';
 import '../modules/common/controllers/quark_folder_controller.dart';
+import '../theme/app_theme.dart';
 import 'selection_bottom_sheet.dart';
 
 const List<String> _kDefaultEntryBlacklist = <String>[''];
@@ -97,13 +98,13 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
     visualDensity: VisualDensity.compact,
   );
   late final ButtonStyle _renameActionButtonStyle = _buildAppBarActionStyle(
-    const Color(0xFF64B5F6),
+    const Color(0xFF1E88E5),
   );
   late final ButtonStyle _deleteActionButtonStyle = _buildAppBarActionStyle(
-    const Color(0xFFE57373),
+    const Color(0xFFE53935),
   );
   late final ButtonStyle _moveActionButtonStyle = _buildAppBarActionStyle(
-    const Color(0xFF81C784),
+    const Color(0xFF43A047),
   );
 
   ButtonStyle _buildAppBarActionStyle(Color color) {
@@ -329,7 +330,7 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
               Text(
                 errText,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white70),
+                style: const TextStyle(color: AppThemeColors.textSecondary),
               ),
               const SizedBox(height: 12),
               ElevatedButton(
@@ -360,7 +361,7 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
               child: Center(
                 child: Text(
                   _searchQuery.isEmpty ? widget.emptyText : '未找到匹配的资源',
-                  style: const TextStyle(color: Colors.white70),
+                  style: const TextStyle(color: AppThemeColors.textSecondary),
                 ),
               ),
             ),
@@ -370,7 +371,7 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
       return Center(
         child: Text(
           _searchQuery.isEmpty ? widget.emptyText : '未找到匹配的资源',
-          style: const TextStyle(color: Colors.white70),
+          style: const TextStyle(color: AppThemeColors.textSecondary),
         ),
       );
     }
@@ -451,8 +452,12 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
     required WebdavListSortType currentSort,
     required bool disabled,
   }) {
-    final labelColor = disabled ? Colors.white38 : Colors.white70;
-    final iconColor = disabled ? Colors.white30 : Colors.white54;
+    final labelColor = disabled
+        ? AppThemeColors.textDisabled
+        : AppThemeColors.textSecondary;
+    final iconColor = disabled
+        ? AppThemeColors.textDisabled
+        : AppThemeColors.textMuted;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(0, 5, 12, 0),
@@ -466,7 +471,7 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
               enabled: !disabled,
               tooltip: '排序方式',
               padding: EdgeInsets.zero,
-              color: const Color(0xFF1A1A1A),
+              color: AppThemeColors.surface,
               position: PopupMenuPosition.under,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(18),
@@ -478,7 +483,7 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
                       child: Text(
                         option.label,
                         style: const TextStyle(
-                          color: Colors.white70,
+                          color: AppThemeColors.textSecondary,
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                         ),
@@ -517,15 +522,15 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
     return Container(
       height: 38,
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: AppThemeColors.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        border: Border.all(color: AppThemeColors.border),
       ),
       child: TextField(
         controller: _searchController,
         enabled: !disabled,
         style: const TextStyle(
-          color: Colors.white,
+          color: AppThemeColors.textPrimary,
           fontSize: 13,
           fontWeight: FontWeight.w500,
         ),
@@ -533,10 +538,13 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
           isDense: true,
           border: InputBorder.none,
           hintText: '搜索资源',
-          hintStyle: const TextStyle(color: Colors.white38, fontSize: 13),
+          hintStyle: const TextStyle(
+            color: AppThemeColors.textDisabled,
+            fontSize: 13,
+          ),
           prefixIcon: const Icon(
             Icons.search_rounded,
-            color: Colors.white54,
+            color: AppThemeColors.textMuted,
             size: 18,
           ),
           suffixIcon: hasKeyword
@@ -545,7 +553,7 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
                   onPressed: disabled ? null : _searchController.clear,
                   icon: const Icon(
                     Icons.close_rounded,
-                    color: Colors.white54,
+                    color: AppThemeColors.textMuted,
                     size: 18,
                   ),
                 )
@@ -580,9 +588,15 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
         ),
       );
     } else if (!hasMore) {
-      child = const Text('没有更多了', style: TextStyle(color: Colors.white38));
+      child = const Text(
+        '没有更多了',
+        style: TextStyle(color: AppThemeColors.textMuted),
+      );
     } else {
-      child = const Text('继续下滑加载更多', style: TextStyle(color: Colors.white38));
+      child = const Text(
+        '继续下滑加载更多',
+        style: TextStyle(color: AppThemeColors.textMuted),
+      );
     }
 
     return Container(
@@ -909,7 +923,7 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
       meta: SelectionBottomSheetMeta(
         icon: Icons.drive_file_move_rounded,
         label: '可选 ${targets.length} 个目标',
-        accent: const Color(0xFF34D399),
+        accent: const Color(0xFF059669),
       ),
       helperText: '点击目标分类即可移动已选资源',
       emptyTitle: '暂无可用目标',
@@ -1048,18 +1062,18 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
     final selectionActive = _cardActionsVisible;
     final borderColor = deleting
         ? deletingColor.withValues(alpha: 0.9)
-        : (selected ? highlightColor : Colors.white.withValues(alpha: 0.08));
+        : (selected ? highlightColor : AppThemeColors.border);
     final borderWidth = deleting || selected ? 1.4 : 1.0;
 
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
+        color: AppThemeColors.surface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: borderColor, width: borderWidth),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.3),
-            blurRadius: 6,
+            color: AppThemeColors.shadowSoft,
+            blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
@@ -1121,7 +1135,7 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
                       child: Text(
                         _breakPath(entry.name),
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: AppThemeColors.textPrimary,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -1132,17 +1146,22 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
                             ? Icons.check_circle_rounded
                             : Icons.radio_button_unchecked_rounded,
                         size: 20,
-                        color: selected ? highlightColor : Colors.white54,
+                        color: selected
+                            ? highlightColor
+                            : AppThemeColors.textMuted,
                       ),
                   ],
                 ),
                 const SizedBox(height: 10),
                 if (subtitle.isNotEmpty)
-                  Text(subtitle, style: const TextStyle(color: Colors.white60)),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(color: AppThemeColors.textSecondary),
+                  ),
                 const SizedBox(height: 2),
                 Text(
                   displayStatus,
-                  style: const TextStyle(color: Colors.white38),
+                  style: const TextStyle(color: AppThemeColors.textMuted),
                 ),
               ],
             ),

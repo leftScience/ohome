@@ -53,6 +53,7 @@ class _QuarkTagEditorViewState extends State<QuarkTagEditorView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppThemeColors.pageBackground,
       appBar: AppBar(title: Text(widget.title)),
       body: ListView(
         padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 120.h),
@@ -86,9 +87,9 @@ class _QuarkTagEditorViewState extends State<QuarkTagEditorView> {
     return Container(
       padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: AppThemeColors.surface,
         borderRadius: BorderRadius.circular(22.r),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        border: Border.all(color: AppThemeColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -97,7 +98,7 @@ class _QuarkTagEditorViewState extends State<QuarkTagEditorView> {
             widget.description,
             style: TextStyle(
               fontSize: 13.sp,
-              color: Colors.white70,
+              color: AppThemeColors.textSecondary,
               height: 1.5,
             ),
           ),
@@ -112,7 +113,7 @@ class _QuarkTagEditorViewState extends State<QuarkTagEditorView> {
               ),
               _buildStatPill(
                 label: '共 ${_allTags.length} 个标签',
-                color: const Color(0xFF80CBC4),
+                color: const Color(0xFF00897B),
               ),
             ],
           ),
@@ -125,9 +126,9 @@ class _QuarkTagEditorViewState extends State<QuarkTagEditorView> {
     return Container(
       padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: AppThemeColors.surface,
         borderRadius: BorderRadius.circular(22.r),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        border: Border.all(color: AppThemeColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -137,7 +138,7 @@ class _QuarkTagEditorViewState extends State<QuarkTagEditorView> {
             style: TextStyle(
               fontSize: 15.sp,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: AppThemeColors.textPrimary,
             ),
           ),
           SizedBox(height: 8.h),
@@ -145,7 +146,7 @@ class _QuarkTagEditorViewState extends State<QuarkTagEditorView> {
             '新增后会自动选中。点按标签可切换选中状态，点右侧关闭图标可直接删除标签。',
             style: TextStyle(
               fontSize: 12.sp,
-              color: Colors.white60,
+              color: AppThemeColors.textSecondary,
               height: 1.5,
             ),
           ),
@@ -156,28 +157,30 @@ class _QuarkTagEditorViewState extends State<QuarkTagEditorView> {
                 child: TextField(
                   controller: _tagController,
                   onSubmitted: (_) => _addTag(),
-                  style: const TextStyle(color: Colors.white),
+                  style: const TextStyle(color: AppThemeColors.textPrimary),
                   decoration: InputDecoration(
                     hintText: widget.inputHint,
-                    hintStyle: const TextStyle(color: Colors.white38),
+                    hintStyle: const TextStyle(
+                      color: AppThemeColors.textDisabled,
+                    ),
                     filled: true,
-                    fillColor: const Color(0xFF111111),
+                    fillColor: AppThemeColors.surfaceMuted,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16.r),
-                      borderSide: BorderSide(
-                        color: Colors.white.withValues(alpha: 0.08),
+                      borderSide: const BorderSide(
+                        color: AppThemeColors.border,
                       ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16.r),
-                      borderSide: BorderSide(
-                        color: Colors.white.withValues(alpha: 0.08),
+                      borderSide: const BorderSide(
+                        color: AppThemeColors.border,
                       ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16.r),
-                      borderSide: BorderSide(
-                        color: AppThemeColors.primary.withValues(alpha: 0.8),
+                      borderSide: const BorderSide(
+                        color: AppThemeColors.primary,
                       ),
                     ),
                   ),
@@ -207,9 +210,9 @@ class _QuarkTagEditorViewState extends State<QuarkTagEditorView> {
     return Container(
       padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: AppThemeColors.surface,
         borderRadius: BorderRadius.circular(22.r),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        border: Border.all(color: AppThemeColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -219,13 +222,16 @@ class _QuarkTagEditorViewState extends State<QuarkTagEditorView> {
             style: TextStyle(
               fontSize: 15.sp,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: AppThemeColors.textPrimary,
             ),
           ),
           SizedBox(height: 8.h),
           Text(
             _allTags.isEmpty ? widget.emptyStateText : '点击标签切换选中状态。',
-            style: TextStyle(fontSize: 12.sp, color: Colors.white60),
+            style: TextStyle(
+              fontSize: 12.sp,
+              color: AppThemeColors.textSecondary,
+            ),
           ),
           if (_allTags.isNotEmpty) ...[
             SizedBox(height: 16.h),
@@ -260,7 +266,7 @@ class _QuarkTagEditorViewState extends State<QuarkTagEditorView> {
         style: TextStyle(
           fontSize: 12.sp,
           fontWeight: FontWeight.w600,
-          color: Colors.white,
+          color: AppThemeColors.textPrimary,
         ),
       ),
     );
@@ -274,15 +280,15 @@ class _QuarkTagEditorViewState extends State<QuarkTagEditorView> {
       onDeleted: () => _deleteTag(tag),
       selectedColor: AppThemeColors.primary.withValues(alpha: 0.18),
       checkmarkColor: AppThemeColors.primary,
-      backgroundColor: const Color(0xFF101010),
-      deleteIconColor: Colors.white60,
+      backgroundColor: AppThemeColors.surfaceMuted,
+      deleteIconColor: AppThemeColors.textMuted,
       side: BorderSide(
         color: selected
             ? AppThemeColors.primary.withValues(alpha: 0.65)
-            : Colors.white.withValues(alpha: 0.08),
+            : AppThemeColors.border,
       ),
       labelStyle: TextStyle(
-        color: selected ? Colors.white : Colors.white70,
+        color: selected ? AppThemeColors.primary : AppThemeColors.textSecondary,
         fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
       ),
     );

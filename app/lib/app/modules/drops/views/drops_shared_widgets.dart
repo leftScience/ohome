@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -187,151 +186,144 @@ class DropsItemCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        boxShadow: AppThemeColors.cardShadow,
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20.r),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: onTap,
-              child: Container(
-                padding: EdgeInsets.all(14.w),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.04),
-                  borderRadius: BorderRadius.circular(20.r),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-                ),
-                child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 76.w,
-                height: 76.w,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(16.r),
-                  image: item.coverUrl.isEmpty
-                      ? null
-                      : DecorationImage(
-                          image: NetworkImage(item.coverUrl),
-                          fit: BoxFit.cover,
-                        ),
-                ),
-                child: item.coverUrl.isEmpty
-                    ? Icon(
-                        Icons.photo_camera_back_outlined,
-                        size: 28.w,
-                        color: Colors.white24,
-                      )
-                    : null,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            child: Container(
+              padding: EdgeInsets.all(14.w),
+              decoration: BoxDecoration(
+                color: AppThemeColors.surface,
+                borderRadius: BorderRadius.circular(20.r),
+                border: Border.all(color: AppThemeColors.border),
               ),
-              SizedBox(width: 14.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                    SizedBox(height: 8.h),
-                    Wrap(
-                      spacing: 6.w,
-                      runSpacing: 6.h,
-                      children: [
-                        _DropsTag(
-                          label: dropsController.categoryLabel(item.category),
-                          color: color,
-                        ),
-                        _DropsTag(
-                          label: dropsController.scopeLabel(item.scopeType),
-                          color: AppThemeColors.primary,
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 10.h),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.location_on_outlined,
-                          size: 14.w,
-                          color: Colors.white54,
-                        ),
-                        SizedBox(width: 4.w),
-                        Expanded(
-                          child: Text(
-                            item.location.isEmpty ? '未填写位置' : item.location,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              color: Colors.white60,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 76.w,
+                    height: 76.w,
+                    decoration: BoxDecoration(
+                      color: AppThemeColors.surfaceSunken,
+                      borderRadius: BorderRadius.circular(16.r),
+                      image: item.coverUrl.isEmpty
+                          ? null
+                          : DecorationImage(
+                              image: NetworkImage(item.coverUrl),
+                              fit: BoxFit.cover,
                             ),
+                    ),
+                    child: item.coverUrl.isEmpty
+                        ? Icon(
+                            Icons.photo_camera_back_outlined,
+                            size: 28.w,
+                            color: AppThemeColors.textDisabled,
+                          )
+                        : null,
+                  ),
+                  SizedBox(width: 14.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w700,
+                            color: AppThemeColors.textPrimary,
                           ),
                         ),
+                        SizedBox(height: 8.h),
+                        Wrap(
+                          spacing: 6.w,
+                          runSpacing: 6.h,
+                          children: [
+                            _DropsTag(
+                              label: dropsController.categoryLabel(
+                                item.category,
+                              ),
+                              color: color,
+                            ),
+                            _DropsTag(
+                              label: dropsController.scopeLabel(item.scopeType),
+                              color: AppThemeColors.primary,
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 10.h),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.location_on_outlined,
+                              size: 14.w,
+                              color: AppThemeColors.textMuted,
+                            ),
+                            SizedBox(width: 4.w),
+                            Expanded(
+                              child: Text(
+                                item.location.isEmpty ? '未填写位置' : item.location,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 12.sp,
+                                  color: AppThemeColors.textSecondary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 4.h),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.event_outlined,
+                              size: 14.w,
+                              color: AppThemeColors.textMuted,
+                            ),
+                            SizedBox(width: 4.w),
+                            Expanded(
+                              child: Text(
+                                item.expireAt == null
+                                    ? '未设置截止日期'
+                                    : '截止日期 ${formatDropsDate(item.expireAt!)}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 12.sp,
+                                  color: AppThemeColors.textSecondary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
-                    SizedBox(height: 4.h),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.event_outlined,
-                          size: 14.w,
-                          color: Colors.white54,
-                        ),
-                        SizedBox(width: 4.w),
-                        Expanded(
-                          child: Text(
-                            item.expireAt == null
-                                ? '未设置截止日期'
-                                : '截止日期 ${formatDropsDate(item.expireAt!)}',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              color: Colors.white60,
-                            ),
-                          ),
-                        ),
-                      ],
+                  ),
+                  if (onDelete != null) ...[
+                    SizedBox(width: 8.w),
+                    IconButton(
+                      onPressed: onDelete,
+                      icon: const Icon(Icons.delete_outline_rounded),
+                      color: AppThemeColors.textMuted,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
                     ),
                   ],
-                ),
+                ],
               ),
-              if (onDelete != null) ...[
-                SizedBox(width: 8.w),
-                IconButton(
-                  onPressed: onDelete,
-                  icon: const Icon(Icons.delete_outline_rounded),
-                  color: Colors.white54,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-              ],
-            ],
+            ),
           ),
         ),
       ),
-    ),
-   ),
-  ),
- );
-}
+    );
+  }
 }
 
 class DropsEventCard extends StatelessWidget {
@@ -352,140 +344,143 @@ class DropsEventCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        boxShadow: AppThemeColors.cardShadow,
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20.r),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-          child: Container(
-            padding: EdgeInsets.all(16.w),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.04),
-              borderRadius: BorderRadius.circular(20.r),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-            ),
-            child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: EdgeInsets.all(10.w),
-                decoration: BoxDecoration(
-                  color: AppThemeColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(14.r),
-                ),
-                child: Icon(
-                  Icons.cake_outlined,
-                  color: AppThemeColors.primary,
-                  size: 24.w,
-                ),
-              ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: Text(
-                  event.title,
-                  style: TextStyle(
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-              if (onDelete != null)
-                IconButton(
-                  onPressed: onDelete,
-                  icon: const Icon(Icons.delete_outline_rounded),
-                  color: Colors.white54,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-            ],
+        child: Container(
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(
+            color: AppThemeColors.surface,
+            borderRadius: BorderRadius.circular(20.r),
+            border: Border.all(color: AppThemeColors.border),
           ),
-          SizedBox(height: 16.h),
-          Wrap(
-            spacing: 8.w,
-            runSpacing: 8.h,
-            children: [
-              _DropsTag(
-                label: dropsController.eventTypeLabel(event.eventType),
-                color: AppThemeColors.primary,
-              ),
-              _DropsTag(
-                label: dropsController.calendarLabel(event.calendarType),
-                color: AppThemeColors.primary,
-              ),
-              _DropsTag(
-                label: dropsController.scopeLabel(event.scopeType),
-                color: AppThemeColors.primary,
-              ),
-            ],
-          ),
-          SizedBox(height: 12.h),
-          Row(
-            children: [
-              Icon(
-                Icons.event_available_outlined,
-                size: 16.w,
-                color: Colors.white54,
-              ),
-              SizedBox(width: 6.w),
-              Text(
-                event.nextOccurAt == null
-                    ? '下一次：未计算'
-                    : '下一次：${formatDropsDate(event.nextOccurAt!)}',
-                style: TextStyle(fontSize: 13.sp, color: Colors.white70),
-              ),
-            ],
-          ),
-          SizedBox(height: 8.h),
-          Row(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.notes_outlined, size: 16.w, color: Colors.white54),
-              SizedBox(width: 6.w),
-              Expanded(
-                child: Text(
-                  event.remark.isEmpty
-                      ? (event.enabled ? '已启用提醒' : '已关闭提醒')
-                      : event.remark,
-                  style: TextStyle(fontSize: 13.sp, color: Colors.white54),
-                ),
+              Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(10.w),
+                    decoration: BoxDecoration(
+                      color: AppThemeColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(14.r),
+                    ),
+                    child: Icon(
+                      Icons.cake_outlined,
+                      color: AppThemeColors.primary,
+                      size: 24.w,
+                    ),
+                  ),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: Text(
+                      event.title,
+                      style: TextStyle(
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w700,
+                        color: AppThemeColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  if (onDelete != null)
+                    IconButton(
+                      onPressed: onDelete,
+                      icon: const Icon(Icons.delete_outline_rounded),
+                      color: AppThemeColors.textMuted,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                ],
               ),
-            ],
-          ),
-          if (onEdit != null) ...[
-            SizedBox(height: 16.h),
-            Align(
-              alignment: Alignment.centerRight,
-              child: OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(999.r),
+              SizedBox(height: 16.h),
+              Wrap(
+                spacing: 8.w,
+                runSpacing: 8.h,
+                children: [
+                  _DropsTag(
+                    label: dropsController.eventTypeLabel(event.eventType),
+                    color: AppThemeColors.primary,
+                  ),
+                  _DropsTag(
+                    label: dropsController.calendarLabel(event.calendarType),
+                    color: AppThemeColors.primary,
+                  ),
+                  _DropsTag(
+                    label: dropsController.scopeLabel(event.scopeType),
+                    color: AppThemeColors.primary,
+                  ),
+                ],
+              ),
+              SizedBox(height: 12.h),
+              Row(
+                children: [
+                  Icon(
+                    Icons.event_available_outlined,
+                    size: 16.w,
+                    color: AppThemeColors.textMuted,
+                  ),
+                  SizedBox(width: 6.w),
+                  Text(
+                    event.nextOccurAt == null
+                        ? '下一次：未计算'
+                        : '下一次：${formatDropsDate(event.nextOccurAt!)}',
+                    style: TextStyle(
+                      fontSize: 13.sp,
+                      color: AppThemeColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 8.h),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.notes_outlined,
+                    size: 16.w,
+                    color: AppThemeColors.textMuted,
+                  ),
+                  SizedBox(width: 6.w),
+                  Expanded(
+                    child: Text(
+                      event.remark.isEmpty
+                          ? (event.enabled ? '已启用提醒' : '已关闭提醒')
+                          : event.remark,
+                      style: TextStyle(
+                        fontSize: 13.sp,
+                        color: AppThemeColors.textMuted,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              if (onEdit != null) ...[
+                SizedBox(height: 16.h),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppThemeColors.primary,
+                      side: BorderSide(
+                        color: AppThemeColors.primary.withValues(alpha: 0.3),
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(999.r),
+                      ),
+                    ),
+                    icon: const Icon(Icons.edit_outlined, size: 16),
+                    label: const Text('编辑'),
+                    onPressed: onEdit,
                   ),
                 ),
-                icon: const Icon(Icons.edit_outlined, size: 16),
-                label: const Text('编辑'),
-                onPressed: onEdit,
-              ),
-            ),
-          ],
-        ],
+              ],
+            ],
+          ),
+        ),
       ),
-    ),
-   ),
-  ),
- );
-}
+    );
+  }
 }
 
 class _DropsItemsFilterCard extends StatelessWidget {
@@ -499,13 +494,10 @@ class _DropsItemsFilterCard extends StatelessWidget {
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(24.r),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-            child: TextField(
-              controller: controller.keywordController,
-              onSubmitted: (_) => controller.search(),
-              decoration: _searchDecoration('搜索名称、位置、备注'),
-            ),
+          child: TextField(
+            controller: controller.keywordController,
+            onSubmitted: (_) => controller.search(),
+            decoration: _searchDecoration('搜索名称、位置、备注'),
           ),
         ),
       ],
@@ -524,13 +516,10 @@ class _DropsEventsFilterCard extends StatelessWidget {
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(24.r),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-            child: TextField(
-              controller: controller.keywordController,
-              onSubmitted: (_) => controller.search(),
-              decoration: _searchDecoration('搜索标题或备注'),
-            ),
+          child: TextField(
+            controller: controller.keywordController,
+            onSubmitted: (_) => controller.search(),
+            decoration: _searchDecoration('搜索标题或备注'),
           ),
         ),
       ],
@@ -541,31 +530,30 @@ class _DropsEventsFilterCard extends StatelessWidget {
 InputDecoration _searchDecoration(String hintText) {
   return InputDecoration(
     hintText: hintText,
-    hintStyle: TextStyle(color: Colors.white54, fontSize: 14.5.sp, letterSpacing: 0.3),
-    prefixIcon: Icon(Icons.search_rounded, color: Colors.white54, size: 22.w),
+    hintStyle: TextStyle(
+      color: AppThemeColors.textMuted,
+      fontSize: 14.5.sp,
+      letterSpacing: 0.3,
+    ),
+    prefixIcon: Icon(
+      Icons.search_rounded,
+      color: AppThemeColors.textMuted,
+      size: 22.w,
+    ),
     filled: true,
-    fillColor: Colors.white.withValues(alpha: 0.05),
+    fillColor: AppThemeColors.surface,
     contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(24.r),
-      borderSide: BorderSide(
-        color: Colors.white.withValues(alpha: 0.12),
-        width: 1.2,
-      ),
+      borderSide: const BorderSide(color: AppThemeColors.border, width: 1.2),
     ),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(24.r),
-      borderSide: BorderSide(
-        color: Colors.white.withValues(alpha: 0.12),
-        width: 1.2,
-      ),
+      borderSide: const BorderSide(color: AppThemeColors.border, width: 1.2),
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(24.r),
-      borderSide: BorderSide(
-        color: const Color(0xFF2B78FF).withValues(alpha: 0.5),
-        width: 1.2,
-      ),
+      borderSide: const BorderSide(color: AppThemeColors.primary, width: 1.2),
     ),
   );
 }
@@ -613,17 +601,17 @@ class _EmptyState extends StatelessWidget {
             width: 108.w,
             height: 108.w,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.03),
+              color: AppThemeColors.surface,
               borderRadius: BorderRadius.circular(28.r),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+              border: Border.all(color: AppThemeColors.border),
             ),
-            child: Icon(icon, size: 56.w, color: Colors.white24),
+            child: Icon(icon, size: 56.w, color: AppThemeColors.textDisabled),
           ),
           SizedBox(height: 18.h),
           Text(
             text,
             style: TextStyle(
-              color: Colors.white54,
+              color: AppThemeColors.textMuted,
               fontSize: 15.sp,
               fontWeight: FontWeight.w600,
             ),

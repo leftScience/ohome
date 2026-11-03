@@ -224,8 +224,8 @@ class SearchController extends GetxController {
         icon: Icons.check_circle_rounded,
         label: '已配置 $availableCount / ${_quarkTargets.length}',
         accent: availableCount > 0
-            ? const Color(0xFF34D399)
-            : const Color(0xFFF59E0B),
+            ? const Color(0xFF059669)
+            : const Color(0xFFD97706),
       ),
       helperText: '点击可用分类即可开始转存',
       emptyTitle: '暂无可用分类',

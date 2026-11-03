@@ -13,6 +13,7 @@ class UserManagementView extends GetView<UserManagementController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppThemeColors.pageBackground,
       appBar: AppBar(title: const Text('用户管理')),
       floatingActionButtonLocation:
           AppFloatingActionButtonPosition.scaffoldLocation,
@@ -39,9 +40,10 @@ class UserManagementView extends GetView<UserManagementController> {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: AppThemeColors.surface,
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        border: Border.all(color: AppThemeColors.border),
+        boxShadow: AppThemeColors.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -51,7 +53,7 @@ class UserManagementView extends GetView<UserManagementController> {
             style: TextStyle(
               fontSize: 15.sp,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: AppThemeColors.textPrimary,
             ),
           ),
           SizedBox(height: 12.h),
@@ -82,18 +84,25 @@ class UserManagementView extends GetView<UserManagementController> {
       onSubmitted: onSubmitted,
       decoration: InputDecoration(
         hintText: hintText,
-        hintStyle: TextStyle(fontSize: 13.sp, color: Colors.white38),
-        prefixIcon: Icon(prefixIcon, size: 20.w, color: Colors.white38),
+        hintStyle: TextStyle(
+          fontSize: 13.sp,
+          color: AppThemeColors.textDisabled,
+        ),
+        prefixIcon: Icon(
+          prefixIcon,
+          size: 20.w,
+          color: AppThemeColors.textDisabled,
+        ),
         filled: true,
-        fillColor: const Color(0xFF101010),
+        fillColor: AppThemeColors.surfaceMuted,
         contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14.r),
-          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+          borderSide: const BorderSide(color: AppThemeColors.border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14.r),
-          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+          borderSide: const BorderSide(color: AppThemeColors.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14.r),
@@ -125,7 +134,7 @@ class UserManagementView extends GetView<UserManagementController> {
                   Icon(
                     Icons.group_off_outlined,
                     size: 60.w,
-                    color: Colors.white24,
+                    color: AppThemeColors.textDisabled,
                   ),
                   SizedBox(height: 14.h),
                   Center(
@@ -134,7 +143,7 @@ class UserManagementView extends GetView<UserManagementController> {
                       style: TextStyle(
                         fontSize: 15.sp,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white70,
+                        color: AppThemeColors.textSecondary,
                       ),
                     ),
                   ),
@@ -200,13 +209,14 @@ class _UserCard extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: AppThemeColors.surface,
         borderRadius: BorderRadius.circular(20.r),
         border: Border.all(
           color: isCurrentUser
               ? AppThemeColors.primary.withValues(alpha: 0.5)
-              : Colors.white.withValues(alpha: 0.06),
+              : AppThemeColors.border,
         ),
+        boxShadow: AppThemeColors.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -222,7 +232,7 @@ class _UserCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                    color: AppThemeColors.primary,
                   ),
                 ),
               ),
@@ -238,7 +248,7 @@ class _UserCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 16.sp,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        color: AppThemeColors.textPrimary,
                       ),
                     ),
                     SizedBox(height: 3.h),
@@ -246,7 +256,10 @@ class _UserCard extends StatelessWidget {
                       subtitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 12.sp, color: Colors.white54),
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: AppThemeColors.textMuted,
+                      ),
                     ),
                   ],
                 ),
@@ -264,7 +277,7 @@ class _UserCard extends StatelessWidget {
                     width: actionWidth,
                     child: _ActionChip(
                       label: '重置密码',
-                      color: const Color(0xFFFFB74D),
+                      color: const Color(0xFFF57C00),
                       icon: Icons.lock_reset_outlined,
                       onTap: onResetPassword,
                     ),
@@ -283,11 +296,11 @@ class _UserCard extends StatelessWidget {
                     ? user.roleName
                     : (user.isSuperAdmin ? '超级管理员' : '普通用户'),
                 backgroundColor: user.isSuperAdmin
-                    ? const Color(0xFFFFB74D).withValues(alpha: 0.16)
-                    : const Color(0xFF90CAF9).withValues(alpha: 0.14),
+                    ? const Color(0xFFF57C00).withValues(alpha: 0.16)
+                    : const Color(0xFF1976D2).withValues(alpha: 0.14),
                 textColor: user.isSuperAdmin
-                    ? const Color(0xFFFFCC80)
-                    : const Color(0xFF90CAF9),
+                    ? AppThemeColors.warning
+                    : AppThemeColors.primary,
               ),
               if (isCurrentUser)
                 _buildBadge(
@@ -295,7 +308,7 @@ class _UserCard extends StatelessWidget {
                   backgroundColor: AppThemeColors.primary.withValues(
                     alpha: 0.14,
                   ),
-                  textColor: const Color(0xFF8AB6FF),
+                  textColor: AppThemeColors.primary,
                 ),
             ],
           ),
@@ -314,7 +327,7 @@ class _UserCard extends StatelessWidget {
               if (canDelete)
                 _ActionChip(
                   label: '删除',
-                  color: const Color(0xFFE57373),
+                  color: const Color(0xFFE53935),
                   icon: Icons.delete_outline_rounded,
                   onTap: onDelete,
                 ),
@@ -328,14 +341,17 @@ class _UserCard extends StatelessWidget {
   Widget _buildInfoRow(IconData icon, String text) {
     return Row(
       children: [
-        Icon(icon, size: 16.w, color: Colors.white38),
+        Icon(icon, size: 16.w, color: AppThemeColors.textDisabled),
         SizedBox(width: 8.w),
         Expanded(
           child: Text(
             text,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 12.sp, color: Colors.white60),
+            style: TextStyle(
+              fontSize: 12.sp,
+              color: AppThemeColors.textSecondary,
+            ),
           ),
         ),
       ],

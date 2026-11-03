@@ -24,7 +24,9 @@ class PlayletView extends GetView<PlayLetController> {
       iconBuilder: (entry) =>
           entry.isDir ? Icons.folder_rounded : Icons.play_circle_fill_rounded,
       iconColorBuilder: (entry) =>
-          entry.isDir ? Colors.amber : Colors.lightBlue,
+          entry.isDir
+              ? const Color(0xFFD97706)
+              : const Color(0xFF0284C7),
       statusBuilder: (entry) => entry.isDir ? '文件夹' : '点击播放',
       onFolderTap: (entry, _, _) => _onFolderTap(entry),
       onFileTap: (entry, _, currentPath) => _onFileTap(entry, currentPath),

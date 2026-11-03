@@ -78,7 +78,7 @@ class _MessagesViewState extends State<MessagesView> {
                         '全局通知与提醒消息',
                         style: TextStyle(
                           fontSize: 13.sp,
-                          color: Colors.white60,
+                          color: AppThemeColors.textSecondary,
                         ),
                       ),
                       GestureDetector(
@@ -96,14 +96,14 @@ class _MessagesViewState extends State<MessagesView> {
                                   ? AppThemeColors.primary.withValues(
                                       alpha: 0.15,
                                     )
-                                  : Colors.white.withValues(alpha: 0.05),
+                                  : AppThemeColors.surface,
                               borderRadius: BorderRadius.circular(999.r),
                               border: Border.all(
                                 color: controller.unreadOnly.value
                                     ? AppThemeColors.primary.withValues(
                                         alpha: 0.5,
                                       )
-                                    : Colors.white.withValues(alpha: 0.1),
+                                    : AppThemeColors.border,
                               ),
                             ),
                             child: Row(
@@ -116,7 +116,7 @@ class _MessagesViewState extends State<MessagesView> {
                                   size: 14.sp,
                                   color: controller.unreadOnly.value
                                       ? AppThemeColors.primary
-                                      : Colors.white54,
+                                      : AppThemeColors.textMuted,
                                 ),
                                 SizedBox(width: 4.w),
                                 Text(
@@ -125,7 +125,7 @@ class _MessagesViewState extends State<MessagesView> {
                                     fontSize: 12.sp,
                                     color: controller.unreadOnly.value
                                         ? AppThemeColors.primary
-                                        : Colors.white54,
+                                        : AppThemeColors.textMuted,
                                   ),
                                 ),
                               ],
@@ -179,7 +179,7 @@ class _MessagesViewState extends State<MessagesView> {
               Center(
                 child: Text(
                   controller.emptyStateTextOf(tabIndex),
-                  style: const TextStyle(color: Colors.white54),
+                  style: const TextStyle(color: AppThemeColors.textMuted),
                 ),
               ),
             ],
@@ -215,7 +215,7 @@ class _MessagesViewState extends State<MessagesView> {
   Widget _buildMessageCard(AppMessageModel message) {
     final sourceColor = controller.sourceColorOf(message);
     return Material(
-      color: const Color(0xFF1A1A1A),
+      color: AppThemeColors.surface,
       borderRadius: BorderRadius.circular(20.r),
       child: InkWell(
         borderRadius: BorderRadius.circular(20.r),
@@ -224,7 +224,7 @@ class _MessagesViewState extends State<MessagesView> {
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20.r),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+            border: Border.all(color: AppThemeColors.border),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -242,7 +242,7 @@ class _MessagesViewState extends State<MessagesView> {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: message.read
-                                ? Colors.white24
+                                ? AppThemeColors.borderStrong
                                 : const Color(0xFFE53935),
                           ),
                         ),
@@ -291,7 +291,7 @@ class _MessagesViewState extends State<MessagesView> {
                                 : Icon(
                                     Icons.delete_outline_rounded,
                                     size: 18.sp,
-                                    color: Colors.white54,
+                                    color: AppThemeColors.textMuted,
                                   ),
                           );
                         }),
@@ -303,20 +303,26 @@ class _MessagesViewState extends State<MessagesView> {
                       style: TextStyle(
                         fontSize: 14.sp,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        color: AppThemeColors.textPrimary,
                       ),
                     ),
                     SizedBox(height: 6.h),
                     Text(
                       controller.summaryOf(message),
-                      style: TextStyle(fontSize: 12.sp, color: Colors.white60),
+                      style: TextStyle(
+                      fontSize: 12.sp,
+                      color: AppThemeColors.textSecondary,
+                    ),
                     ),
                     SizedBox(height: 8.h),
                     Text(
                       message.triggerDate == null
                           ? '提醒时间未知'
                           : '提醒日期 ${_formatDate(message.triggerDate!)}',
-                      style: TextStyle(fontSize: 11.sp, color: Colors.white38),
+                      style: TextStyle(
+                      fontSize: 11.sp,
+                      color: AppThemeColors.textMuted,
+                    ),
                     ),
                   ],
                 ),
@@ -354,14 +360,15 @@ class _MessagesViewState extends State<MessagesView> {
                     curve: Curves.easeOut,
                     padding: EdgeInsets.symmetric(vertical: 10.h),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1E1E1E),
+                      color: AppThemeColors.surface,
                       borderRadius: BorderRadius.circular(24.r),
+                      border: Border.all(color: AppThemeColors.border),
                     ),
                     child: Center(
                       child: Text(
                         labels[index],
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.6),
+                          color: AppThemeColors.textSecondary,
                           fontWeight: FontWeight.w400,
                           fontSize: 13.sp,
                         ),
@@ -430,7 +437,7 @@ class _MessagesViewState extends State<MessagesView> {
     Get.bottomSheet(
       Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF171717),
+          color: AppThemeColors.surface,
           borderRadius: BorderRadius.vertical(top: Radius.circular(30.r)),
         ),
         child: SafeArea(
@@ -451,7 +458,7 @@ class _MessagesViewState extends State<MessagesView> {
                     width: 42.w,
                     height: 4.h,
                     decoration: BoxDecoration(
-                      color: Colors.white24,
+                      color: AppThemeColors.borderStrong,
                       borderRadius: BorderRadius.circular(999.r),
                     ),
                   ),
@@ -470,9 +477,7 @@ class _MessagesViewState extends State<MessagesView> {
                       ],
                     ),
                     borderRadius: BorderRadius.circular(24.r),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.08),
-                    ),
+                    border: Border.all(color: AppThemeColors.border),
                   ),
                   child: Row(
                     children: [
@@ -480,12 +485,12 @@ class _MessagesViewState extends State<MessagesView> {
                         width: 46.w,
                         height: 46.w,
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.08),
+                          color: AppThemeColors.primary.withValues(alpha: 0.10),
                           borderRadius: BorderRadius.circular(16.r),
                         ),
                         child: Icon(
                           Icons.campaign_rounded,
-                          color: Colors.white,
+                          color: AppThemeColors.primary,
                           size: 24.w,
                         ),
                       ),
@@ -499,7 +504,7 @@ class _MessagesViewState extends State<MessagesView> {
                               style: TextStyle(
                                 fontSize: 18.sp,
                                 fontWeight: FontWeight.w700,
-                                color: Colors.white,
+                                color: AppThemeColors.textPrimary,
                               ),
                             ),
                             SizedBox(height: 4.h),
@@ -507,7 +512,7 @@ class _MessagesViewState extends State<MessagesView> {
                               '发送全局通知给所有用户',
                               style: TextStyle(
                                 fontSize: 12.sp,
-                                color: Colors.white70,
+                                color: AppThemeColors.textSecondary,
                               ),
                             ),
                           ],
@@ -522,41 +527,40 @@ class _MessagesViewState extends State<MessagesView> {
                   style: TextStyle(
                     fontSize: 13.sp,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white70,
+                    color: AppThemeColors.textSecondary,
                   ),
                 ),
                 SizedBox(height: 8.h),
                 TextField(
                   controller: titleController,
-                  style: TextStyle(fontSize: 14.sp, color: Colors.white),
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: AppThemeColors.textPrimary,
+                  ),
                   decoration: InputDecoration(
                     hintText: '请输入消息标题',
                     hintStyle: TextStyle(
                       fontSize: 13.sp,
-                      color: Colors.white38,
+                      color: AppThemeColors.textDisabled,
                     ),
                     prefixIcon: Icon(
                       Icons.title_rounded,
-                      color: Colors.white38,
+                      color: AppThemeColors.textDisabled,
                       size: 20.w,
                     ),
                     filled: true,
-                    fillColor: const Color(0xFF111111),
+                    fillColor: AppThemeColors.surfaceMuted,
                     contentPadding: EdgeInsets.symmetric(
                       horizontal: 14.w,
                       vertical: 14.h,
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14.r),
-                      borderSide: BorderSide(
-                        color: Colors.white.withValues(alpha: 0.08),
-                      ),
+                      borderSide: const BorderSide(color: AppThemeColors.border),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14.r),
-                      borderSide: BorderSide(
-                        color: Colors.white.withValues(alpha: 0.08),
-                      ),
+                      borderSide: const BorderSide(color: AppThemeColors.border),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14.r),
@@ -572,37 +576,36 @@ class _MessagesViewState extends State<MessagesView> {
                   style: TextStyle(
                     fontSize: 13.sp,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white70,
+                    color: AppThemeColors.textSecondary,
                   ),
                 ),
                 SizedBox(height: 8.h),
                 TextField(
                   controller: contentController,
-                  style: TextStyle(fontSize: 14.sp, color: Colors.white),
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: AppThemeColors.textPrimary,
+                  ),
                   maxLines: 5,
                   decoration: InputDecoration(
                     hintText: '请输入消息内容',
                     hintStyle: TextStyle(
                       fontSize: 13.sp,
-                      color: Colors.white38,
+                      color: AppThemeColors.textDisabled,
                     ),
                     filled: true,
-                    fillColor: const Color(0xFF111111),
+                    fillColor: AppThemeColors.surfaceMuted,
                     contentPadding: EdgeInsets.symmetric(
                       horizontal: 14.w,
                       vertical: 14.h,
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14.r),
-                      borderSide: BorderSide(
-                        color: Colors.white.withValues(alpha: 0.08),
-                      ),
+                      borderSide: const BorderSide(color: AppThemeColors.border),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14.r),
-                      borderSide: BorderSide(
-                        color: Colors.white.withValues(alpha: 0.08),
-                      ),
+                      borderSide: const BorderSide(color: AppThemeColors.border),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14.r),
@@ -620,8 +623,8 @@ class _MessagesViewState extends State<MessagesView> {
                         onPressed: () => Get.back(),
                         style: OutlinedButton.styleFrom(
                           minimumSize: Size.fromHeight(50.h),
-                          side: BorderSide(
-                            color: Colors.white.withValues(alpha: 0.12),
+                          side: const BorderSide(
+                            color: AppThemeColors.border,
                           ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16.r),
@@ -632,7 +635,7 @@ class _MessagesViewState extends State<MessagesView> {
                           style: TextStyle(
                             fontSize: 14.sp,
                             fontWeight: FontWeight.w600,
-                            color: Colors.white70,
+                            color: AppThemeColors.textSecondary,
                           ),
                         ),
                       ),

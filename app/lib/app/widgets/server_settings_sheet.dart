@@ -36,7 +36,7 @@ class ServerSettingsSheet extends StatelessWidget {
     return Container(
       padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 20.h + bottomInset),
       decoration: BoxDecoration(
-        color: const Color(0xFF171717),
+        color: AppThemeColors.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
       ),
       child: SafeArea(
@@ -51,7 +51,7 @@ class ServerSettingsSheet extends StatelessWidget {
                   width: 42.w,
                   height: 4.h,
                   decoration: BoxDecoration(
-                    color: Colors.white24,
+                    color: AppThemeColors.borderStrong,
                     borderRadius: BorderRadius.circular(999.r),
                   ),
                 ),
@@ -65,7 +65,7 @@ class ServerSettingsSheet extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 20.sp,
                       fontWeight: FontWeight.w700,
-                      color: Colors.white,
+                      color: AppThemeColors.textPrimary,
                     ),
                   ),
                   Row(
@@ -76,7 +76,7 @@ class ServerSettingsSheet extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 14.sp,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color: AppThemeColors.textPrimary,
                         ),
                       ),
                       SizedBox(width: 8.w),
@@ -101,7 +101,7 @@ class ServerSettingsSheet extends StatelessWidget {
                     errorText!,
                     style: TextStyle(
                       fontSize: 13.sp,
-                      color: Colors.redAccent.shade100,
+                      color: AppThemeColors.danger,
                     ),
                   ),
                 ),
@@ -113,13 +113,16 @@ class ServerSettingsSheet extends StatelessWidget {
                     vertical: 16.h,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.04),
+                    color: AppThemeColors.surfaceMuted,
                     borderRadius: BorderRadius.circular(18.r),
-                    border: Border.all(color: Colors.white12),
+                    border: Border.all(color: AppThemeColors.border),
                   ),
                   child: Text(
                     '暂未发现服务，请重试或手动输入地址。',
-                    style: TextStyle(fontSize: 13.sp, color: Colors.white70),
+                    style: TextStyle(
+                      fontSize: 13.sp,
+                      color: AppThemeColors.textSecondary,
+                    ),
                   ),
                 ),
               if (!isManualEntryMode && servers.isNotEmpty)
@@ -142,29 +145,32 @@ class ServerSettingsSheet extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                    color: AppThemeColors.textPrimary,
                   ),
                 ),
                 SizedBox(height: 8.h),
                 TextField(
                   controller: apiBaseUrlController,
                   keyboardType: TextInputType.url,
-                  style: TextStyle(color: Colors.white, fontSize: 15.sp),
+                  style: TextStyle(
+                    color: AppThemeColors.textPrimary,
+                    fontSize: 15.sp,
+                  ),
                   decoration: InputDecoration(
                     hintText: 'http://catx.top:18090',
                     hintStyle: TextStyle(
-                      color: Colors.white38,
+                      color: AppThemeColors.textDisabled,
                       fontSize: 15.sp,
                     ),
                     filled: true,
-                    fillColor: Colors.white.withValues(alpha: 0.04),
+                    fillColor: AppThemeColors.surfaceMuted,
                     contentPadding: EdgeInsets.symmetric(
                       horizontal: 16.w,
                       vertical: 18.h,
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(18.r),
-                      borderSide: BorderSide(color: Colors.grey.shade800),
+                      borderSide: const BorderSide(color: AppThemeColors.border),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(18.r),
@@ -185,7 +191,7 @@ class ServerSettingsSheet extends StatelessWidget {
                       padding: EdgeInsets.symmetric(vertical: 14.h),
                       side: BorderSide(
                         color: isDiscovering
-                            ? Colors.white24
+                            ? AppThemeColors.borderStrong
                             : AppThemeColors.primary.withValues(alpha: 0.8),
                       ),
                       shape: RoundedRectangleBorder(
@@ -198,7 +204,7 @@ class ServerSettingsSheet extends StatelessWidget {
                         fontSize: 14.sp,
                         fontWeight: FontWeight.w600,
                         color: isDiscovering
-                            ? Colors.white54
+                            ? AppThemeColors.textDisabled
                             : AppThemeColors.primary,
                       ),
                     ),
@@ -236,11 +242,13 @@ class _ServerCard extends StatelessWidget {
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
             color: isSelected
-                ? AppThemeColors.primary.withValues(alpha: 0.18)
-                : Colors.white.withValues(alpha: 0.04),
+                ? AppThemeColors.primary.withValues(alpha: 0.10)
+                : AppThemeColors.surfaceMuted,
             borderRadius: BorderRadius.circular(18.r),
             border: Border.all(
-              color: isSelected ? AppThemeColors.primary : Colors.white12,
+              color: isSelected
+                  ? AppThemeColors.primary
+                  : AppThemeColors.border,
             ),
           ),
           child: Column(
@@ -255,7 +263,7 @@ class _ServerCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 15.sp,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        color: AppThemeColors.textPrimary,
                       ),
                     ),
                   ),
@@ -270,7 +278,10 @@ class _ServerCard extends StatelessWidget {
               SizedBox(height: 6.h),
               Text(
                 server.origin,
-                style: TextStyle(fontSize: 12.sp, color: Colors.white70),
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  color: AppThemeColors.textSecondary,
+                ),
               ),
               SizedBox(height: 8.h),
               Wrap(
@@ -299,12 +310,15 @@ class _Tag extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.06),
+        color: AppThemeColors.surfaceSunken,
         borderRadius: BorderRadius.circular(999.r),
       ),
       child: Text(
         text,
-        style: TextStyle(fontSize: 11.sp, color: Colors.white70),
+        style: TextStyle(
+          fontSize: 11.sp,
+          color: AppThemeColors.textSecondary,
+        ),
       ),
     );
   }

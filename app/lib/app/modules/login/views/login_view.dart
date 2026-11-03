@@ -20,7 +20,15 @@ class LoginView extends GetView<LoginController> {
     return Scaffold(
       body: Stack(
         children: [
-          Container(color: const Color(0xFF0F172A)),
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0xFFEAF2FF), Color(0xFFF6F8FD)],
+              ),
+            ),
+          ),
           Positioned(
             top: -140.h,
             right: -50.w,
@@ -29,7 +37,7 @@ class LoginView extends GetView<LoginController> {
               height: 300.w,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFF3B82F6).withValues(alpha: 0.4),
+                color: const Color(0xFF3B82F6).withValues(alpha: 0.16),
               ),
             ),
           ),
@@ -41,7 +49,7 @@ class LoginView extends GetView<LoginController> {
               height: 250.w,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFF8B5CF6).withValues(alpha: 0.4),
+                color: const Color(0xFF8B5CF6).withValues(alpha: 0.14),
               ),
             ),
           ),
@@ -70,12 +78,13 @@ class LoginView extends GetView<LoginController> {
                               32.h,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.04),
+                              color: AppThemeColors.surface,
                               borderRadius: BorderRadius.circular(32.r),
                               border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.1),
+                                color: AppThemeColors.border,
                                 width: 1,
                               ),
+                              boxShadow: AppThemeColors.floatingShadow,
                             ),
                             child: Obx(
                               () => Form(
@@ -145,7 +154,7 @@ class _Header extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 15.sp,
                   fontWeight: FontWeight.w400,
-                  color: Colors.white70,
+                  color: AppThemeColors.textSecondary,
                   letterSpacing: 1.1,
                 ),
               ),
@@ -155,7 +164,7 @@ class _Header extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 34.sp,
                   fontWeight: FontWeight.w800,
-                  color: Colors.white,
+                  color: AppThemeColors.textPrimary,
                   letterSpacing: 1.5,
                 ),
               ),
@@ -165,9 +174,9 @@ class _Header extends StatelessWidget {
         Container(
           padding: EdgeInsets.all(4.w),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.1),
+            color: AppThemeColors.surface,
             borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+            border: Border.all(color: AppThemeColors.border),
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(12.r),
@@ -201,14 +210,14 @@ class _SettingsIconButton extends GetView<LoginController> {
               width: 44.w,
               height: 44.w,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.08),
+                color: AppThemeColors.surface,
                 borderRadius: BorderRadius.circular(14.r),
-                border: Border.all(color: Colors.white12),
+                border: Border.all(color: AppThemeColors.border),
               ),
               child: Icon(
                 Icons.settings_rounded,
                 size: 22.sp,
-                color: Colors.white,
+                color: AppThemeColors.textPrimary,
               ),
             ),
             if (hasFoundServer)
@@ -222,7 +231,7 @@ class _SettingsIconButton extends GetView<LoginController> {
                     color: const Color(0xFF21C47B),
                     borderRadius: BorderRadius.circular(999.r),
                     border: Border.all(
-                      color: const Color(0xFF1E1E1E),
+                      color: AppThemeColors.surface,
                       width: 2,
                     ),
                   ),
@@ -272,7 +281,10 @@ class _CredentialsFields extends GetView<LoginController> {
       children: [
         TextFormField(
           controller: controller.nameController,
-          style: TextStyle(color: Colors.white, fontSize: 16.sp),
+          style: TextStyle(
+            color: AppThemeColors.textPrimary,
+            fontSize: 16.sp,
+          ),
           decoration: _fieldDecoration(
             hintText: '输入用户名',
             icon: Icons.person_outline_rounded,
@@ -283,7 +295,10 @@ class _CredentialsFields extends GetView<LoginController> {
         TextFormField(
           controller: controller.passwordController,
           obscureText: true,
-          style: TextStyle(color: Colors.white, fontSize: 16.sp),
+          style: TextStyle(
+            color: AppThemeColors.textPrimary,
+            fontSize: 16.sp,
+          ),
           decoration: _fieldDecoration(
             hintText: '输入密码',
             icon: Icons.lock_outline_rounded,
@@ -300,10 +315,10 @@ class _CredentialsFields extends GetView<LoginController> {
   }) {
     return InputDecoration(
       hintText: hintText,
-      hintStyle: TextStyle(color: Colors.white54, fontSize: 15.sp),
-      prefixIcon: Icon(icon, color: Colors.white54, size: 22.sp),
+      hintStyle: TextStyle(color: AppThemeColors.textMuted, fontSize: 15.sp),
+      prefixIcon: Icon(icon, color: AppThemeColors.textMuted, size: 22.sp),
       filled: true,
-      fillColor: Colors.white.withValues(alpha: 0.05),
+      fillColor: AppThemeColors.surfaceMuted,
       contentPadding: EdgeInsets.symmetric(vertical: 18.h, horizontal: 20.w),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16.r),
@@ -313,7 +328,7 @@ class _CredentialsFields extends GetView<LoginController> {
         borderRadius: BorderRadius.circular(16.r),
         borderSide: const BorderSide(color: AppThemeColors.primary, width: 1.5),
       ),
-      errorStyle: TextStyle(color: Colors.redAccent.shade100, fontSize: 12.sp),
+      errorStyle: TextStyle(color: AppThemeColors.danger, fontSize: 12.sp),
     );
   }
 }

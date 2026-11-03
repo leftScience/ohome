@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../theme/app_theme.dart';
+
 class UnderDevelopmentPage extends StatelessWidget {
   const UnderDevelopmentPage({
     super.key,
@@ -57,7 +59,7 @@ class UnderDevelopmentPage extends StatelessWidget {
               style: TextStyle(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.w600,
-                color: Colors.white,
+                color: AppThemeColors.textPrimary,
                 letterSpacing: 0.5,
               ),
             ),

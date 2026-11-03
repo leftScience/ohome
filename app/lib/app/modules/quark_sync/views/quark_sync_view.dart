@@ -23,6 +23,7 @@ class QuarkSyncView extends GetView<QuarkSyncController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppThemeColors.pageBackground,
       appBar: AppBar(title: const Text('同步任务')),
       floatingActionButtonLocation:
           AppFloatingActionButtonPosition.scaffoldLocation,
@@ -48,9 +49,9 @@ class QuarkSyncView extends GetView<QuarkSyncController> {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: AppThemeColors.surface,
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        border: Border.all(color: AppThemeColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -60,7 +61,7 @@ class QuarkSyncView extends GetView<QuarkSyncController> {
             style: TextStyle(
               fontSize: 15.sp,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: AppThemeColors.textPrimary,
             ),
           ),
           SizedBox(height: 12.h),
@@ -69,29 +70,28 @@ class QuarkSyncView extends GetView<QuarkSyncController> {
             onSubmitted: (_) => controller.search(),
             decoration: InputDecoration(
               hintText: '按任务名称搜索',
-              hintStyle: TextStyle(fontSize: 13.sp, color: Colors.white38),
+              hintStyle: TextStyle(
+                fontSize: 13.sp,
+                color: AppThemeColors.textDisabled,
+              ),
               prefixIcon: Icon(
                 Icons.search_rounded,
                 size: 20.w,
-                color: Colors.white38,
+                color: AppThemeColors.textDisabled,
               ),
               filled: true,
-              fillColor: const Color(0xFF101010),
+              fillColor: AppThemeColors.surfaceMuted,
               contentPadding: EdgeInsets.symmetric(
                 horizontal: 12.w,
                 vertical: 12.h,
               ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14.r),
-                borderSide: BorderSide(
-                  color: Colors.white.withValues(alpha: 0.08),
-                ),
+                borderSide: const BorderSide(color: AppThemeColors.border),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14.r),
-                borderSide: BorderSide(
-                  color: Colors.white.withValues(alpha: 0.08),
-                ),
+                borderSide: const BorderSide(color: AppThemeColors.border),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14.r),
@@ -107,9 +107,7 @@ class QuarkSyncView extends GetView<QuarkSyncController> {
                   onPressed: controller.resetFilters,
                   style: OutlinedButton.styleFrom(
                     minimumSize: Size.fromHeight(44.h),
-                    side: BorderSide(
-                      color: Colors.white.withValues(alpha: 0.1),
-                    ),
+                    side: const BorderSide(color: AppThemeColors.borderStrong),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14.r),
                     ),
@@ -160,7 +158,7 @@ class QuarkSyncView extends GetView<QuarkSyncController> {
                   Icon(
                     Icons.sync_problem_outlined,
                     size: 60.w,
-                    color: Colors.white24,
+                    color: AppThemeColors.textDisabled,
                   ),
                   SizedBox(height: 14.h),
                   Center(
@@ -169,7 +167,7 @@ class QuarkSyncView extends GetView<QuarkSyncController> {
                       style: TextStyle(
                         fontSize: 15.sp,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white70,
+                        color: AppThemeColors.textSecondary,
                       ),
                     ),
                   ),
@@ -242,9 +240,9 @@ class _TaskCard extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: AppThemeColors.surface,
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        border: Border.all(color: AppThemeColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -263,7 +261,7 @@ class _TaskCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 16.sp,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        color: AppThemeColors.textPrimary,
                       ),
                     ),
                     SizedBox(height: 4.h),
@@ -272,8 +270,8 @@ class _TaskCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 12.sp,
                         color: task.enabled
-                            ? const Color(0xFF81C784)
-                            : Colors.white38,
+                            ? const Color(0xFF43A047)
+                            : AppThemeColors.textDisabled,
                       ),
                     ),
                   ],
@@ -283,7 +281,9 @@ class _TaskCard extends StatelessWidget {
                 padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
                 decoration: BoxDecoration(
                   color:
-                      (task.enabled ? const Color(0xFF81C784) : Colors.white30)
+                      (task.enabled
+                              ? const Color(0xFF43A047)
+                              : AppThemeColors.textDisabled)
                           .withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(999.r),
                 ),
@@ -293,8 +293,8 @@ class _TaskCard extends StatelessWidget {
                     fontSize: 11.sp,
                     fontWeight: FontWeight.w600,
                     color: task.enabled
-                        ? const Color(0xFF81C784)
-                        : Colors.white54,
+                        ? const Color(0xFF43A047)
+                        : AppThemeColors.textMuted,
                   ),
                 ),
               ),
@@ -340,7 +340,7 @@ class _TaskCard extends StatelessWidget {
               ),
               _ActionChip(
                 label: busy ? '执行中' : '执行一次',
-                color: const Color(0xFF81C784),
+                color: const Color(0xFF43A047),
                 icon: busy
                     ? Icons.hourglass_top_rounded
                     : Icons.play_arrow_rounded,
@@ -348,7 +348,7 @@ class _TaskCard extends StatelessWidget {
               ),
               _ActionChip(
                 label: '删除',
-                color: const Color(0xFFE57373),
+                color: const Color(0xFFE53935),
                 icon: Icons.delete_outline_rounded,
                 onTap: busy ? null : onDelete,
               ),
@@ -367,7 +367,7 @@ class _TaskCard extends StatelessWidget {
       children: [
         Padding(
           padding: EdgeInsets.only(top: maxLines > 1 ? 2.h : 0),
-          child: Icon(icon, size: 16.w, color: Colors.white38),
+          child: Icon(icon, size: 16.w, color: AppThemeColors.textDisabled),
         ),
         SizedBox(width: 8.w),
         Expanded(
@@ -378,7 +378,7 @@ class _TaskCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 12.sp,
               height: maxLines > 1 ? 1.5 : null,
-              color: Colors.white60,
+              color: AppThemeColors.textSecondary,
             ),
           ),
         ),

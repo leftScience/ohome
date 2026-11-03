@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+
+import '../../../theme/app_theme.dart';
 import '../controllers/search_controller.dart' as search_controller;
 
 class SearchView extends StatefulWidget {
@@ -70,13 +72,16 @@ class _SearchViewState extends State<SearchView> {
         },
         child: Scaffold(
           appBar: AppBar(
-            backgroundColor: const Color(0xFF1E1E1E),
+            backgroundColor: AppThemeColors.pageBackground,
             elevation: 0,
             titleSpacing: 0,
             leadingWidth: 48,
             leading: IconButton(
               padding: EdgeInsets.zero,
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              icon: const Icon(
+                Icons.arrow_back,
+                color: AppThemeColors.textPrimary,
+              ),
               onPressed: _handleBack,
             ),
             title: Padding(
@@ -95,7 +100,7 @@ class _SearchViewState extends State<SearchView> {
                 padding: const EdgeInsets.all(1.2),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1E1E1E),
+                    color: AppThemeColors.surface,
                     borderRadius: BorderRadius.circular(21.r),
                   ),
                   child: TextField(
@@ -105,7 +110,7 @@ class _SearchViewState extends State<SearchView> {
                     style: TextStyle(
                       fontSize: 14.sp,
                       height: 1.2,
-                      color: Colors.white,
+                      color: AppThemeColors.textPrimary,
                     ),
                     decoration: InputDecoration(
                       hintText: '搜索影视、短剧、播客、阅读...',
@@ -118,12 +123,12 @@ class _SearchViewState extends State<SearchView> {
                       hintStyle: TextStyle(
                         fontSize: 14.sp,
                         height: 1.2,
-                        color: Colors.grey[500],
+                        color: AppThemeColors.textDisabled,
                       ),
                       suffixIcon: IconButton(
-                        icon: Icon(
+                        icon: const Icon(
                           Icons.search_rounded,
-                          color: Colors.grey[400],
+                          color: AppThemeColors.textMuted,
                         ),
                         onPressed: () => controller.performSearch(),
                       ),
@@ -146,13 +151,13 @@ class _SearchViewState extends State<SearchView> {
                   },
                   child: const Text(
                     '取消',
-                    style: TextStyle(color: Colors.white),
+                    style: TextStyle(color: AppThemeColors.textPrimary),
                   ),
                 );
               }),
             ],
           ),
-          backgroundColor: const Color(0xFF121212),
+          backgroundColor: AppThemeColors.pageBackground,
           body: Padding(
             padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 16.h),
             child: Obx(() {
@@ -173,7 +178,10 @@ class _SearchViewState extends State<SearchView> {
                     padding: EdgeInsets.symmetric(vertical: 24.h),
                     child: Text(
                       '暂无搜索结果',
-                      style: TextStyle(fontSize: 14.sp, color: Colors.grey),
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: AppThemeColors.textMuted,
+                      ),
                     ),
                   ),
                 );
@@ -208,19 +216,13 @@ class _SearchViewState extends State<SearchView> {
 
                   return Container(
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1E1E1E),
+                      color: AppThemeColors.surface,
                       borderRadius: BorderRadius.circular(16.r),
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.06),
+                        color: AppThemeColors.border,
                         width: 1,
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.15),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
+                      boxShadow: AppThemeColors.cardShadow,
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -286,18 +288,19 @@ class _SearchViewState extends State<SearchView> {
                                                           vertical: 4.h,
                                                         ),
                                                     decoration: BoxDecoration(
-                                                      color: const Color(
-                                                        0xFF7C4DFF,
-                                                      ).withValues(alpha: 0.15),
+                                                      color: AppThemeColors
+                                                          .accent
+                                                          .withValues(
+                                                            alpha: 0.10,
+                                                          ),
                                                       borderRadius:
                                                           BorderRadius.circular(
                                                             999.r,
                                                           ),
                                                       border: Border.all(
-                                                        color:
-                                                            const Color(
-                                                              0xFF7C4DFF,
-                                                            ).withValues(
+                                                        color: AppThemeColors
+                                                            .accent
+                                                            .withValues(
                                                               alpha: 0.3,
                                                             ),
                                                         width: 0.5,
@@ -316,9 +319,9 @@ class _SearchViewState extends State<SearchView> {
                                                             Icons
                                                                 .rocket_launch_rounded,
                                                             size: 10.w,
-                                                            color: const Color(
-                                                              0xFFB388FF,
-                                                            ),
+                                                            color:
+                                                                AppThemeColors
+                                                                    .accent,
                                                           ),
                                                         ),
                                                         SizedBox(width: 4.w),
@@ -335,9 +338,8 @@ class _SearchViewState extends State<SearchView> {
                                                                   FontWeight
                                                                       .w500,
                                                               color:
-                                                                  const Color(
-                                                                    0xFFB388FF,
-                                                                  ),
+                                                                  AppThemeColors
+                                                                      .accent,
                                                               height: 1.25,
                                                             ),
                                                           ),
@@ -356,14 +358,16 @@ class _SearchViewState extends State<SearchView> {
                                                   Icon(
                                                     Icons.access_time_rounded,
                                                     size: 11.w,
-                                                    color: Colors.white38,
+                                                    color: AppThemeColors
+                                                        .textDisabled,
                                                   ),
                                                   SizedBox(width: 4.w),
                                                   Text(
                                                     dateStr,
                                                     style: TextStyle(
                                                       fontSize: 10.sp,
-                                                      color: Colors.white38,
+                                                      color: AppThemeColors
+                                                          .textDisabled,
                                                     ),
                                                   ),
                                                 ],
@@ -380,7 +384,7 @@ class _SearchViewState extends State<SearchView> {
                                         style: TextStyle(
                                           fontSize: 14.sp,
                                           fontWeight: FontWeight.w600,
-                                          color: Colors.white,
+                                          color: AppThemeColors.textPrimary,
                                           height: 1.45,
                                         ),
                                       ),
@@ -392,7 +396,7 @@ class _SearchViewState extends State<SearchView> {
                                           overflow: TextOverflow.ellipsis,
                                           style: TextStyle(
                                             fontSize: 12.sp,
-                                            color: Colors.white60,
+                                            color: AppThemeColors.textSecondary,
                                             height: 1.45,
                                           ),
                                         ),
@@ -410,7 +414,7 @@ class _SearchViewState extends State<SearchView> {
                           decoration: BoxDecoration(
                             border: Border(
                               top: BorderSide(
-                                color: Colors.white.withValues(alpha: 0.06),
+                                color: AppThemeColors.divider,
                                 width: 1,
                               ),
                             ),
@@ -427,7 +431,8 @@ class _SearchViewState extends State<SearchView> {
                                     Get.snackbar('提示', '已复制链接');
                                   },
                                   style: TextButton.styleFrom(
-                                    foregroundColor: Colors.white70,
+                                    foregroundColor:
+                                        AppThemeColors.textSecondary,
                                     minimumSize: Size(0, 58.h),
                                     padding: EdgeInsets.symmetric(
                                       vertical: 16.h,
@@ -452,7 +457,7 @@ class _SearchViewState extends State<SearchView> {
                               Container(
                                 width: 1,
                                 height: 30.h,
-                                color: Colors.white.withValues(alpha: 0.08),
+                                color: AppThemeColors.border,
                               ),
                               // 转存按钮
                               Expanded(
@@ -462,8 +467,8 @@ class _SearchViewState extends State<SearchView> {
                                       : () => controller.transferQuark(item),
                                   style: TextButton.styleFrom(
                                     foregroundColor: isTransferring
-                                        ? Colors.white38
-                                        : const Color(0xFFB388FF),
+                                        ? AppThemeColors.textDisabled
+                                        : AppThemeColors.accent,
                                     minimumSize: Size(0, 58.h),
                                     padding: EdgeInsets.symmetric(
                                       vertical: 16.h,
@@ -557,7 +562,7 @@ class _SearchHistorySection
                 style: TextStyle(
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white,
+                  color: AppThemeColors.textPrimary,
                 ),
               ),
               const Spacer(),
@@ -570,7 +575,10 @@ class _SearchHistorySection
                 ),
                 child: Text(
                   '清空',
-                  style: TextStyle(fontSize: 12.sp, color: Colors.white70),
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: AppThemeColors.textSecondary,
+                  ),
                 ),
               ),
             ],
@@ -583,10 +591,10 @@ class _SearchHistorySection
                 .map((item) {
                   return Container(
                     decoration: BoxDecoration(
-                      color: const Color(0xFF232428),
+                      color: AppThemeColors.surfaceMuted,
                       borderRadius: BorderRadius.circular(999),
                       border: Border.all(
-                        color: const Color(0xFF2C2D31),
+                        color: AppThemeColors.border,
                         width: 1,
                       ),
                     ),
@@ -607,7 +615,7 @@ class _SearchHistorySection
                               item,
                               style: TextStyle(
                                 fontSize: 12.sp,
-                                color: Colors.white70,
+                                color: AppThemeColors.textSecondary,
                               ),
                             ),
                           ),
@@ -625,7 +633,7 @@ class _SearchHistorySection
                             child: Icon(
                               Icons.close_rounded,
                               size: 14.w,
-                              color: Colors.white38,
+                              color: AppThemeColors.textDisabled,
                             ),
                           ),
                         ),
@@ -667,7 +675,10 @@ class _RecommendArea extends GetView<search_controller.SearchController> {
             alignment: Alignment.topLeft,
             child: Text(
               '推荐加载失败：$err',
-              style: TextStyle(fontSize: 12.sp, color: Colors.grey),
+              style: TextStyle(
+                fontSize: 12.sp,
+                color: AppThemeColors.textMuted,
+              ),
             ),
           );
         }
@@ -771,15 +782,19 @@ class _RecommendListPage extends GetView<search_controller.SearchController> {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF1E1E1E),
+          color: AppThemeColors.surface,
           borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(color: AppThemeColors.border),
         ),
         clipBehavior: Clip.antiAlias,
         child: items.isEmpty
             ? Center(
                 child: Text(
                   '暂无数据',
-                  style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: AppThemeColors.textMuted,
+                  ),
                 ),
               )
             : ListView.separated(
@@ -814,7 +829,7 @@ class _RecommendListPage extends GetView<search_controller.SearchController> {
                         hasMore ? '继续下拉加载更多' : '没有更多了',
                         style: TextStyle(
                           fontSize: 12.sp,
-                          color: Colors.grey[600],
+                          color: AppThemeColors.textMuted,
                         ),
                       ),
                     );
@@ -888,7 +903,7 @@ class _RecommendListPage extends GetView<search_controller.SearchController> {
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
                                     fontSize: 12.sp,
-                                    color: Colors.grey[600],
+                                    color: AppThemeColors.textMuted,
                                   ),
                                 ),
                               ],
@@ -958,8 +973,11 @@ class _DoubanTabBar extends StatelessWidget {
                         colors: [Color(0xFF7C4DFF), Color(0xFF448AFF)],
                       )
                     : null,
-                color: selected ? null : const Color(0xFF2A2A2A),
+                color: selected ? null : AppThemeColors.surfaceMuted,
                 borderRadius: BorderRadius.circular(999),
+                border: selected
+                    ? null
+                    : Border.all(color: AppThemeColors.border),
                 boxShadow: selected
                     ? [
                         BoxShadow(
@@ -975,7 +993,9 @@ class _DoubanTabBar extends StatelessWidget {
                   tabs[i],
                   style: TextStyle(
                     fontSize: 12.sp,
-                    color: selected ? Colors.white : Colors.white70,
+                    color: selected
+                        ? AppThemeColors.textOnAccent
+                        : AppThemeColors.textSecondary,
                     fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
                   ),
                 ),
@@ -1012,8 +1032,9 @@ class _DoubanSection extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
+        color: AppThemeColors.surface,
         borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: AppThemeColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1021,7 +1042,10 @@ class _DoubanSection extends StatelessWidget {
           if (items.isEmpty)
             Text(
               '暂无数据',
-              style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
+              style: TextStyle(
+                fontSize: 12.sp,
+                color: AppThemeColors.textMuted,
+              ),
             ),
           ...items.map((item) {
             final name = _title(item);
@@ -1093,7 +1117,7 @@ class _DoubanSection extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 fontSize: 12.sp,
-                                color: Colors.grey[600],
+                                color: AppThemeColors.textMuted,
                               ),
                             ),
                           ],
@@ -1153,13 +1177,16 @@ class _DoubanSection extends StatelessWidget {
                       '继续下拉加载更多',
                       style: TextStyle(
                         fontSize: 12.sp,
-                        color: Colors.grey[600],
+                        color: AppThemeColors.textMuted,
                       ),
                     );
                   }
                   return Text(
                     '没有更多了',
-                    style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: AppThemeColors.textMuted,
+                    ),
                   );
                 },
               ),

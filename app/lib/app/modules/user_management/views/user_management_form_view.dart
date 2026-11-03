@@ -60,6 +60,7 @@ class _UserManagementFormViewState extends State<UserManagementFormView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppThemeColors.pageBackground,
       appBar: AppBar(title: Text(_isEdit ? '编辑角色' : '新增用户')),
       body: SafeArea(
         child: Form(
@@ -70,11 +71,10 @@ class _UserManagementFormViewState extends State<UserManagementFormView> {
               Container(
                 padding: EdgeInsets.all(18.w),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1A1A1A),
+                  color: AppThemeColors.surface,
                   borderRadius: BorderRadius.circular(22.r),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.06),
-                  ),
+                  border: Border.all(color: AppThemeColors.border),
+                  boxShadow: AppThemeColors.cardShadow,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -84,7 +84,7 @@ class _UserManagementFormViewState extends State<UserManagementFormView> {
                       style: TextStyle(
                         fontSize: 18.sp,
                         fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                        color: AppThemeColors.textPrimary,
                       ),
                     ),
                     SizedBox(height: 8.h),
@@ -92,7 +92,10 @@ class _UserManagementFormViewState extends State<UserManagementFormView> {
                       _isEdit
                           ? '这里只保留角色调整，用户名和昵称请到个人资料处修改。'
                           : '新用户密码将使用系统默认密码，创建后可通过“重置密码”再次初始化。',
-                      style: TextStyle(fontSize: 12.sp, color: Colors.white54),
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: AppThemeColors.textMuted,
+                      ),
                     ),
                     SizedBox(height: 18.h),
                     if (!_isEdit) ...[
@@ -128,7 +131,7 @@ class _UserManagementFormViewState extends State<UserManagementFormView> {
                         '修改当前登录用户角色后，将自动退出并重新登录。',
                         style: TextStyle(
                           fontSize: 12.sp,
-                          color: const Color(0xFFFFB74D),
+                          color: AppThemeColors.warning,
                         ),
                       ),
                     ],
@@ -183,7 +186,7 @@ class _UserManagementFormViewState extends State<UserManagementFormView> {
           style: TextStyle(
             fontSize: 13.sp,
             fontWeight: FontWeight.w600,
-            color: Colors.white70,
+            color: AppThemeColors.textSecondary,
           ),
         ),
         SizedBox(height: 8.h),
@@ -209,29 +212,28 @@ class _UserManagementFormViewState extends State<UserManagementFormView> {
             }
             return null;
           },
-          dropdownColor: const Color(0xFF1A1A1A),
-          style: TextStyle(fontSize: 14.sp, color: Colors.white),
-          iconEnabledColor: Colors.white60,
+          dropdownColor: AppThemeColors.surface,
+          style: TextStyle(fontSize: 14.sp, color: AppThemeColors.textPrimary),
+          iconEnabledColor: AppThemeColors.textSecondary,
           decoration: InputDecoration(
             hintText: '请选择角色',
-            hintStyle: TextStyle(fontSize: 13.sp, color: Colors.white38),
+            hintStyle: TextStyle(
+              fontSize: 13.sp,
+              color: AppThemeColors.textDisabled,
+            ),
             filled: true,
-            fillColor: const Color(0xFF101010),
+            fillColor: AppThemeColors.surfaceMuted,
             contentPadding: EdgeInsets.symmetric(
               horizontal: 14.w,
               vertical: 14.h,
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14.r),
-              borderSide: BorderSide(
-                color: Colors.white.withValues(alpha: 0.08),
-              ),
+              borderSide: const BorderSide(color: AppThemeColors.border),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14.r),
-              borderSide: BorderSide(
-                color: Colors.white.withValues(alpha: 0.08),
-              ),
+              borderSide: const BorderSide(color: AppThemeColors.border),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14.r),
@@ -239,11 +241,11 @@ class _UserManagementFormViewState extends State<UserManagementFormView> {
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14.r),
-              borderSide: const BorderSide(color: Colors.redAccent),
+              borderSide: const BorderSide(color: AppThemeColors.danger),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14.r),
-              borderSide: const BorderSide(color: Colors.redAccent),
+              borderSide: const BorderSide(color: AppThemeColors.danger),
             ),
           ),
         ),
@@ -266,7 +268,7 @@ class _UserManagementFormViewState extends State<UserManagementFormView> {
           style: TextStyle(
             fontSize: 13.sp,
             fontWeight: FontWeight.w600,
-            color: Colors.white70,
+            color: AppThemeColors.textSecondary,
           ),
         ),
         SizedBox(height: 8.h),
@@ -276,24 +278,23 @@ class _UserManagementFormViewState extends State<UserManagementFormView> {
           validator: validator,
           decoration: InputDecoration(
             hintText: hintText,
-            hintStyle: TextStyle(fontSize: 13.sp, color: Colors.white38),
+            hintStyle: TextStyle(
+              fontSize: 13.sp,
+              color: AppThemeColors.textDisabled,
+            ),
             filled: true,
-            fillColor: const Color(0xFF101010),
+            fillColor: AppThemeColors.surfaceMuted,
             contentPadding: EdgeInsets.symmetric(
               horizontal: 14.w,
               vertical: 14.h,
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14.r),
-              borderSide: BorderSide(
-                color: Colors.white.withValues(alpha: 0.08),
-              ),
+              borderSide: const BorderSide(color: AppThemeColors.border),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14.r),
-              borderSide: BorderSide(
-                color: Colors.white.withValues(alpha: 0.08),
-              ),
+              borderSide: const BorderSide(color: AppThemeColors.border),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14.r),
@@ -301,11 +302,11 @@ class _UserManagementFormViewState extends State<UserManagementFormView> {
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14.r),
-              borderSide: const BorderSide(color: Colors.redAccent),
+              borderSide: const BorderSide(color: AppThemeColors.danger),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14.r),
-              borderSide: const BorderSide(color: Colors.redAccent),
+              borderSide: const BorderSide(color: AppThemeColors.danger),
             ),
           ),
         ),

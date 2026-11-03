@@ -13,6 +13,7 @@ class QuarkSearchSettingsView extends GetView<QuarkSearchSettingsController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppThemeColors.pageBackground,
       appBar: AppBar(title: const Text('夸克搜索')),
       body: Obx(() {
         if (controller.loading.value) {
@@ -107,9 +108,9 @@ class QuarkSearchSettingsView extends GetView<QuarkSearchSettingsController> {
     return Container(
       padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: AppThemeColors.surface,
         borderRadius: BorderRadius.circular(22.r),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        border: Border.all(color: AppThemeColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -119,7 +120,7 @@ class QuarkSearchSettingsView extends GetView<QuarkSearchSettingsController> {
             style: TextStyle(
               fontSize: 16.sp,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: AppThemeColors.textPrimary,
             ),
           ),
           SizedBox(height: 8.h),
@@ -127,7 +128,7 @@ class QuarkSearchSettingsView extends GetView<QuarkSearchSettingsController> {
             '代理地址在当前页直接填写，TG 频道和插件改为独立标签编辑页，保存后下次搜索立即生效。',
             style: TextStyle(
               fontSize: 13.sp,
-              color: Colors.white70,
+              color: AppThemeColors.textSecondary,
               height: 1.5,
             ),
           ),
@@ -147,9 +148,9 @@ class QuarkSearchSettingsView extends GetView<QuarkSearchSettingsController> {
     return Container(
       padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: AppThemeColors.surface,
         borderRadius: BorderRadius.circular(22.r),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        border: Border.all(color: AppThemeColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -175,13 +176,16 @@ class QuarkSearchSettingsView extends GetView<QuarkSearchSettingsController> {
                       style: TextStyle(
                         fontSize: 15.sp,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        color: AppThemeColors.textPrimary,
                       ),
                     ),
                     SizedBox(height: 4.h),
                     Text(
                       _formatUpdatedAt(updatedAt),
-                      style: TextStyle(fontSize: 12.sp, color: Colors.white54),
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: AppThemeColors.textMuted,
+                      ),
                     ),
                   ],
                 ),
@@ -193,36 +197,30 @@ class QuarkSearchSettingsView extends GetView<QuarkSearchSettingsController> {
             description,
             style: TextStyle(
               fontSize: 12.sp,
-              color: Colors.white60,
+              color: AppThemeColors.textSecondary,
               height: 1.5,
             ),
           ),
           SizedBox(height: 12.h),
           TextField(
             controller: controller,
-            style: const TextStyle(color: Colors.white),
+            style: const TextStyle(color: AppThemeColors.textPrimary),
             decoration: InputDecoration(
               hintText: hint,
-              hintStyle: const TextStyle(color: Colors.white38),
+              hintStyle: const TextStyle(color: AppThemeColors.textDisabled),
               filled: true,
-              fillColor: const Color(0xFF111111),
+              fillColor: AppThemeColors.surfaceMuted,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16.r),
-                borderSide: BorderSide(
-                  color: Colors.white.withValues(alpha: 0.08),
-                ),
+                borderSide: const BorderSide(color: AppThemeColors.border),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16.r),
-                borderSide: BorderSide(
-                  color: Colors.white.withValues(alpha: 0.08),
-                ),
+                borderSide: const BorderSide(color: AppThemeColors.border),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16.r),
-                borderSide: BorderSide(
-                  color: AppThemeColors.primary.withValues(alpha: 0.8),
-                ),
+                borderSide: const BorderSide(color: AppThemeColors.primary),
               ),
             ),
           ),
@@ -252,9 +250,9 @@ class QuarkSearchSettingsView extends GetView<QuarkSearchSettingsController> {
         child: Ink(
           padding: EdgeInsets.all(18.w),
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1A1A),
+            color: AppThemeColors.surface,
             borderRadius: BorderRadius.circular(22.r),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+            border: Border.all(color: AppThemeColors.border),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -280,7 +278,7 @@ class QuarkSearchSettingsView extends GetView<QuarkSearchSettingsController> {
                           style: TextStyle(
                             fontSize: 15.sp,
                             fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                            color: AppThemeColors.textPrimary,
                           ),
                         ),
                         SizedBox(height: 4.h),
@@ -288,7 +286,7 @@ class QuarkSearchSettingsView extends GetView<QuarkSearchSettingsController> {
                           _formatUpdatedAt(updatedAt),
                           style: TextStyle(
                             fontSize: 12.sp,
-                            color: Colors.white54,
+                            color: AppThemeColors.textMuted,
                           ),
                         ),
                       ],
@@ -311,14 +309,14 @@ class QuarkSearchSettingsView extends GetView<QuarkSearchSettingsController> {
                           style: TextStyle(
                             fontSize: 12.sp,
                             fontWeight: FontWeight.w600,
-                            color: AppThemeColors.secondary,
+                            color: AppThemeColors.primary,
                           ),
                         ),
                         SizedBox(width: 4.w),
                         Icon(
                           Icons.chevron_right_rounded,
                           size: 18.w,
-                          color: AppThemeColors.secondary,
+                          color: AppThemeColors.primary,
                         ),
                       ],
                     ),
@@ -330,7 +328,7 @@ class QuarkSearchSettingsView extends GetView<QuarkSearchSettingsController> {
                 description,
                 style: TextStyle(
                   fontSize: 12.sp,
-                  color: Colors.white60,
+                  color: AppThemeColors.textSecondary,
                   height: 1.5,
                 ),
               ),
@@ -338,11 +336,9 @@ class QuarkSearchSettingsView extends GetView<QuarkSearchSettingsController> {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF111111),
+                  color: AppThemeColors.surfaceMuted,
                   borderRadius: BorderRadius.circular(16.r),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.06),
-                  ),
+                  border: Border.all(color: AppThemeColors.border),
                 ),
                 child: Row(
                   children: [
@@ -357,7 +353,7 @@ class QuarkSearchSettingsView extends GetView<QuarkSearchSettingsController> {
                       style: TextStyle(
                         fontSize: 12.sp,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        color: AppThemeColors.textPrimary,
                       ),
                     ),
                   ],
@@ -372,15 +368,16 @@ class QuarkSearchSettingsView extends GetView<QuarkSearchSettingsController> {
                     vertical: 14.h,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF101010),
+                    color: AppThemeColors.surfaceMuted,
                     borderRadius: BorderRadius.circular(16.r),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.05),
-                    ),
+                    border: Border.all(color: AppThemeColors.border),
                   ),
                   child: Text(
                     '暂未选择，点击进入页面后添加或勾选标签。',
-                    style: TextStyle(fontSize: 12.sp, color: Colors.white54),
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: AppThemeColors.textMuted,
+                    ),
                   ),
                 )
               else
@@ -397,7 +394,7 @@ class QuarkSearchSettingsView extends GetView<QuarkSearchSettingsController> {
                 helper,
                 style: TextStyle(
                   fontSize: 12.sp,
-                  color: Colors.white54,
+                  color: AppThemeColors.textMuted,
                   height: 1.5,
                 ),
               ),
@@ -412,13 +409,13 @@ class QuarkSearchSettingsView extends GetView<QuarkSearchSettingsController> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
       decoration: BoxDecoration(
-        color: const Color(0xFF101010),
+        color: AppThemeColors.surfaceMuted,
         borderRadius: BorderRadius.circular(999.r),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        border: Border.all(color: AppThemeColors.border),
       ),
       child: Text(
         tag,
-        style: TextStyle(fontSize: 12.sp, color: Colors.white70),
+        style: TextStyle(fontSize: 12.sp, color: AppThemeColors.textSecondary),
       ),
     );
   }
@@ -438,7 +435,7 @@ class QuarkSearchSettingsView extends GetView<QuarkSearchSettingsController> {
         style: TextStyle(
           fontSize: 12.sp,
           fontWeight: FontWeight.w600,
-          color: Colors.white,
+          color: AppThemeColors.primary,
         ),
       ),
     );

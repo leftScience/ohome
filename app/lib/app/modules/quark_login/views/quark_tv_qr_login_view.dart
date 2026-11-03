@@ -145,6 +145,7 @@ class _QuarkTvQrLoginViewState extends State<QuarkTvQrLoginView> {
   Widget build(BuildContext context) {
     final qrBytes = _decodeQrBytes(_qrData);
     return Scaffold(
+      backgroundColor: AppThemeColors.pageBackground,
       appBar: AppBar(title: const Text('夸克TV扫码登录')),
       body: ListView(
         padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 120.h),
@@ -152,9 +153,9 @@ class _QuarkTvQrLoginViewState extends State<QuarkTvQrLoginView> {
           Container(
             padding: EdgeInsets.all(18.w),
             decoration: BoxDecoration(
-              color: const Color(0xFF1A1A1A),
+              color: AppThemeColors.surface,
               borderRadius: BorderRadius.circular(22.r),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+              border: Border.all(color: AppThemeColors.border),
             ),
             child: Column(
               children: [
@@ -165,6 +166,7 @@ class _QuarkTvQrLoginViewState extends State<QuarkTvQrLoginView> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(20.r),
+                    border: Border.all(color: AppThemeColors.border),
                   ),
                   child: qrBytes == null
                       ? Center(
@@ -172,7 +174,7 @@ class _QuarkTvQrLoginViewState extends State<QuarkTvQrLoginView> {
                             '二维码加载失败',
                             style: TextStyle(
                               fontSize: 14.sp,
-                              color: Colors.black54,
+                              color: AppThemeColors.textMuted,
                             ),
                           ),
                         )
@@ -189,13 +191,19 @@ class _QuarkTvQrLoginViewState extends State<QuarkTvQrLoginView> {
                 Text(
                   _statusText,
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 14.sp, color: Colors.white70),
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: AppThemeColors.textSecondary,
+                  ),
                 ),
                 SizedBox(height: 10.h),
                 Text(
                   '扫码成功后会自动关闭此页面',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 12.sp, color: Colors.white38),
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: AppThemeColors.textDisabled,
+                  ),
                 ),
               ],
             ),

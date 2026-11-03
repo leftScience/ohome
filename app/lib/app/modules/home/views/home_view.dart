@@ -1,9 +1,9 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
 import '../../../routes/app_pages.dart';
+import '../../../theme/app_theme.dart';
 import '../../../widgets/home_style_backdrop.dart';
 import '../controllers/home_controller.dart';
 import '../widgets/home_todo_panel.dart';
@@ -61,7 +61,7 @@ class HomeView extends GetView<HomeController> {
                   _greeting,
                   style: TextStyle(
                     fontSize: 14.sp,
-                    color: Colors.white60,
+                    color: AppThemeColors.textMuted,
                     letterSpacing: 0.3,
                   ),
                 ),
@@ -72,7 +72,7 @@ class HomeView extends GetView<HomeController> {
                     fontSize: 24.sp,
                     height: 1.3,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: AppThemeColors.textPrimary,
                     letterSpacing: 0.5,
                   ),
                 ),
@@ -94,29 +94,24 @@ class HomeView extends GetView<HomeController> {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(20.r),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-              child: Material(
-                color: Colors.white.withValues(alpha: 0.05),
+            child: Material(
+              color: AppThemeColors.surface,
+              borderRadius: BorderRadius.circular(20.r),
+              child: InkWell(
+                onTap: controller.openMessages,
                 borderRadius: BorderRadius.circular(20.r),
-                child: InkWell(
-                  onTap: controller.openMessages,
-                  borderRadius: BorderRadius.circular(20.r),
-                  child: Ink(
-                    width: 48.w,
-                    height: 48.w,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20.r),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.12),
-                      ),
-                    ),
-                    child: Center(
-                      child: Icon(
-                        Icons.notifications_none_rounded,
-                        color: Colors.white.withValues(alpha: 0.85),
-                        size: 24.w,
-                      ),
+                child: Ink(
+                  width: 48.w,
+                  height: 48.w,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20.r),
+                    border: Border.all(color: AppThemeColors.border),
+                  ),
+                  child: Center(
+                    child: Icon(
+                      Icons.notifications_none_rounded,
+                      color: AppThemeColors.textSecondary,
+                      size: 24.w,
                     ),
                   ),
                 ),
@@ -135,10 +130,7 @@ class HomeView extends GetView<HomeController> {
                     colors: [Color(0xFFFF5252), Color(0xFFD32F2F)],
                   ),
                   borderRadius: BorderRadius.circular(999.r),
-                  border: Border.all(
-                    color: const Color(0xFF121212),
-                    width: 1.5,
-                  ),
+                  border: Border.all(color: AppThemeColors.surface, width: 1.5),
                   boxShadow: [
                     BoxShadow(
                       color: const Color(0xFFFF5252).withValues(alpha: 0.4),
@@ -174,54 +166,49 @@ class HomeView extends GetView<HomeController> {
       onTap: () => Get.toNamed(Routes.SEARCH),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24.r),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-          child: Container(
-            height: 52.h,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24.r),
-              color: Colors.white.withValues(alpha: 0.05),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.12),
-                width: 1.2,
+        child: Container(
+          height: 52.h,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24.r),
+            color: AppThemeColors.surface,
+            border: Border.all(color: AppThemeColors.border, width: 1.2),
+          ),
+          child: Row(
+            children: [
+              SizedBox(width: 16.w),
+              Icon(
+                Icons.search_rounded,
+                color: AppThemeColors.textMuted,
+                size: 22.w,
               ),
-            ),
-            child: Row(
-              children: [
-                SizedBox(width: 16.w),
-                Icon(Icons.search_rounded, color: Colors.white54, size: 22.w),
-                SizedBox(width: 12.w),
-                Expanded(
-                  child: Text(
-                    '搜索影视、短剧、播客、阅读...',
-                    style: TextStyle(
-                      color: Colors.white54,
-                      fontSize: 14.5.sp,
-                      letterSpacing: 0.3,
-                    ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Text(
+                  '搜索影视、短剧、播客、阅读...',
+                  style: TextStyle(
+                    color: AppThemeColors.textMuted,
+                    fontSize: 14.5.sp,
+                    letterSpacing: 0.3,
                   ),
                 ),
-                Container(
-                  margin: EdgeInsets.only(right: 6.w),
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 14.w,
-                    vertical: 8.h,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(18.r),
-                  ),
-                  child: Text(
-                    '搜索',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
+              ),
+              Container(
+                margin: EdgeInsets.only(right: 6.w),
+                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
+                decoration: BoxDecoration(
+                  color: AppThemeColors.surfaceSunken,
+                  borderRadius: BorderRadius.circular(18.r),
+                ),
+                child: Text(
+                  '搜索',
+                  style: TextStyle(
+                    color: AppThemeColors.textSecondary,
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -297,9 +284,9 @@ class HomeView extends GetView<HomeController> {
           ),
           boxShadow: [
             BoxShadow(
-              color: entry.gradient[1].withValues(alpha: 0.35),
-              blurRadius: 18,
-              offset: const Offset(0, 8),
+              color: entry.gradient[1].withValues(alpha: 0.2),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
@@ -317,7 +304,7 @@ class HomeView extends GetView<HomeController> {
                   gradient: RadialGradient(
                     colors: [
                       Colors.white.withValues(alpha: 0.12),
-                      Colors.transparent,
+                      Colors.white.withValues(alpha: 0),
                     ],
                   ),
                 ),
@@ -335,7 +322,7 @@ class HomeView extends GetView<HomeController> {
                   gradient: RadialGradient(
                     colors: [
                       entry.iconColor.withValues(alpha: 0.35),
-                      Colors.transparent,
+                      entry.iconColor.withValues(alpha: 0),
                     ],
                   ),
                 ),
@@ -350,7 +337,7 @@ class HomeView extends GetView<HomeController> {
                     end: Alignment.bottomCenter,
                     colors: [
                       Colors.white.withValues(alpha: 0.12),
-                      Colors.transparent,
+                      Colors.white.withValues(alpha: 0),
                     ],
                     stops: const [0.0, 0.45],
                   ),

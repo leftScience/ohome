@@ -2,13 +2,15 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../theme/app_theme.dart';
+
 class PlaylistLoadingView extends StatefulWidget {
   const PlaylistLoadingView({
     super.key,
     required this.message,
     this.icon,
     this.accentColor = const Color(0xFF2563FF),
-    this.textColor = Colors.white70,
+    this.textColor = AppThemeColors.textSecondary,
   });
 
   final String message;
@@ -83,17 +85,15 @@ class _PlaylistLoadingViewState extends State<PlaylistLoadingView>
                       height: 54,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: const Color(0xFF090909),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.08),
-                        ),
+                        color: AppThemeColors.surface,
+                        border: Border.all(color: AppThemeColors.border),
                       ),
                     ),
                     if (widget.icon != null)
                       Icon(
                         widget.icon,
                         size: 20,
-                        color: Colors.white.withValues(alpha: 0.9),
+                        color: widget.accentColor,
                       ),
                   ],
                 ),
@@ -126,7 +126,7 @@ class _SpinnerTrackPainter extends CustomPainter {
     final paint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
-      ..color = Colors.white.withValues(alpha: 0.16);
+      ..color = AppThemeColors.borderStrong;
     canvas.drawCircle(center, radius, paint);
   }
 
@@ -153,11 +153,11 @@ class _SpinnerGradientPainter extends CustomPainter {
         startAngle: -math.pi / 2,
         endAngle: math.pi * 3 / 2,
         colors: [
-          Colors.white.withValues(alpha: 0.98),
-          Colors.white.withValues(alpha: 0.98),
+          AppThemeColors.borderStrong,
+          AppThemeColors.borderStrong,
           accentColor.withValues(alpha: 0.96),
           accentColor,
-          Colors.white.withValues(alpha: 0.96),
+          AppThemeColors.borderStrong,
         ],
         stops: const [0.0, 0.36, 0.58, 0.8, 1.0],
       ).createShader(rect);
