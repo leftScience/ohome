@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 
 import '../../../data/api/quark.dart';
 import '../../../data/models/quark_file_entry.dart';
+import '../../../utils/quark_error_helper.dart';
 
 enum WebdavListSortType { updatedDesc, updatedAsc, nameAsc }
 
@@ -71,6 +72,7 @@ abstract class WebdavFolderController extends GetxController {
   final hasMore = true.obs;
   final error = RxnString();
   final loadMoreError = RxnString();
+  final authError = false.obs;
   final deletingPaths = <String>{}.obs;
   final currentSort = WebdavListSortType.updatedDesc.obs;
   final _navigationStack = <String>[].obs;
@@ -225,6 +227,7 @@ abstract class WebdavFolderController extends GetxController {
       loadingMore.value = false;
       error.value = null;
       loadMoreError.value = null;
+      authError.value = false;
     } else {
       if (loading.value || loadingMore.value || !hasMore.value) {
         return;
@@ -258,10 +261,13 @@ abstract class WebdavFolderController extends GetxController {
       }
     } catch (e) {
       if (token == _loadToken) {
+        final isAuthError = QuarkErrorHelper.isQuarkAuthError(e);
+        final friendlyMessage = QuarkErrorHelper.toFriendlyMessage(e);
+        authError.value = isAuthError;
         if (refresh) {
-          error.value = e.toString();
+          error.value = friendlyMessage;
         } else {
-          loadMoreError.value = e.toString();
+          loadMoreError.value = friendlyMessage;
         }
       }
     } finally {

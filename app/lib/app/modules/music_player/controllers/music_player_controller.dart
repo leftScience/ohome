@@ -17,6 +17,7 @@ import '../../../services/playback_audio_session.dart';
 import '../../../services/playback_entry_service.dart';
 import '../../../utils/app_env.dart';
 import '../../../utils/media_path.dart';
+import '../../../utils/quark_error_helper.dart';
 
 enum _InitialTrackSource { none, preferred, explicitResume, storedResume }
 
@@ -530,7 +531,10 @@ class MusicPlayerController extends GetxController with WidgetsBindingObserver {
       await _resolveInitialPlaybackTarget(arguments, version);
     } catch (error) {
       if (_routeArgsVersion != version) return;
-      Get.snackbar('提示', '获取播放列表失败：$error');
+      Get.snackbar(
+        '提示',
+        '获取播放列表失败：${QuarkErrorHelper.toFriendlyMessage(error)}',
+      );
     } finally {
       if (_routeArgsVersion == version) {
         isLoadingPlaylist.value = false;
@@ -925,7 +929,7 @@ class MusicPlayerController extends GetxController with WidgetsBindingObserver {
       _syncAudioPlaybackState();
     } catch (e) {
       await _audioSession.deactivate();
-      Get.snackbar('播放失败', e.toString());
+      Get.snackbar('播放失败', QuarkErrorHelper.toFriendlyMessage(e));
     }
   }
 

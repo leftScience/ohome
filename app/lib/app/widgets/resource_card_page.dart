@@ -6,7 +6,10 @@ import 'package:get/get.dart';
 import '../data/api/quark.dart';
 import '../data/models/quark_file_entry.dart';
 import '../modules/common/controllers/quark_folder_controller.dart';
+import '../routes/app_pages.dart';
+import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
+import '../utils/quark_error_helper.dart';
 import 'selection_bottom_sheet.dart';
 
 const List<String> _kDefaultEntryBlacklist = <String>[''];
@@ -220,6 +223,7 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
       final hasMore = widget.controller.hasMore.value;
       final error = widget.controller.error.value;
       final loadMoreError = widget.controller.loadMoreError.value;
+      final authError = widget.controller.authError.value;
       final currentSort = widget.controller.currentSort.value;
       final selectedPaths = _visibleSelectedPaths(entries);
       final selectedCount = selectedPaths.length;
@@ -296,6 +300,7 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
           hasMore: hasMore,
           error: error,
           loadMoreError: loadMoreError,
+          authError: authError,
           currentSort: currentSort,
           sortDisabled: sortDisabled,
         ),
@@ -312,6 +317,7 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
     required bool hasMore,
     required String? error,
     required String? loadMoreError,
+    required bool authError,
     required WebdavListSortType currentSort,
     required bool sortDisabled,
   }) {
@@ -321,21 +327,86 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
 
     final errText = error?.trim() ?? '';
     if (errText.isNotEmpty) {
+      final authService = Get.isRegistered<AuthService>()
+          ? Get.find<AuthService>()
+          : null;
+      final isSuperAdmin = authService?.user.value?.isSuperAdmin ?? false;
+
       return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              if (authError) ...[
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: AppThemeColors.warning.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.lock_clock_rounded,
+                    color: AppThemeColors.warning,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                const Text(
+                  '夸克登录已失效',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppThemeColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
               Text(
-                errText,
+                authError ? '无法读取夸克网盘中的内容，请重新登录夸克账号后再试。' : errText,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: AppThemeColors.textSecondary),
+                style: const TextStyle(
+                  color: AppThemeColors.textSecondary,
+                  height: 1.5,
+                ),
               ),
-              const SizedBox(height: 12),
-              ElevatedButton(
-                onPressed: widget.controller.refreshCurrent,
-                child: const Text('重试'),
+              if (authError) ...[
+                const SizedBox(height: 10),
+                Text(
+                  isSuperAdmin
+                      ? QuarkErrorHelper.authErrorAdminHint
+                      : QuarkErrorHelper.authErrorUserHint,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    height: 1.5,
+                    color: AppThemeColors.textMuted,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 18),
+              Wrap(
+                spacing: 12,
+                runSpacing: 8,
+                alignment: WrapAlignment.center,
+                children: [
+                  OutlinedButton(
+                    onPressed: widget.controller.refreshCurrent,
+                    child: const Text('重试'),
+                  ),
+                  if (authError && isSuperAdmin)
+                    FilledButton.icon(
+                      onPressed: () async {
+                        await Get.toNamed(Routes.QUARK_LOGIN);
+                        if (!mounted) return;
+                        await widget.controller.refreshCurrent();
+                      },
+                      icon: const Icon(Icons.login_rounded, size: 18),
+                      label: const Text('更新夸克登录'),
+                    ),
+                ],
               ),
             ],
           ),
@@ -707,7 +778,9 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
       renamed = true;
       if (mounted) Get.snackbar('提示', '重命名成功');
     } catch (e) {
-      if (mounted) Get.snackbar('错误', '重命名失败：$e');
+      if (mounted) {
+        Get.snackbar('错误', '重命名失败：${QuarkErrorHelper.toFriendlyMessage(e)}');
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -829,7 +902,10 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
       targets = await widget.controller.fetchMoveTargets();
     } catch (e) {
       if (mounted) {
-        Get.snackbar('错误', '获取移动目标失败: $e');
+        Get.snackbar(
+          '错误',
+          '获取移动目标失败: ${QuarkErrorHelper.toFriendlyMessage(e)}',
+        );
       }
       return;
     }

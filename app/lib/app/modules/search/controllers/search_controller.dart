@@ -7,6 +7,7 @@ import '../../../data/api/pansou.dart';
 import '../../../data/api/quark_transfer.dart';
 import '../../../data/storage/search_history_storage.dart';
 import '../../../utils/http_client.dart';
+import '../../../utils/quark_error_helper.dart';
 import '../../../widgets/selection_bottom_sheet.dart';
 
 class SearchController extends GetxController {
@@ -145,7 +146,9 @@ class SearchController extends GetxController {
     } on ApiException catch (e) {
       Get.snackbar(
         '转存失败',
-        e.message.trim().isEmpty ? '请稍后重试' : e.message,
+        QuarkErrorHelper.toFriendlyMessage(
+          e.message.trim().isEmpty ? '请稍后重试' : e.message,
+        ),
         snackPosition: SnackPosition.TOP,
         duration: const Duration(seconds: 4),
       );

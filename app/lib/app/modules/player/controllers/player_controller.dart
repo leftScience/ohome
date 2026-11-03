@@ -14,6 +14,7 @@ import '../../../services/playback_entry_service.dart';
 import '../../../services/video_cast_service.dart';
 import '../../../utils/app_env.dart';
 import '../../../utils/media_path.dart';
+import '../../../utils/quark_error_helper.dart';
 import '../../../data/storage/playback_progress_storage.dart';
 import '../../../data/storage/skip_settings_storage.dart';
 import '../../video_cast/views/video_cast_view.dart';
@@ -1198,7 +1199,10 @@ class PlayerController extends GetxController {
       await _resolveInitialPlaybackTarget(args, version);
     } catch (error) {
       if (_routeArgsVersion != version) return;
-      Get.snackbar('提示', '获取播放列表失败：$error');
+      Get.snackbar(
+        '提示',
+        '获取播放列表失败：${QuarkErrorHelper.toFriendlyMessage(error)}',
+      );
     } finally {
       if (_routeArgsVersion == version) {
         isLoadingPlaylist.value = false;

@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../data/api/quark.dart';
 import '../../../services/media_history_service.dart';
+import '../../../utils/quark_error_helper.dart';
 
 enum ReaderFileFormat { unknown, epub, txt, pdf }
 
@@ -676,7 +677,7 @@ class ReaderController extends GetxController {
   }
 
   void onPdfDocumentError(Object loadError) {
-    error.value = '加载 PDF 失败：$loadError';
+    error.value = '加载 PDF 失败：${QuarkErrorHelper.toFriendlyMessage(loadError)}';
     viewerLoading.value = false;
   }
 
@@ -747,7 +748,7 @@ class ReaderController extends GetxController {
           throw Exception('暂不支持当前文件类型');
       }
     } catch (e) {
-      error.value = '加载阅读内容失败：$e';
+      error.value = '加载阅读内容失败：${QuarkErrorHelper.toFriendlyMessage(e)}';
       viewerLoading.value = false;
     } finally {
       loading.value = false;

@@ -4,6 +4,7 @@ import 'package:get/get_navigation/src/extension_navigation.dart';
 import 'package:ohome/app/utils/app_env.dart';
 import 'package:ohome/app/utils/common_utils.dart';
 import 'package:ohome/app/utils/http_interceptor.dart';
+import 'package:ohome/app/utils/quark_error_helper.dart';
 
 class HttpClient {
   HttpClient._(this._dio);
@@ -222,7 +223,7 @@ class HttpClient {
   }
 
   static void _toastError(String message) {
-    final text = message.trim();
+    final text = QuarkErrorHelper.toFriendlyMessage(message);
     if (text.isEmpty) return;
     if (Get.overlayContext == null) return;
 

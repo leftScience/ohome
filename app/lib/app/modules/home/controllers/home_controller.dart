@@ -10,6 +10,7 @@ import '../../../services/history_playback_service.dart';
 import '../../../services/media_history_service.dart';
 import '../../../services/playback_entry_service.dart';
 import '../../../utils/app_env.dart';
+import '../../../utils/quark_error_helper.dart';
 import '../../messages/controllers/messages_controller.dart';
 import '../../music_player/controllers/music_player_controller.dart';
 
@@ -200,7 +201,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
       return true;
     } catch (e) {
-      Get.snackbar('提示', '播放失败：$e');
+      Get.snackbar('提示', '播放失败：${QuarkErrorHelper.toFriendlyMessage(e)}');
       return false;
     } finally {
       recentHistoryOpening.value = false;
