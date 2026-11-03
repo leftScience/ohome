@@ -16,10 +16,12 @@ class HomeRecommendController extends GetxController {
   final RxString recommendError = ''.obs;
   final RxList<dynamic> hotMovies = <dynamic>[].obs;
   final RxList<dynamic> hotCnDramas = <dynamic>[].obs;
+  final RxList<dynamic> hotPlaylets = <dynamic>[].obs;
+  final RxList<dynamic> hotAudiobooks = <dynamic>[].obs;
   int _recommendToken = 0;
   final RxInt recommendTabIndex = 0.obs;
   static const int _recommendPageSize = 20;
-  static const int _recommendTabCount = 2;
+  static const int _recommendTabCount = 4;
 
   final RxList<bool> recommendHasMore = List<bool>.filled(
     _recommendTabCount,
@@ -38,8 +40,34 @@ class HomeRecommendController extends GetxController {
   final List<_ResolvedRecommendTab?> _recommendResolved =
       List<_ResolvedRecommendTab?>.filled(_recommendTabCount, null);
   static const List<_RecommendTabSpec> _recommendSpecs = <_RecommendTabSpec>[
-    _RecommendTabSpec(isMovie: true, group: '热门电影', sub: '全部'),
-    _RecommendTabSpec(isMovie: false, group: '最近热门剧集', sub: '综合'),
+    _RecommendTabSpec(
+      kind: _RecommendKind.movie,
+      group: '热门电影',
+      sub: '全部',
+      fallbackCategory: '热门',
+      fallbackType: '全部',
+    ),
+    _RecommendTabSpec(
+      kind: _RecommendKind.tv,
+      group: '最近热门剧集',
+      sub: '综合',
+      fallbackCategory: 'tv',
+      fallbackType: 'tv',
+    ),
+    _RecommendTabSpec(
+      kind: _RecommendKind.playlet,
+      group: '热门短剧',
+      sub: '总榜',
+      fallbackCategory: 'rank',
+      fallbackType: 'all',
+    ),
+    _RecommendTabSpec(
+      kind: _RecommendKind.audiobook,
+      group: '热门有声书',
+      sub: '周榜',
+      fallbackCategory: 'hot',
+      fallbackType: 'week',
+    ),
   ];
 
   @override
@@ -62,28 +90,47 @@ class HomeRecommendController extends GetxController {
         final spec = _recommendSpecs[i];
         final mapping = _findMapping(
           categories,
-          isMovie: spec.isMovie,
+          kind: spec.kind,
           group: spec.group,
           sub: spec.sub,
         );
         _recommendResolved[i] = mapping == null
-            ? null
+            ? _ResolvedRecommendTab(
+                kind: spec.kind,
+                category: spec.fallbackCategory,
+                type: spec.fallbackType,
+              )
             : _ResolvedRecommendTab(
-                isMovie: spec.isMovie,
+                kind: spec.kind,
                 category: mapping.category,
                 type: mapping.type,
               );
       }
 
+      Object? firstTabError;
+      var anySuccess = false;
       final results = await Future.wait<List<dynamic>>([
         for (var i = 0; i < _recommendTabCount; i++)
-          _fetchRecommendPage(i, page: 1, limit: _recommendPageSize),
+          _fetchRecommendPage(i, page: 1, limit: _recommendPageSize).then(
+            (records) {
+              anySuccess = true;
+              return records;
+            },
+            onError: (Object err) {
+              firstTabError ??= err;
+              return const <dynamic>[];
+            },
+          ),
       ]);
       if (token != _recommendToken) return;
 
+      if (!anySuccess && firstTabError != null) {
+        throw firstTabError!;
+      }
+
       for (var i = 0; i < _recommendTabCount; i++) {
         _itemsByIndex(i).assignAll(results[i]);
-        _recommendPages[i] = 1;
+        _recommendPages[i] = results[i].isEmpty ? 0 : 1;
         recommendHasMore[i] = results[i].length >= _recommendPageSize;
         recommendLoadMoreError[i] = '';
       }
@@ -157,19 +204,37 @@ class HomeRecommendController extends GetxController {
     final resolved = _recommendResolved[tabIndex];
     if (resolved == null) return const <dynamic>[];
 
-    final resp = resolved.isMovie
-        ? await _doubanRepository.getMovieRanking(
-            category: resolved.category,
-            type: resolved.type,
-            page: page,
-            limit: limit,
-          )
-        : await _doubanRepository.getTvRanking(
-            category: resolved.category,
-            type: resolved.type,
-            page: page,
-            limit: limit,
-          );
+    final DoubanRankingResponse resp;
+    switch (resolved.kind) {
+      case _RecommendKind.movie:
+        resp = await _doubanRepository.getMovieRanking(
+          category: resolved.category,
+          type: resolved.type,
+          page: page,
+          limit: limit,
+        );
+      case _RecommendKind.tv:
+        resp = await _doubanRepository.getTvRanking(
+          category: resolved.category,
+          type: resolved.type,
+          page: page,
+          limit: limit,
+        );
+      case _RecommendKind.playlet:
+        resp = await _doubanRepository.getPlayletRanking(
+          category: resolved.category,
+          type: resolved.type,
+          page: page,
+          limit: limit,
+        );
+      case _RecommendKind.audiobook:
+        resp = await _doubanRepository.getAudiobookRanking(
+          category: resolved.category,
+          type: resolved.type,
+          page: page,
+          limit: limit,
+        );
+    }
     return resp.records;
   }
 
@@ -179,6 +244,10 @@ class HomeRecommendController extends GetxController {
         return hotMovies;
       case 1:
         return hotCnDramas;
+      case 2:
+        return hotPlaylets;
+      case 3:
+        return hotAudiobooks;
       default:
         return hotMovies;
     }
@@ -197,15 +266,22 @@ class HomeRecommendController extends GetxController {
   void _clearRecommendItems() {
     hotMovies.clear();
     hotCnDramas.clear();
+    hotPlaylets.clear();
+    hotAudiobooks.clear();
   }
 
   static DoubanCategoryMapping? _findMapping(
     DoubanCategories categories, {
-    required bool isMovie,
+    required _RecommendKind kind,
     required String group,
     required String sub,
   }) {
-    final outer = isMovie ? categories.movie : categories.tv;
+    final outer = switch (kind) {
+      _RecommendKind.movie => categories.movie,
+      _RecommendKind.tv => categories.tv,
+      _RecommendKind.playlet => categories.playlet,
+      _RecommendKind.audiobook => categories.audiobook,
+    };
     DoubanCategoryMapping? mapping;
     final normGroup = _normLabel(group);
     final normSub = _normLabel(sub);
@@ -265,26 +341,32 @@ class HomeRecommendController extends GetxController {
   }
 }
 
+enum _RecommendKind { movie, tv, playlet, audiobook }
+
 class _RecommendTabSpec {
   const _RecommendTabSpec({
-    required this.isMovie,
+    required this.kind,
     required this.group,
     required this.sub,
+    required this.fallbackCategory,
+    required this.fallbackType,
   });
 
-  final bool isMovie;
+  final _RecommendKind kind;
   final String group;
   final String sub;
+  final String fallbackCategory;
+  final String fallbackType;
 }
 
 class _ResolvedRecommendTab {
   const _ResolvedRecommendTab({
-    required this.isMovie,
+    required this.kind,
     required this.category,
     required this.type,
   });
 
-  final bool isMovie;
+  final _RecommendKind kind;
   final String category;
   final String type;
 }

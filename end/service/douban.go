@@ -88,16 +88,42 @@ func (s *DoubanService) GetTvCategories() map[string]map[string]dto.DoubanCatego
 	}
 }
 
+func (s *DoubanService) GetPlayletCategories() map[string]map[string]dto.DoubanCategoryMappingItem {
+	return map[string]map[string]dto.DoubanCategoryMappingItem{
+		"热门短剧": {
+			"总榜": {Category: "rank", Type: "all"},
+			"月榜": {Category: "rank", Type: "month"},
+			"周榜": {Category: "rank", Type: "week"},
+		},
+	}
+}
+
+func (s *DoubanService) GetAudiobookCategories() map[string]map[string]dto.DoubanCategoryMappingItem {
+	return map[string]map[string]dto.DoubanCategoryMappingItem{
+		"热门有声书": {
+			"周榜":  {Category: "hot", Type: "week"},
+			"月榜":  {Category: "hot", Type: "month"},
+			"总榜":  {Category: "hot", Type: "all"},
+			"新书榜": {Category: "new", Type: "week"},
+			"好评榜": {Category: "praise", Type: "week"},
+		},
+	}
+}
+
 func (s *DoubanService) GetAllCategories() map[string]any {
 	return map[string]any{
-		"movie": s.GetMovieCategories(),
-		"tv":    s.GetTvCategories(),
+		"movie":     s.GetMovieCategories(),
+		"tv":        s.GetTvCategories(),
+		"playlet":   s.GetPlayletCategories(),
+		"audiobook": s.GetAudiobookCategories(),
 	}
 }
 
 func (s *DoubanService) SyncAllCache(ctx context.Context) error {
 	pairsMovie := s.flattenCategoryPairs(s.GetMovieCategories())
 	pairsTv := s.flattenCategoryPairs(s.GetTvCategories())
+	pairsPlaylet := s.flattenCategoryPairs(s.GetPlayletCategories())
+	pairsAudiobook := s.flattenCategoryPairs(s.GetAudiobookCategories())
 
 	var firstErr error
 
@@ -122,6 +148,30 @@ func (s *DoubanService) SyncAllCache(ctx context.Context) error {
 				firstErr = err
 			}
 			global.Logger.Errorf("Douban Sync tv Error: %s", err.Error())
+		}
+	}
+
+	for _, p := range pairsPlaylet {
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
+		if _, err := s.syncRecentHotToCache(ctx, "playlet", p.Category, p.Type); err != nil {
+			if firstErr == nil {
+				firstErr = err
+			}
+			global.Logger.Errorf("Douban Sync playlet Error: %s", err.Error())
+		}
+	}
+
+	for _, p := range pairsAudiobook {
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
+		if _, err := s.syncRecentHotToCache(ctx, "audiobook", p.Category, p.Type); err != nil {
+			if firstErr == nil {
+				firstErr = err
+			}
+			global.Logger.Errorf("Douban Sync audiobook Error: %s", err.Error())
 		}
 	}
 
@@ -254,6 +304,132 @@ func (s *DoubanService) GetTvRankingWithProxy(ctx context.Context, category, typ
 	return data, nil
 }
 
+func (s *DoubanService) GetPlayletRankingWithProxy(ctx context.Context, category, typ string, page, limit int, proxyBase string) (map[string]any, error) {
+	category = strings.TrimSpace(category)
+	typ = strings.TrimSpace(typ)
+	if category == "" {
+		category = "rank"
+	}
+	if typ == "" {
+		typ = "all"
+	}
+	if page <= 0 {
+		page = 1
+	}
+	if limit <= 0 {
+		limit = 10
+	}
+	if limit > 100 {
+		return nil, errors.New("分页数量不能超过 100")
+	}
+
+	cache, err := s.getOrSyncRecentHotCache(ctx, "playlet", category, typ)
+	if err != nil {
+		return nil, err
+	}
+
+	records := cache.Records
+	total := cache.Total
+	if total <= 0 {
+		total = len(records)
+	}
+	categories := cache.Categories
+	for i := range categories {
+		categories[i].Selected = categories[i].Category == category && categories[i].Type == typ
+	}
+
+	start := (page - 1) * limit
+	pageRecords := []any{}
+	if start < len(records) {
+		end := start + limit
+		if end > len(records) {
+			end = len(records)
+		}
+		pageRecords = records[start:end]
+	}
+
+	proxyBase = strings.TrimRight(strings.TrimSpace(proxyBase), "/")
+	if proxyBase != "" {
+		for _, r := range pageRecords {
+			rewriteDoubanImageFields(r, proxyBase)
+		}
+	}
+
+	data := map[string]any{
+		"records":    pageRecords,
+		"total":      total,
+		"page":       page,
+		"limit":      limit,
+		"category":   category,
+		"type":       typ,
+		"categories": categories,
+	}
+	return data, nil
+}
+
+func (s *DoubanService) GetAudiobookRankingWithProxy(ctx context.Context, category, typ string, page, limit int, proxyBase string) (map[string]any, error) {
+	category = strings.TrimSpace(category)
+	typ = strings.TrimSpace(typ)
+	if category == "" {
+		category = "hot"
+	}
+	if typ == "" {
+		typ = "week"
+	}
+	if page <= 0 {
+		page = 1
+	}
+	if limit <= 0 {
+		limit = 10
+	}
+	if limit > 100 {
+		return nil, errors.New("分页数量不能超过 100")
+	}
+
+	cache, err := s.getOrSyncRecentHotCache(ctx, "audiobook", category, typ)
+	if err != nil {
+		return nil, err
+	}
+
+	records := cache.Records
+	total := cache.Total
+	if total <= 0 {
+		total = len(records)
+	}
+	categories := cache.Categories
+	for i := range categories {
+		categories[i].Selected = categories[i].Category == category && categories[i].Type == typ
+	}
+
+	start := (page - 1) * limit
+	pageRecords := []any{}
+	if start < len(records) {
+		end := start + limit
+		if end > len(records) {
+			end = len(records)
+		}
+		pageRecords = records[start:end]
+	}
+
+	proxyBase = strings.TrimRight(strings.TrimSpace(proxyBase), "/")
+	if proxyBase != "" {
+		for _, r := range pageRecords {
+			rewriteDoubanImageFields(r, proxyBase)
+		}
+	}
+
+	data := map[string]any{
+		"records":    pageRecords,
+		"total":      total,
+		"page":       page,
+		"limit":      limit,
+		"category":   category,
+		"type":       typ,
+		"categories": categories,
+	}
+	return data, nil
+}
+
 func (s *DoubanService) flattenCategoryPairs(source map[string]map[string]dto.DoubanCategoryMappingItem) []dto.DoubanCategoryMappingItem {
 	unique := make(map[string]dto.DoubanCategoryMappingItem)
 	for _, group := range source {
@@ -304,26 +480,56 @@ func (s *DoubanService) getRecentHotCache(subject, category, typ string) (douban
 }
 
 func (s *DoubanService) syncRecentHotToCache(ctx context.Context, subject, category, typ string) (doubanRecentHotCache, error) {
-	defaultCategory := "热门"
-	defaultType := "全部"
-	if subject == "tv" {
-		defaultCategory = "tv"
-		defaultType = "tv"
-	}
+	var (
+		resp dto.DoubanRecentHotResp
+		err  error
+	)
 
-	query := neturl.Values{}
-	query.Set("start", "0")
-	query.Set("limit", strconv.Itoa(doubanSyncLimit))
-	if strings.TrimSpace(category) != "" && category != defaultCategory {
-		query.Set("category", category)
-	}
-	if strings.TrimSpace(typ) != "" && typ != defaultType {
-		query.Set("type", typ)
-	}
+	switch subject {
+	case "playlet":
+		if strings.TrimSpace(category) == "" {
+			category = "rank"
+		}
+		if strings.TrimSpace(typ) == "" {
+			typ = "all"
+		}
+		resp, err = doubanDao.GetPlayletRanking(ctx, typ)
+		if err != nil {
+			return doubanRecentHotCache{}, err
+		}
+	case "audiobook":
+		if strings.TrimSpace(category) == "" {
+			category = "hot"
+		}
+		if strings.TrimSpace(typ) == "" {
+			typ = "week"
+		}
+		resp, err = doubanDao.GetAudiobookRanking(ctx, category, typ)
+		if err != nil {
+			return doubanRecentHotCache{}, err
+		}
+	default:
+		defaultCategory := "热门"
+		defaultType := "全部"
+		if subject == "tv" {
+			defaultCategory = "tv"
+			defaultType = "tv"
+		}
 
-	resp, err := doubanDao.GetRecentHot(ctx, subject, query)
-	if err != nil {
-		return doubanRecentHotCache{}, err
+		query := neturl.Values{}
+		query.Set("start", "0")
+		query.Set("limit", strconv.Itoa(doubanSyncLimit))
+		if strings.TrimSpace(category) != "" && category != defaultCategory {
+			query.Set("category", category)
+		}
+		if strings.TrimSpace(typ) != "" && typ != defaultType {
+			query.Set("type", typ)
+		}
+
+		resp, err = doubanDao.GetRecentHot(ctx, subject, query)
+		if err != nil {
+			return doubanRecentHotCache{}, err
+		}
 	}
 
 	items := resp.Items
@@ -331,7 +537,14 @@ func (s *DoubanService) syncRecentHotToCache(ctx context.Context, subject, categ
 		items = resp.Subjects
 	}
 	if len(items) == 0 {
-		return doubanRecentHotCache{}, errors.New("豆瓣API返回空数据")
+		switch subject {
+		case "playlet":
+			return doubanRecentHotCache{}, errors.New("短剧榜单返回空数据")
+		case "audiobook":
+			return doubanRecentHotCache{}, errors.New("有声书榜单返回空数据")
+		default:
+			return doubanRecentHotCache{}, errors.New("豆瓣API返回空数据")
+		}
 	}
 
 	cache := doubanRecentHotCache{

@@ -57,6 +57,18 @@ func (a *DoubanApi) Doc(c *gin.Context) {
 				"categories": base + "/douban/tv/categories",
 				"example":    base + "/douban/tv/drama/韩剧?page=1&limit=10",
 			},
+			"playlet": gin.H{
+				"recent_hot": base + "/douban/playlet/recent_hot",
+				"hot":        base + "/douban/playlet/hot/:type?",
+				"categories": base + "/douban/playlet/categories",
+				"example":    base + "/douban/playlet/recent_hot?category=rank&type=all&page=1&limit=20",
+			},
+			"audiobook": gin.H{
+				"recent_hot": base + "/douban/audiobook/recent_hot",
+				"hot":        base + "/douban/audiobook/hot/:type?",
+				"categories": base + "/douban/audiobook/categories",
+				"example":    base + "/douban/audiobook/recent_hot?category=hot&type=week&page=1&limit=20",
+			},
 			"legacy": gin.H{
 				"recent_hot": base + "/douban/recent_hot?type=movie&category=热门&subtype=全部&page=1&limit=10",
 			},
@@ -70,6 +82,14 @@ func (a *DoubanApi) GetMovieCategories(c *gin.Context) {
 
 func (a *DoubanApi) GetTvCategories(c *gin.Context) {
 	utils.OkWithData(doubanService.GetTvCategories(), c)
+}
+
+func (a *DoubanApi) GetPlayletCategories(c *gin.Context) {
+	utils.OkWithData(doubanService.GetPlayletCategories(), c)
+}
+
+func (a *DoubanApi) GetAudiobookCategories(c *gin.Context) {
+	utils.OkWithData(doubanService.GetAudiobookCategories(), c)
 }
 
 func (a *DoubanApi) GetAllCategories(c *gin.Context) {
@@ -250,6 +270,90 @@ func (a *DoubanApi) GetTvVariety(c *gin.Context) {
 	utils.OkWithDetailed(data, fmt.Sprintf("获取最近热门综艺榜单成功: %s", label), c)
 }
 
+func (a *DoubanApi) GetPlayletRecentHot(c *gin.Context) {
+	category := c.DefaultQuery("category", "rank")
+	typ := c.DefaultQuery("type", "all")
+	page, limit := parsePageLimit(c)
+
+	data, err := doubanService.GetPlayletRankingWithProxy(
+		c.Request.Context(),
+		category,
+		typ,
+		page,
+		limit,
+		requestBaseURL(c),
+	)
+	if err != nil {
+		utils.FailWithMessage(err.Error(), c)
+		return
+	}
+	utils.OkWithDetailed(data, fmt.Sprintf("获取短剧榜单成功: %s - %s", category, typ), c)
+}
+
+func (a *DoubanApi) GetPlayletHot(c *gin.Context) {
+	typ := strings.TrimSpace(c.Param("type"))
+	if typ == "" {
+		typ = "all"
+	}
+	page, limit := parsePageLimit(c)
+
+	data, err := doubanService.GetPlayletRankingWithProxy(
+		c.Request.Context(),
+		"rank",
+		typ,
+		page,
+		limit,
+		requestBaseURL(c),
+	)
+	if err != nil {
+		utils.FailWithMessage(err.Error(), c)
+		return
+	}
+	utils.OkWithDetailed(data, fmt.Sprintf("获取热门短剧榜单成功: %s", typ), c)
+}
+
+func (a *DoubanApi) GetAudiobookRecentHot(c *gin.Context) {
+	category := c.DefaultQuery("category", "hot")
+	typ := c.DefaultQuery("type", "week")
+	page, limit := parsePageLimit(c)
+
+	data, err := doubanService.GetAudiobookRankingWithProxy(
+		c.Request.Context(),
+		category,
+		typ,
+		page,
+		limit,
+		requestBaseURL(c),
+	)
+	if err != nil {
+		utils.FailWithMessage(err.Error(), c)
+		return
+	}
+	utils.OkWithDetailed(data, fmt.Sprintf("获取有声书榜单成功: %s - %s", category, typ), c)
+}
+
+func (a *DoubanApi) GetAudiobookHot(c *gin.Context) {
+	typ := strings.TrimSpace(c.Param("type"))
+	if typ == "" {
+		typ = "week"
+	}
+	page, limit := parsePageLimit(c)
+
+	data, err := doubanService.GetAudiobookRankingWithProxy(
+		c.Request.Context(),
+		"hot",
+		typ,
+		page,
+		limit,
+		requestBaseURL(c),
+	)
+	if err != nil {
+		utils.FailWithMessage(err.Error(), c)
+		return
+	}
+	utils.OkWithDetailed(data, fmt.Sprintf("获取热门有声书榜单成功: %s", typ), c)
+}
+
 func (a *DoubanApi) GetRecentHotLegacy(c *gin.Context) {
 	kind := strings.TrimSpace(c.DefaultQuery("type", "movie"))
 	category := c.DefaultQuery("category", "热门")
@@ -280,8 +384,26 @@ func (a *DoubanApi) GetRecentHotLegacy(c *gin.Context) {
 			limit,
 			requestBaseURL(c),
 		)
+	case "playlet":
+		data, err = doubanService.GetPlayletRankingWithProxy(
+			c.Request.Context(),
+			category,
+			subtype,
+			page,
+			limit,
+			requestBaseURL(c),
+		)
+	case "audiobook":
+		data, err = doubanService.GetAudiobookRankingWithProxy(
+			c.Request.Context(),
+			category,
+			subtype,
+			page,
+			limit,
+			requestBaseURL(c),
+		)
 	default:
-		utils.FailWithMessage("类型参数只支持 movie 或 tv", c)
+		utils.FailWithMessage("类型参数只支持 movie、tv、playlet 或 audiobook", c)
 		return
 	}
 
@@ -290,8 +412,13 @@ func (a *DoubanApi) GetRecentHotLegacy(c *gin.Context) {
 		return
 	}
 	kindName := "电视剧"
-	if kind == "movie" {
+	switch kind {
+	case "movie":
 		kindName = "电影"
+	case "playlet":
+		kindName = "短剧"
+	case "audiobook":
+		kindName = "有声书"
 	}
 	utils.OkWithDetailed(data, fmt.Sprintf("获取%s榜单成功", kindName), c)
 }

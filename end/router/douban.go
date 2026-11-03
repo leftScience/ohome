@@ -17,6 +17,8 @@ func InitDoubanRoutes() {
 		rgPublic.GET("douban/categories", doubanApi.GetAllCategories)
 		rgPublic.GET("douban/movie/categories", doubanApi.GetMovieCategories)
 		rgPublic.GET("douban/tv/categories", doubanApi.GetTvCategories)
+		rgPublic.GET("douban/playlet/categories", doubanApi.GetPlayletCategories)
+		rgPublic.GET("douban/audiobook/categories", doubanApi.GetAudiobookCategories)
 
 		// image proxy
 		rgPublic.GET("douban/image", doubanApi.GetImage)
@@ -38,6 +40,16 @@ func InitDoubanRoutes() {
 		rgPublic.GET("douban/tv/drama/:type", doubanApi.GetTvDrama)
 		rgPublic.GET("douban/tv/variety", doubanApi.GetTvVariety)
 		rgPublic.GET("douban/tv/variety/:type", doubanApi.GetTvVariety)
+
+		// playlet ranking
+		rgPublic.GET("douban/playlet/recent_hot", doubanApi.GetPlayletRecentHot)
+		rgPublic.GET("douban/playlet/hot", doubanApi.GetPlayletHot)
+		rgPublic.GET("douban/playlet/hot/:type", doubanApi.GetPlayletHot)
+
+		// audiobook ranking
+		rgPublic.GET("douban/audiobook/recent_hot", doubanApi.GetAudiobookRecentHot)
+		rgPublic.GET("douban/audiobook/hot", doubanApi.GetAudiobookHot)
+		rgPublic.GET("douban/audiobook/hot/:type", doubanApi.GetAudiobookHot)
 
 		// legacy
 		rgPublic.GET("douban/recent_hot", doubanApi.GetRecentHotLegacy)

@@ -54,6 +54,8 @@ class _HomeRecommendSectionState extends State<HomeRecommendSection> {
       final tabs = <_DoubanSectionData>[
         _DoubanSectionData(title: '电影', items: controller.hotMovies),
         _DoubanSectionData(title: '电视剧', items: controller.hotCnDramas),
+        _DoubanSectionData(title: '短剧', items: controller.hotPlaylets),
+        _DoubanSectionData(title: '有声书', items: controller.hotAudiobooks),
       ];
 
       return Container(
@@ -77,6 +79,11 @@ class _HomeRecommendSectionState extends State<HomeRecommendSection> {
   }
 
   Widget _buildPanelHeader(List<_DoubanSectionData> tabs) {
+    final sourceLabel = switch (controller.recommendTabIndex.value) {
+      2 => '红果人气榜单',
+      3 => '懒人听书榜单',
+      _ => '豆瓣实时榜单',
+    };
     return Padding(
       padding: EdgeInsets.only(top: 12.h, bottom: 10.h),
       child: Column(
@@ -110,7 +117,7 @@ class _HomeRecommendSectionState extends State<HomeRecommendSection> {
                 ),
                 const Spacer(),
                 Text(
-                  '豆瓣实时榜单',
+                  sourceLabel,
                   style: TextStyle(
                     fontSize: 11.sp,
                     fontWeight: FontWeight.w500,
@@ -310,6 +317,8 @@ class _RecommendListPage extends GetView<HomeRecommendController> {
                 final name = _DoubanItem.title(item);
                 final subtitle = _DoubanItem.subtitle(item);
                 final rating = _DoubanItem.rating(item);
+                final hot = _DoubanItem.hot(item);
+                final remarks = _DoubanItem.remarks(item);
                 final cover = _DoubanItem.cover(item).trim();
 
                 return Material(
@@ -357,7 +366,11 @@ class _RecommendListPage extends GetView<HomeRecommendController> {
                                   ),
                                 ],
                                 SizedBox(height: 7.h),
-                                _buildRatingBadge(rating),
+                                _buildMetaBadge(
+                                  rating: rating,
+                                  hot: hot,
+                                  remarks: remarks,
+                                ),
                               ],
                             ),
                           ),
@@ -446,42 +459,106 @@ class _RecommendListPage extends GetView<HomeRecommendController> {
     );
   }
 
-  Widget _buildRatingBadge(String rating) {
-    if (rating.isEmpty) {
-      return Text(
-        '暂无评分',
-        style: TextStyle(
-          fontSize: 11.sp,
-          color: AppThemeColors.textDisabled,
-          fontWeight: FontWeight.w500,
-        ),
+  Widget _buildMetaBadge({
+    required String rating,
+    required String hot,
+    required String remarks,
+  }) {
+    if (rating.isNotEmpty || hot.isNotEmpty || remarks.isNotEmpty) {
+      return Wrap(
+        spacing: 6.w,
+        runSpacing: 4.h,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          if (rating.isNotEmpty)
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF8EB),
+                borderRadius: BorderRadius.circular(6.r),
+                border: Border.all(
+                  color: const Color(0xFFF59E0B).withValues(alpha: 0.22),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.star_rounded,
+                    size: 13.w,
+                    color: const Color(0xFFF59E0B),
+                  ),
+                  SizedBox(width: 2.5.w),
+                  Text(
+                    rating,
+                    style: TextStyle(
+                      fontSize: 11.5.sp,
+                      color: const Color(0xFFD97706),
+                      fontWeight: FontWeight.w700,
+                      height: 1.1,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          if (hot.isNotEmpty)
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF1F0),
+                borderRadius: BorderRadius.circular(6.r),
+                border: Border.all(
+                  color: const Color(0xFFFF4D4F).withValues(alpha: 0.2),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.local_fire_department_rounded,
+                    size: 12.5.w,
+                    color: const Color(0xFFF97316),
+                  ),
+                  SizedBox(width: 2.5.w),
+                  Text(
+                    '人气 $hot',
+                    style: TextStyle(
+                      fontSize: 11.sp,
+                      color: const Color(0xFFEA580C),
+                      fontWeight: FontWeight.w700,
+                      height: 1.1,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          if (remarks.isNotEmpty)
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+              decoration: BoxDecoration(
+                color: AppThemeColors.surfaceSunken,
+                borderRadius: BorderRadius.circular(6.r),
+              ),
+              child: Text(
+                remarks,
+                style: TextStyle(
+                  fontSize: 10.5.sp,
+                  color: AppThemeColors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                  height: 1.1,
+                ),
+              ),
+            ),
+        ],
       );
     }
 
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF8EB),
-        borderRadius: BorderRadius.circular(6.r),
-        border: Border.all(
-          color: const Color(0xFFF59E0B).withValues(alpha: 0.22),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.star_rounded, size: 13.w, color: const Color(0xFFF59E0B)),
-          SizedBox(width: 2.5.w),
-          Text(
-            rating,
-            style: TextStyle(
-              fontSize: 11.5.sp,
-              color: const Color(0xFFD97706),
-              fontWeight: FontWeight.w700,
-              height: 1.1,
-            ),
-          ),
-        ],
+    return Text(
+      '暂无评分',
+      style: TextStyle(
+        fontSize: 11.sp,
+        color: AppThemeColors.textDisabled,
+        fontWeight: FontWeight.w500,
       ),
     );
   }
@@ -608,6 +685,31 @@ class _DoubanItem {
         if (v is num) return v.toStringAsFixed(1);
         if (v is String) return v.trim();
       }
+    }
+    return '';
+  }
+
+  static String hot(dynamic item) {
+    if (item is Map) {
+      final v = item['hot'] ?? item['hits'];
+      if (v is String && v.trim().isNotEmpty) return v.trim();
+      if (v is num && v > 0) {
+        if (v >= 100000000) {
+          return '${(v / 100000000).toStringAsFixed(1)}亿';
+        }
+        if (v >= 10000) {
+          return '${(v / 10000).toStringAsFixed(1)}万';
+        }
+        return v.toInt().toString();
+      }
+    }
+    return '';
+  }
+
+  static String remarks(dynamic item) {
+    if (item is Map) {
+      final v = item['remarks'] ?? item['episodes_info'];
+      if (v is String && v.trim().isNotEmpty) return v.trim();
     }
     return '';
   }

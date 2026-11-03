@@ -13,10 +13,17 @@ class DoubanCategoryMapping {
 }
 
 class DoubanCategories {
-  const DoubanCategories({required this.movie, required this.tv});
+  const DoubanCategories({
+    required this.movie,
+    required this.tv,
+    this.playlet = const {},
+    this.audiobook = const {},
+  });
 
   final Map<String, Map<String, DoubanCategoryMapping>> movie;
   final Map<String, Map<String, DoubanCategoryMapping>> tv;
+  final Map<String, Map<String, DoubanCategoryMapping>> playlet;
+  final Map<String, Map<String, DoubanCategoryMapping>> audiobook;
 
   factory DoubanCategories.fromJson(Map<String, dynamic> json) {
     Map<String, Map<String, DoubanCategoryMapping>> decodeGroup(dynamic raw) {
@@ -37,6 +44,8 @@ class DoubanCategories {
     return DoubanCategories(
       movie: decodeGroup(json['movie']),
       tv: decodeGroup(json['tv']),
+      playlet: decodeGroup(json['playlet']),
+      audiobook: decodeGroup(json['audiobook']),
     );
   }
 }
