@@ -6,7 +6,6 @@ var (
 	userDao              dao.UserDao
 	roleDao              dao.RoleDao
 	configDao            dao.ConfigDao
-	todoDao              dao.TodoDao
 	dictDao              dao.DictDao
 	fileDao              dao.FileDao
 	quarkConfigDao       dao.QuarkConfigDao

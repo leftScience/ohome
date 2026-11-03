@@ -6,17 +6,14 @@ import (
 )
 
 const (
-	AppMessageSourceDrops  = "drops"
 	AppMessageSourceQuark  = "quark"
 	AppMessageSourceSystem = "system"
 )
 
 const (
-	AppMessageTypeDropsItemExpire     = "drops_item_expire"
-	AppMessageTypeDropsEventReminder  = "drops_event_reminder"
-	AppMessageTypeQuarkTransferDone   = "quark_transfer_done"
-	AppMessageTypeQuarkTransferFail   = "quark_transfer_fail"
-	AppMessageTypeSystemBroadcast     = "system_broadcast"
+	AppMessageTypeQuarkTransferDone = "quark_transfer_done"
+	AppMessageTypeQuarkTransferFail = "quark_transfer_fail"
+	AppMessageTypeSystemBroadcast   = "system_broadcast"
 )
 
 const (

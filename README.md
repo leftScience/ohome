@@ -25,14 +25,10 @@
 
 ### 家庭事务管理
 
-- 待办事项管理
-- “点滴”物资管理
-- 物资临期提醒
-- 重要日期提醒
 - 站内消息与提醒中心
 
 ### 消息统一推送中心
-- 可以将临期消息，同步消息统一推送
+- 可以将同步消息统一推送
 
 ## 快速上手
 1. 先启动服务端
@@ -84,7 +80,7 @@ docker run -d --name ohome-server --restart unless-stopped -p 18090:18090  --add
 
 ### 客户端适合做什么
 
-客户端是 Flutter 应用，当前主要面向 Android 使用，负责登录、资源浏览、播放、网盘管理、待办和提醒等交互能力。
+客户端是 Flutter 应用，当前主要面向 Android 使用，负责登录、资源浏览、播放、网盘管理、消息提醒等交互能力。
 
 ### 默认超级管理员账号密码
 
@@ -158,20 +154,10 @@ admin/123
   </tr>
 </table>
 
-#### 家庭事务与提醒
+#### 消息提醒
 
 <table>
   <tr>
-    <td align="center">
-      <img src="./.github/assets/物资管理.jpg" width="220" alt="物资管理" />
-      <br />
-      物资管理
-    </td>
-    <td align="center">
-      <img src="./.github/assets/重要日期提醒.jpg" width="220" alt="重要日期提醒" />
-      <br />
-      重要日期提醒
-    </td>
     <td align="center">
       <img src="./.github/assets/消息中心提醒.jpg" width="220" alt="消息中心提醒" />
       <br />

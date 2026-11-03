@@ -7,7 +7,6 @@ import (
 var (
 	userService              service.UserService
 	configService            service.ConfigService
-	todoService              service.TodoService
 	dictService              service.DictService
 	fileService              service.FileService
 	quarkConfigService       service.QuarkConfigService
@@ -18,7 +17,5 @@ var (
 	pansouService            service.PansouService
 	quarkAutoSaveTaskService service.QuarkAutoSaveTaskService
 	quarkTransferTaskService service.QuarkTransferTaskService
-	dropsItemService         service.DropsItemService
-	dropsEventService        service.DropsEventService
 	appMessageService        service.AppMessageService
 )

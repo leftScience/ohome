@@ -4,14 +4,12 @@ import 'package:ohome/app/data/api/app_update.dart';
 import 'package:ohome/app/data/api/auth.dart';
 import 'package:ohome/app/data/api/config.dart';
 import 'package:ohome/app/data/api/dict.dart';
-import 'package:ohome/app/data/api/drops.dart';
 import 'package:ohome/app/data/api/media_history.dart';
 import 'package:ohome/app/data/api/quark.dart';
 import 'package:ohome/app/data/api/quark_auto_save_task.dart';
 import 'package:ohome/app/data/api/quark_tv_login.dart';
 import 'package:ohome/app/data/api/quark_transfer_task.dart';
 import 'package:ohome/app/data/api/server_update.dart';
-import 'package:ohome/app/data/api/todo.dart';
 import 'package:ohome/app/data/api/user.dart';
 import 'package:ohome/app/data/storage/token_storage.dart';
 import 'package:ohome/app/data/storage/user_storage.dart';
@@ -40,8 +38,6 @@ class IndexServices {
     );
     Get.put<ConfigApi>(ConfigApi(httpClient: httpClient), permanent: true);
     Get.put<DictApi>(DictApi(httpClient: httpClient), permanent: true);
-    Get.put<DropsApi>(DropsApi(httpClient: httpClient), permanent: true);
-    Get.put<TodoApi>(TodoApi(httpClient: httpClient), permanent: true);
     Get.put<QuarkAutoSaveTaskApi>(
       QuarkAutoSaveTaskApi(httpClient: httpClient),
       permanent: true,

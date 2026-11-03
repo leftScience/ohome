@@ -94,7 +94,6 @@ func initBasePlatformRoutes() {
 	InitUserRoutes()
 	InitConfigRoutes()
 	InitQuarkLoginRoutes()
-	InitTodoRoutes()
 	InitDictRoutes()
 	InitFileRoutes()
 	InitQuarkConfigRoutes()
@@ -104,8 +103,6 @@ func initBasePlatformRoutes() {
 	InitPansouRoutes()
 	InitQuarkAutoSaveTaskRoutes()
 	InitQuarkTransferTaskRoutes()
-	InitDropsItemRoutes()
-	InitDropsEventRoutes()
 	InitAppMessageRoutes()
 	InitSystemUpdateRoutes()
 }

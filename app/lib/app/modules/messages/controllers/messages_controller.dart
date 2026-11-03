@@ -8,10 +8,6 @@ import '../../../data/models/app_message_model.dart';
 import '../../../data/models/app_message_push_event.dart';
 import '../../../routes/app_pages.dart';
 import '../../../services/app_message_push_service.dart';
-import '../../drops/drops_catalog.dart';
-import '../../drops/controllers/drops_controller.dart';
-import '../../drops/views/drops_event_form_view.dart';
-import '../../drops/views/drops_item_detail_view.dart';
 
 class MessagesController extends GetxController {
   MessagesController({
@@ -27,7 +23,6 @@ class MessagesController extends GetxController {
   static const int _pageSize = 20;
   static const List<String> tabSources = <String>[
     '',
-    'drops',
     'quark',
     'system',
   ];
@@ -200,7 +195,6 @@ class MessagesController extends GetxController {
     await _appMessageApi.markAllMessagesRead();
     _invalidateTabs(clearData: true);
     await loadMessages(refresh: true, tabIndex: selectedTabIndex.value);
-    _refreshDropsOverviewIfNeeded();
     Get.snackbar('提示', '消息已全部标记为已读');
   }
 
@@ -235,7 +229,6 @@ class MessagesController extends GetxController {
       await _appMessageApi.deleteMessage(id);
       _invalidateTabs(clearData: true);
       await loadMessages(refresh: true, tabIndex: selectedTabIndex.value);
-      _refreshDropsOverviewIfNeeded();
       Get.snackbar('提示', '消息已删除');
     } catch (_) {
       return;
@@ -250,23 +243,12 @@ class MessagesController extends GetxController {
       await _appMessageApi.markMessageRead(id);
     }
 
-    if (message.source == 'drops' &&
-        message.bizType == 'item' &&
-        message.bizId != null) {
-      await Get.to<bool>(() => DropsItemDetailView(itemId: message.bizId!));
-    } else if (message.source == 'drops' &&
-        message.bizType == 'event' &&
-        message.bizId != null) {
-      await Get.to<bool>(
-        () => DropsEventFormView(initialEventId: message.bizId),
-      );
-    } else if (message.source == 'quark') {
+    if (message.source == 'quark') {
       await Get.toNamed(Routes.QUARK_TRANSFER_TASKS);
     }
 
     _invalidateTabs(clearData: true);
     await loadMessages(refresh: true, tabIndex: selectedTabIndex.value);
-    _refreshDropsOverviewIfNeeded();
   }
 
   RxList<AppMessageModel> messagesOf(int tabIndex) => tabMessages[tabIndex];
@@ -286,8 +268,6 @@ class MessagesController extends GetxController {
 
   String sourceLabel(String source) {
     switch (source.trim().toLowerCase()) {
-      case 'drops':
-        return '点滴';
       case 'quark':
         return '夸克';
       case 'system':
@@ -301,8 +281,6 @@ class MessagesController extends GetxController {
     switch (source.trim().toLowerCase()) {
       case '':
         return '全部';
-      case 'drops':
-        return '点滴';
       case 'quark':
         return '夸克';
       case 'system':
@@ -318,8 +296,6 @@ class MessagesController extends GetxController {
 
   Color sourceColor(String source) {
     switch (source.trim().toLowerCase()) {
-      case 'drops':
-        return const Color(0xFF7C4DFF);
       case 'quark':
         return const Color(0xFF1976D2);
       case 'system':
@@ -331,8 +307,6 @@ class MessagesController extends GetxController {
 
   String emptyStateTextOf(int tabIndex) {
     switch (tabSources[tabIndex]) {
-      case 'drops':
-        return '暂无点滴消息';
       case 'quark':
         return '暂无夸克消息';
       case 'system':
@@ -347,10 +321,7 @@ class MessagesController extends GetxController {
     if (summary.isEmpty) {
       return '点击查看详情';
     }
-    if (message.source.trim().toLowerCase() != 'drops') {
-      return summary;
-    }
-    return _translateDropsSummary(summary);
+    return summary;
   }
 
   void _handleScroll(int tabIndex) {
@@ -448,12 +419,6 @@ class MessagesController extends GetxController {
     }
   }
 
-  void _refreshDropsOverviewIfNeeded() {
-    if (Get.isRegistered<DropsController>()) {
-      Get.find<DropsController>().refreshOverview();
-    }
-  }
-
   Future<void> sendSystemMessage({
     required String title,
     required String content,
@@ -467,26 +432,5 @@ class MessagesController extends GetxController {
     } catch (e) {
       Get.snackbar('错误', '发送失败: $e');
     }
-  }
-
-  String _translateDropsSummary(String summary) {
-    var result = summary;
-    final replacements = <String, String>{
-      'birthday': dropsEventTypeLabel('birthday'),
-      'anniversary': dropsEventTypeLabel('anniversary'),
-      'custom': dropsEventTypeLabel('custom'),
-      'solar': dropsCalendarLabel('solar'),
-      'lunar': dropsCalendarLabel('lunar'),
-      'kitchen': dropsCategoryLabel('kitchen'),
-      'food': dropsCategoryLabel('food'),
-      'medicine': dropsCategoryLabel('medicine'),
-      'clothing': dropsCategoryLabel('clothing'),
-      'other': dropsCategoryLabel('other'),
-    };
-
-    replacements.forEach((raw, label) {
-      result = result.replaceAll(RegExp('\\b${RegExp.escape(raw)}\\b'), label);
-    });
-    return result;
   }
 }

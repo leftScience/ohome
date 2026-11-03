@@ -28,10 +28,6 @@ config:
   defaultPassword: 123
   allowUserRegistration: false
 
-drops:
-  itemReminderDays: "7,3,1,0" # 物资到期提醒：提前 7/3/1 天和当天
-  eventReminderDays: "7,3,1,0" # 重要日期提醒：提前 7/3/1 天和当天
-
 quark:
   transfer:
     workers: 2 # 转存任务 worker 数

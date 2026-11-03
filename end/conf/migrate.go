@@ -11,7 +11,6 @@ func InitSchema(db *gorm.DB) error {
 		&model.Role{},
 		&model.User{},
 		&model.Config{},
-		&model.TodoItem{},
 		&model.DictType{},
 		&model.DictData{},
 		&model.File{},
@@ -20,9 +19,6 @@ func InitSchema(db *gorm.DB) error {
 		&model.QuarkTransferTask{},
 		&model.UserMediaHistory{},
 		&model.AppMessage{},
-		&model.DropsItem{},
-		&model.DropsItemPhoto{},
-		&model.DropsEvent{},
 	); err != nil {
 		return err
 	}

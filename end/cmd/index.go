@@ -43,7 +43,6 @@ func Start() {
 
 	task.StartDoubanSyncScheduler()
 	task.StartQuarkAutoSaveScheduler()
-	task.StartDropsReminderScheduler()
 
 	router.InitRouter()
 }

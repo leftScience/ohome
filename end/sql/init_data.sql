@@ -8,10 +8,6 @@ INSERT INTO `sys_dict_type` (
     updated_at,
     deleted_at
 ) VALUES
-    (9, '点滴范围', 'dropsScopeType', '1', '点滴模块范围选项', '2026-03-18 00:00:00', '2026-03-18 00:00:00', NULL),
-    (10, '点滴物资分类', 'dropsItemCategory', '1', '点滴模块物资分类选项', '2026-03-18 00:00:00', '2026-03-18 00:00:00', NULL),
-    (11, '点滴重要日期类型', 'dropsEventType', '1', '点滴模块重要日期类型选项', '2026-03-18 00:00:00', '2026-03-18 00:00:00', NULL),
-    (12, '点滴日期制式', 'dropsCalendarType', '1', '点滴模块公历/农历选项', '2026-03-18 00:00:00', '2026-03-18 00:00:00', NULL),
     (13, '上传文件类型', 'uploadFileType', '1', '文件上传类型选项', '2026-03-20 00:00:00', '2026-03-20 00:00:00', NULL);
 
 INSERT INTO `sys_dict_data` (
@@ -28,18 +24,6 @@ INSERT INTO `sys_dict_data` (
     updated_at,
     deleted_at
 ) VALUES
-    (31, 1, '家庭共享', 'shared', 'shared', 'dropsScopeType', 'Y', '1', '家庭共享范围', '2026-03-18 00:00:00', '2026-03-18 00:00:00', NULL),
-    (32, 2, '个人私有', 'personal', 'personal', 'dropsScopeType', '', '1', '个人私有范围', '2026-03-18 00:00:00', '2026-03-18 00:00:00', NULL),
-    (33, 1, '厨房用品', 'kitchen', 'kitchen', 'dropsItemCategory', '', '1', '点滴物资分类', '2026-03-18 00:00:00', '2026-03-18 00:00:00', NULL),
-    (34, 2, '食品', 'food', 'food', 'dropsItemCategory', 'Y', '1', '点滴物资分类', '2026-03-18 00:00:00', '2026-03-18 00:00:00', NULL),
-    (35, 3, '药品', 'medicine', 'medicine', 'dropsItemCategory', '', '1', '点滴物资分类', '2026-03-18 00:00:00', '2026-03-18 00:00:00', NULL),
-    (36, 4, '衣物', 'clothing', 'clothing', 'dropsItemCategory', '', '1', '点滴物资分类', '2026-03-18 00:00:00', '2026-03-18 00:00:00', NULL),
-    (37, 5, '其他', 'other', 'other', 'dropsItemCategory', '', '1', '点滴物资分类', '2026-03-18 00:00:00', '2026-03-18 00:00:00', NULL),
-    (38, 1, '生日', 'birthday', 'birthday', 'dropsEventType', 'Y', '1', '点滴重要日期类型', '2026-03-18 00:00:00', '2026-03-18 00:00:00', NULL),
-    (39, 2, '纪念日', 'anniversary', 'anniversary', 'dropsEventType', '', '1', '点滴重要日期类型', '2026-03-18 00:00:00', '2026-03-18 00:00:00', NULL),
-    (40, 3, '自定义', 'custom', 'custom', 'dropsEventType', '', '1', '点滴重要日期类型', '2026-03-18 00:00:00', '2026-03-18 00:00:00', NULL),
-    (41, 1, '公历', 'solar', 'solar', 'dropsCalendarType', 'Y', '1', '点滴日期制式', '2026-03-18 00:00:00', '2026-03-18 00:00:00', NULL),
-    (42, 2, '农历', 'lunar', 'lunar', 'dropsCalendarType', '', '1', '点滴日期制式', '2026-03-18 00:00:00', '2026-03-18 00:00:00', NULL),
     (43, 1, '用户头像', 'userAvatar', 'userAvatar', 'uploadFileType', 'Y', '1', '用户头像上传类型', '2026-03-20 00:00:00', '2026-03-20 00:00:00', NULL);
 
 INSERT INTO `sys_quark_config` (
