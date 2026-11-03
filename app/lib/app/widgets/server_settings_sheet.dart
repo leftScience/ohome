@@ -151,7 +151,7 @@ class ServerSettingsSheet extends StatelessWidget {
                   keyboardType: TextInputType.url,
                   style: TextStyle(color: Colors.white, fontSize: 15.sp),
                   decoration: InputDecoration(
-                    hintText: 'http://999576.xyz:18090',
+                    hintText: 'http://catx.top:18090',
                     hintStyle: TextStyle(
                       color: Colors.white38,
                       fontSize: 15.sp,
