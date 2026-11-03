@@ -154,18 +154,24 @@ jobs:
           export CONF_DIR
           python3 - <<'PY'
           import os
+          import re
           from pathlib import Path
 
           config_path = Path(os.environ["CONF_DIR"]) / "config.yaml"
           manifest_url = os.environ["PACKAGED_UPDATE_MANIFEST_URLS"].strip()
+          if not manifest_url:
+            raise SystemExit("PACKAGED_UPDATE_MANIFEST_URLS is empty")
           original = config_path.read_text(encoding="utf-8")
-          target = '  manifestUrl: ""'
-          if target not in original:
-            raise SystemExit(f"missing manifestUrl placeholder in {config_path}")
-          config_path.write_text(
-              original.replace(target, f'  manifestUrl: "{manifest_url}"', 1),
-              encoding="utf-8",
+          updated, count = re.subn(
+              r'^(\s*)manifestUrl:.*$',
+              lambda m: f'{m.group(1)}manifestUrl: "{manifest_url}"',
+              original,
+              count=1,
+              flags=re.MULTILINE,
           )
+          if count == 0:
+            raise SystemExit(f"missing manifestUrl key in {config_path}")
+          config_path.write_text(updated, encoding="utf-8")
           PY
           cp sql/init_data.sql "${SQL_DIR}/init_data.sql"
           printf "%s" "${RELEASE_VERSION}" > "${BIN_DIR}/server.version"
