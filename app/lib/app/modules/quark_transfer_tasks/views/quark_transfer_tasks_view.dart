@@ -212,7 +212,7 @@ class QuarkTransferTasksView extends GetView<QuarkTransferTasksController> {
 
   Widget _buildTaskList(BuildContext context) {
     final bottomPadding = embedded
-        ? MainTabContentInsets.bottom(context) + 8.h
+        ? MainTabContentInsets.bottom(context) + 72.h
         : 100.h;
 
     return Obx(() {
