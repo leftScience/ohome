@@ -8,6 +8,7 @@ import '../../me/views/me_view.dart';
 import '../../quark_tasks/views/quark_tasks_view.dart';
 import '../../../theme/app_theme.dart';
 import '../../../widgets/home_style_backdrop.dart';
+import '../../../widgets/main_tab_content_insets.dart';
 import '../controllers/main_controller.dart';
 
 class MainView extends GetView<MainController> {
@@ -18,10 +19,11 @@ class MainView extends GetView<MainController> {
     QuarkTasksView(),
     MeView(),
   ];
-  static const double _tabBarHeight = 64;
+  static const double _tabBarHeight = MainTabContentInsets.tabBarHeight;
   static const double _floatingHorizontalPadding = 24;
-  static const double _floatingBottomSpacing = 16;
-  static const double _historyBannerGap = 10;
+  static const double _floatingBottomSpacing =
+      MainTabContentInsets.floatingBottomSpacing;
+  static const double _historyBannerGap = MainTabContentInsets.historyBannerGap;
   static const double _tabBarInnerHorizontalPadding = 8;
 
   @override

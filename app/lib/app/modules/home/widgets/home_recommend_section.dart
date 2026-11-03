@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 
 import '../../../routes/app_pages.dart';
 import '../../../theme/app_theme.dart';
+import '../../../widgets/main_tab_content_insets.dart';
 import '../controllers/home_recommend_controller.dart';
 
 class HomeRecommendSection extends StatefulWidget {
@@ -14,8 +15,6 @@ class HomeRecommendSection extends StatefulWidget {
 }
 
 class _HomeRecommendSectionState extends State<HomeRecommendSection> {
-  static const double _listHeight = 340;
-
   late final HomeRecommendController controller;
   late final PageController _pageController;
 
@@ -60,105 +59,136 @@ class _HomeRecommendSectionState extends State<HomeRecommendSection> {
         _DoubanSectionData(title: '热门国产剧', items: controller.hotCnDramas),
       ];
 
-      final allEmpty = tabs.every((e) => e.items.isEmpty);
-      if (allEmpty) {
-        if (controller.recommendLoading.value) {
-          return _buildSectionHeader(
-            child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 24.h),
-              child: const Center(child: CircularProgressIndicator()),
-            ),
-          );
-        }
-        final err = controller.recommendError.value.trim();
-        if (err.isNotEmpty) {
-          return _buildSectionHeader(
-            child: Text(
-              '推荐加载失败：$err',
-              style: TextStyle(
-                fontSize: 12.sp,
-                color: AppThemeColors.textMuted,
-              ),
-            ),
-          );
-        }
-        return const SizedBox.shrink();
-      }
+      return Container(
+        decoration: BoxDecoration(
+          color: AppThemeColors.surface,
+          borderRadius: BorderRadius.circular(22.r),
+          border: Border.all(color: AppThemeColors.border, width: 1.1),
+          boxShadow: AppThemeColors.cardShadow,
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          children: [
+            _buildPanelHeader(tabs),
+            Expanded(child: _buildPanelContent(tabs)),
+          ],
+        ),
+      );
+    });
+  }
 
-      return Column(
+  Widget _buildPanelHeader(List<_DoubanSectionData> tabs) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(14.w, 12.h, 14.w, 0),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildTitle(),
-          SizedBox(height: 14.h),
+          Row(
+            children: [
+              Container(
+                width: 3.w,
+                height: 15.h,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(2.r),
+                  gradient: const LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0xFF7C4DFF), Color(0xFF448AFF)],
+                  ),
+                ),
+              ),
+              SizedBox(width: 8.w),
+              Text(
+                '热门推荐',
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                  color: AppThemeColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 10.h),
           _DoubanTabBar(
             index: controller.recommendTabIndex.value,
             tabs: tabs.map((e) => e.title).toList(growable: false),
             onChanged: _handleTabChanged,
           ),
-          SizedBox(height: 12.h),
-          SizedBox(
-            height: _listHeight.h,
-            child: PageView.builder(
-              controller: _pageController,
-              itemCount: tabs.length,
-              onPageChanged: (i) => controller.recommendTabIndex.value = i,
-              itemBuilder: (context, index) {
-                final tab = tabs[index];
-                return _RecommendListPage(
-                  tabIndex: index,
-                  items: tab.items,
-                  isLoadingMore: controller.recommendLoadingMore[index],
-                  hasMore: controller.recommendHasMore[index],
-                  loadMoreError: controller.recommendLoadMoreError[index],
-                  onRetryLoadMore: () =>
-                      controller.loadMoreRecommendationsForTab(index),
-                  onTapItem: _openSearch,
-                );
-              },
-            ),
-          ),
+          SizedBox(height: 8.h),
         ],
-      );
-    });
-  }
-
-  Widget _buildSectionHeader({required Widget child}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildTitle(),
-        SizedBox(height: 14.h),
-        child,
-      ],
+      ),
     );
   }
 
-  Widget _buildTitle() {
-    return Row(
-      children: [
-        Container(
-          width: 3.w,
-          height: 16.h,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(2.r),
-            gradient: const LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0xFF7C4DFF), Color(0xFF448AFF)],
+  Widget _buildPanelContent(List<_DoubanSectionData> tabs) {
+    final allEmpty = tabs.every((e) => e.items.isEmpty);
+    if (allEmpty) {
+      if (controller.recommendLoading.value) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      final err = controller.recommendError.value.trim();
+      if (err.isNotEmpty) {
+        return Center(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 24.w),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '推荐加载失败',
+                  style: TextStyle(
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w600,
+                    color: AppThemeColors.textSecondary,
+                  ),
+                ),
+                SizedBox(height: 6.h),
+                Text(
+                  err,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 11.sp,
+                    color: AppThemeColors.textMuted,
+                  ),
+                ),
+                SizedBox(height: 6.h),
+                TextButton(
+                  onPressed: controller.loadRecommendations,
+                  child: const Text('重试'),
+                ),
+              ],
             ),
           ),
+        );
+      }
+      return Center(
+        child: Text(
+          '暂无推荐内容',
+          style: TextStyle(fontSize: 12.sp, color: AppThemeColors.textMuted),
         ),
-        SizedBox(width: 8.w),
-        Text(
-          '热门推荐',
-          style: TextStyle(
-            fontSize: 16.sp,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 0.5,
-            color: AppThemeColors.textPrimary,
-          ),
-        ),
-      ],
+      );
+    }
+
+    return PageView.builder(
+      controller: _pageController,
+      itemCount: tabs.length,
+      onPageChanged: (i) => controller.recommendTabIndex.value = i,
+      itemBuilder: (context, index) {
+        final tab = tabs[index];
+        return _RecommendListPage(
+          tabIndex: index,
+          items: tab.items,
+          isLoadingMore: controller.recommendLoadingMore[index],
+          hasMore: controller.recommendHasMore[index],
+          loadMoreError: controller.recommendLoadMoreError[index],
+          onRetryLoadMore: () =>
+              controller.loadMoreRecommendationsForTab(index),
+          onTapItem: _openSearch,
+        );
+      },
     );
   }
 }
@@ -195,159 +225,156 @@ class _RecommendListPage extends GetView<HomeRecommendController> {
         );
         return false;
       },
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppThemeColors.surface,
-          borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: AppThemeColors.border),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: items.isEmpty
-            ? Center(
-                child: Text(
-                  '暂无数据',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: AppThemeColors.textMuted,
-                  ),
+      child: items.isEmpty
+          ? Center(
+              child: Text(
+                '暂无数据',
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  color: AppThemeColors.textMuted,
                 ),
-              )
-            : ListView.separated(
-                primary: false,
-                padding: EdgeInsets.all(12.w),
-                itemCount: items.length + 1,
-                separatorBuilder: (_, _) => SizedBox(height: 8.h),
-                itemBuilder: (context, index) {
-                  if (index >= items.length) {
-                    final err = loadMoreError.trim();
-                    if (err.isNotEmpty) {
-                      return Center(
-                        child: TextButton(
-                          onPressed: onRetryLoadMore,
-                          child: Text(
-                            '加载更多失败，点我重试',
-                            style: TextStyle(fontSize: 12.sp),
-                          ),
-                        ),
-                      );
-                    }
-                    if (isLoadingMore) {
-                      return Center(
-                        child: SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2.w),
-                        ),
-                      );
-                    }
+              ),
+            )
+          : ListView.separated(
+              primary: false,
+              padding: EdgeInsets.fromLTRB(
+                12.w,
+                0,
+                12.w,
+                12.h + MainTabContentInsets.historyBannerOverlap,
+              ),
+              itemCount: items.length + 1,
+              separatorBuilder: (_, _) => SizedBox(height: 8.h),
+              itemBuilder: (context, index) {
+                if (index >= items.length) {
+                  final err = loadMoreError.trim();
+                  if (err.isNotEmpty) {
                     return Center(
-                      child: Text(
-                        hasMore ? '继续下拉加载更多' : '没有更多了',
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          color: AppThemeColors.textMuted,
+                      child: TextButton(
+                        onPressed: onRetryLoadMore,
+                        child: Text(
+                          '加载更多失败，点我重试',
+                          style: TextStyle(fontSize: 12.sp),
                         ),
                       ),
                     );
                   }
+                  if (isLoadingMore) {
+                    return Center(
+                      child: SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2.w),
+                      ),
+                    );
+                  }
+                  return Center(
+                    child: Text(
+                      hasMore ? '继续下拉加载更多' : '没有更多了',
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: AppThemeColors.textMuted,
+                      ),
+                    ),
+                  );
+                }
 
-                  final item = items[index];
-                  final name = _DoubanItem.title(item);
-                  final subtitle = _DoubanItem.subtitle(item);
-                  final rating = _DoubanItem.rating(item);
-                  final cover = _DoubanItem.cover(item).trim();
+                final item = items[index];
+                final name = _DoubanItem.title(item);
+                final subtitle = _DoubanItem.subtitle(item);
+                final rating = _DoubanItem.rating(item);
+                final cover = _DoubanItem.cover(item).trim();
 
-                  return InkWell(
-                    onTap: () => onTapItem(name),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(10.r),
-                          child: SizedBox(
-                            width: 52.w,
-                            height: 72.w,
-                            child: Stack(
-                              children: [
-                                Positioned.fill(
-                                  child: Image.asset(
-                                    _placeholder,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                                if (cover.isNotEmpty)
-                                  Positioned.fill(
-                                    child: Image.network(
-                                      cover,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (_, error, stackTrace) {
-                                        return Image.asset(
-                                          _placeholder,
-                                          fit: BoxFit.cover,
-                                        );
-                                      },
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 10.w),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                return InkWell(
+                  onTap: () => onTapItem(name),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(10.r),
+                        child: SizedBox(
+                          width: 52.w,
+                          height: 72.w,
+                          child: Stack(
                             children: [
-                              Text(
-                                name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 13.sp,
-                                  fontWeight: FontWeight.w600,
+                              Positioned.fill(
+                                child: Image.asset(
+                                  _placeholder,
+                                  fit: BoxFit.cover,
                                 ),
                               ),
-                              if (subtitle.isNotEmpty) ...[
-                                SizedBox(height: 4.h),
-                                Text(
-                                  subtitle,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 12.sp,
-                                    color: AppThemeColors.textMuted,
+                              if (cover.isNotEmpty)
+                                Positioned.fill(
+                                  child: Image.network(
+                                    cover,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, error, stackTrace) {
+                                      return Image.asset(
+                                        _placeholder,
+                                        fit: BoxFit.cover,
+                                      );
+                                    },
                                   ),
                                 ),
-                              ],
-                              if (rating.isNotEmpty) ...[
-                                SizedBox(height: 4.h),
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.star_rounded,
-                                      size: 14.w,
-                                      color: Colors.orange[600],
-                                    ),
-                                    SizedBox(width: 3.w),
-                                    Text(
-                                      rating,
-                                      style: TextStyle(
-                                        fontSize: 12.sp,
-                                        color: Colors.orange[600],
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
                             ],
                           ),
                         ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-      ),
+                      ),
+                      SizedBox(width: 10.w),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 13.sp,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            if (subtitle.isNotEmpty) ...[
+                              SizedBox(height: 4.h),
+                              Text(
+                                subtitle,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 12.sp,
+                                  color: AppThemeColors.textMuted,
+                                ),
+                              ),
+                            ],
+                            if (rating.isNotEmpty) ...[
+                              SizedBox(height: 4.h),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.star_rounded,
+                                    size: 14.w,
+                                    color: Colors.orange[600],
+                                  ),
+                                  SizedBox(width: 3.w),
+                                  Text(
+                                    rating,
+                                    style: TextStyle(
+                                      fontSize: 12.sp,
+                                      color: Colors.orange[600],
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
     );
   }
 }
@@ -381,7 +408,10 @@ class _DoubanTabBar extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: selected
                     ? const LinearGradient(
-                        colors: [Color(0xFF7C4DFF), Color(0xFF448AFF)],
+                        colors: [
+                          AppThemeColors.primary,
+                          AppThemeColors.primaryDeep,
+                        ],
                       )
                     : null,
                 color: selected ? null : AppThemeColors.surfaceMuted,
@@ -392,7 +422,7 @@ class _DoubanTabBar extends StatelessWidget {
                 boxShadow: selected
                     ? [
                         BoxShadow(
-                          color: const Color(0xFF7C4DFF).withValues(alpha: 0.3),
+                          color: AppThemeColors.primary.withValues(alpha: 0.28),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
