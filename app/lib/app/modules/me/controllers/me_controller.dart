@@ -84,7 +84,7 @@ class MeController extends GetxController {
 
   Future<void> openQuarkLogin({String? credentialTarget}) async {
     if (!canOpenQuarkLogin) {
-      Get.snackbar('提示', '当前共享模式下无需个人夸克登录');
+      Get.snackbar('提示', '当前为共享模式');
       return;
     }
     final target = (credentialTarget ?? '').trim();
@@ -142,7 +142,7 @@ class MeController extends GetxController {
       await refreshQuarkAccountStatus();
       Get.snackbar(
         '提示',
-        normalized == 'shared' ? '已切换为共享夸克账号' : '已强制全员独享夸克账号',
+        normalized == 'shared' ? '已切换为共享' : '已切换为独享',
       );
     } catch (_) {
       return;
@@ -154,7 +154,7 @@ class MeController extends GetxController {
   Future<void> setPreferExclusive(bool prefer) async {
     if (quarkPreferSaving.value) return;
     if (!accountStatus.canPreferExclusive) {
-      Get.snackbar('提示', '管理员已强制独享，无法修改个人偏好');
+      Get.snackbar('提示', '已强制独享');
       return;
     }
     quarkPreferSaving.value = true;
@@ -162,10 +162,7 @@ class MeController extends GetxController {
       await _quarkAccountApi.setPreferExclusive(prefer);
       await refreshQuarkAccountStatus();
       if (prefer) {
-        Get.snackbar('提示', '已开启独享，请登录自己的夸克账号');
         await openPersonalQuarkLogin();
-      } else {
-        Get.snackbar('提示', '已关闭独享，将使用共享夸克数据');
       }
     } catch (_) {
       return;

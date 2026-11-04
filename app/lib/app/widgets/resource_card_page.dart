@@ -335,11 +335,6 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
           QuarkErrorHelper.isQuarkLoginRequired(error);
       // 独享缺登录 / 个人凭证失效：用户自己去登录；共享凭证失效：仅超管可修。
       final canSelfLogin = isLoginRequired || isSuperAdmin;
-      final authHint = isLoginRequired
-          ? QuarkErrorHelper.loginRequiredHint
-          : (isSuperAdmin
-                ? QuarkErrorHelper.authErrorAdminHint
-                : QuarkErrorHelper.authErrorUserHint);
       final loginTarget = isLoginRequired
           ? 'personal'
           : (isSuperAdmin ? 'shared' : 'personal');
@@ -366,7 +361,7 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
                 ),
                 const SizedBox(height: 14),
                 Text(
-                  isLoginRequired ? '需要登录夸克账号' : '夸克登录已失效',
+                  isLoginRequired ? '需要登录夸克' : '夸克登录已失效',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 16,
@@ -374,32 +369,15 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
                     color: AppThemeColors.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 8),
-              ],
-              Text(
-                authError
-                    ? (isLoginRequired
-                          ? QuarkErrorHelper.loginRequiredMessage
-                          : '无法读取夸克网盘中的内容，请重新登录夸克账号后再试。')
-                    : errText,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: AppThemeColors.textSecondary,
-                  height: 1.5,
-                ),
-              ),
-              if (authError) ...[
-                const SizedBox(height: 10),
+              ] else
                 Text(
-                  authHint,
+                  errText,
                   textAlign: TextAlign.center,
                   style: const TextStyle(
-                    fontSize: 13,
+                    color: AppThemeColors.textSecondary,
                     height: 1.5,
-                    color: AppThemeColors.textMuted,
                   ),
                 ),
-              ],
               const SizedBox(height: 18),
               Wrap(
                 spacing: 12,

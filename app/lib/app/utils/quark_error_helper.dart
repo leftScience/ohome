@@ -6,14 +6,9 @@
 class QuarkErrorHelper {
   QuarkErrorHelper._();
 
-  static const String authErrorMessage = '夸克登录已失效，请重新登录夸克账号后再试';
+  static const String authErrorMessage = '夸克登录已失效';
 
-  static const String authErrorAdminHint = '请前往「设置 - 夸克登录」更新夸克登录信息后再试。';
-
-  static const String authErrorUserHint = '请联系管理员前往「设置 - 夸克登录」更新夸克登录信息后再试。';
-
-  static const String loginRequiredMessage = '请先登录夸克账号后再试';
-  static const String loginRequiredHint = '请前往「设置 - 夸克账户」登录自己的夸克账号。';
+      static const String loginRequiredMessage = '请先登录夸克';
 
   static const List<String> _loginRequiredMarkers = <String>[
     'quark_login_required',

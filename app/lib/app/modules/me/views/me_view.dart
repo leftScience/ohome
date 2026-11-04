@@ -366,7 +366,6 @@ class _QuarkAccountCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final canPrefer = status.canPreferExclusive == true;
     final preferExclusive = status.preferExclusive == true;
-    final forcedExclusive = status.systemMode == 'exclusive';
     final effectiveExclusive = status.effectiveMode == 'exclusive';
 
     return Container(
@@ -387,82 +386,83 @@ class _QuarkAccountCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 40.w,
-                      height: 40.w,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF00897B).withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(14.r),
+                if (canPrefer)
+                  Row(
+                    children: [
+                      Container(
+                        width: 40.w,
+                        height: 40.w,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF00897B).withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(14.r),
+                        ),
+                        child: Icon(
+                          Icons.share_outlined,
+                          color: const Color(0xFF00897B),
+                          size: 22.w,
+                        ),
                       ),
-                      child: Icon(
-                        Icons.share_outlined,
-                        color: const Color(0xFF00897B),
-                        size: 22.w,
-                      ),
-                    ),
-                    SizedBox(width: 14.w),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '夸克数据范围',
-                            style: TextStyle(
-                              fontSize: 15.sp,
-                              fontWeight: FontWeight.w600,
-                              color: AppThemeColors.textPrimary,
-                            ),
+                      SizedBox(width: 14.w),
+                      Expanded(
+                        child: Text(
+                          '独享',
+                          style: TextStyle(
+                            fontSize: 15.sp,
+                            fontWeight: FontWeight.w600,
+                            color: AppThemeColors.textPrimary,
                           ),
-                          SizedBox(height: 4.h),
-                          Text(
-                            forcedExclusive
-                                ? '管理员已强制独享，请登录自己的夸克账号'
-                                : (effectiveExclusive
-                                    ? '当前使用你自己的夸克账号与目录'
-                                    : '当前使用家庭共享夸克账号与目录'),
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              color: AppThemeColors.textMuted,
-                            ),
+                        ),
+                      ),
+                      if (loading)
+                        Padding(
+                          padding: EdgeInsets.only(right: 8.w),
+                          child: SizedBox(
+                            width: 18.w,
+                            height: 18.w,
+                            child: const CircularProgressIndicator(strokeWidth: 2),
                           ),
-                        ],
+                        ),
+                      Switch.adaptive(
+                        value: preferExclusive,
+                        onChanged: preferSaving ? null : onPreferChanged,
                       ),
-                    ),
-                    if (loading)
-                      SizedBox(
-                        width: 18.w,
-                        height: 18.w,
-                        child: const CircularProgressIndicator(strokeWidth: 2),
+                    ],
+                  )
+                else
+                  Row(
+                    children: [
+                      Container(
+                        width: 40.w,
+                        height: 40.w,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF00897B).withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(14.r),
+                        ),
+                        child: Icon(
+                          Icons.share_outlined,
+                          color: const Color(0xFF00897B),
+                          size: 22.w,
+                        ),
                       ),
-                  ],
-                ),
-                if (canPrefer) ...[
-                  SizedBox(height: 12.h),
-                  SwitchListTile.adaptive(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(
-                      '使用独享夸克账号',
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w600,
-                        color: AppThemeColors.textPrimary,
+                      SizedBox(width: 14.w),
+                      Expanded(
+                        child: Text(
+                          effectiveExclusive ? '独享' : '共享',
+                          style: TextStyle(
+                            fontSize: 15.sp,
+                            fontWeight: FontWeight.w600,
+                            color: AppThemeColors.textPrimary,
+                          ),
+                        ),
                       ),
-                    ),
-                    subtitle: Text(
-                      preferExclusive
-                          ? '已开启：读写你自己的 WP/类型/用户目录'
-                          : '关闭时跟随共享库，无需个人登录',
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        color: AppThemeColors.textMuted,
-                      ),
-                    ),
-                    value: preferExclusive,
-                    onChanged: preferSaving ? null : onPreferChanged,
+                      if (loading)
+                        SizedBox(
+                          width: 18.w,
+                          height: 18.w,
+                          child: const CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                    ],
                   ),
-                ],
                 if (effectiveExclusive && onLoginTap != null) ...[
                   SizedBox(height: 4.h),
                   Align(
@@ -471,7 +471,7 @@ class _QuarkAccountCard extends StatelessWidget {
                       onPressed: onLoginTap,
                       icon: const Icon(Icons.login_rounded, size: 18),
                       label: Text(
-                        status.cookieConfigured == true ? '管理夸克登录' : '去登录夸克',
+                        status.cookieConfigured == true ? '夸克登录' : '去登录夸克',
                       ),
                     ),
                   ),
@@ -557,14 +557,6 @@ class _QuarkAdminMenuCard extends StatelessWidget {
                                 color: AppThemeColors.textPrimary,
                               ),
                             ),
-                            SizedBox(height: 4.h),
-                            Text(
-                              '统一管理共享状态、登录、搜索和播放设置',
-                              style: TextStyle(
-                                fontSize: 12.sp,
-                                color: AppThemeColors.textMuted,
-                              ),
-                            ),
                           ],
                         ),
                       ),
@@ -614,14 +606,6 @@ class _QuarkAdminMenuCard extends StatelessWidget {
                                             color: AppThemeColors.textPrimary,
                                           ),
                                         ),
-                                        SizedBox(height: 4.h),
-                                        Text(
-                                          '共享：默认全家共用；独享：强制每人登录自己的夸克',
-                                          style: TextStyle(
-                                            fontSize: 12.sp,
-                                            color: AppThemeColors.textMuted,
-                                          ),
-                                        ),
                                         SizedBox(height: 8.h),
                                         SegmentedButton<String>(
                                           segments: const [
@@ -654,9 +638,6 @@ class _QuarkAdminMenuCard extends StatelessWidget {
                                     icon: Icons.cookie_outlined,
                                     iconColor: const Color(0xFFF57C00),
                                     title: '夸克登录',
-                                    subtitle: systemMode == 'exclusive'
-                                        ? '维护当前账号自己的夸克凭证'
-                                        : '维护共享夸克 Cookie / TV 登录',
                                     onTap: onLoginTap,
                                   ),
                                   _buildDivider(),
@@ -664,7 +645,6 @@ class _QuarkAdminMenuCard extends StatelessWidget {
                                     icon: Icons.travel_explore_rounded,
                                     iconColor: const Color(0xFF1E88E5),
                                     title: '夸克搜索',
-                                    subtitle: '配置 HTTP 代理、HTTPS 代理、TG 频道和启用插件',
                                     onTap: onSearchTap,
                                   ),
                                   _buildDivider(),
@@ -672,8 +652,6 @@ class _QuarkAdminMenuCard extends StatelessWidget {
                                     icon: Icons.smart_display_outlined,
                                     iconColor: const Color(0xFF8E24AA),
                                     title: '夸克播放',
-                                    subtitle:
-                                        '配置 302 / 本地代理，更多代理参数请在后端配置文件设置',
                                     onTap: onStreamTap,
                                   ),
                                 ],
@@ -707,14 +685,12 @@ class _SettingsSubMenuTile extends StatelessWidget {
     required this.icon,
     required this.iconColor,
     required this.title,
-    required this.subtitle,
     required this.onTap,
   });
 
   final IconData icon;
   final Color iconColor;
   final String title;
-  final String subtitle;
   final VoidCallback? onTap;
 
   @override
@@ -739,26 +715,13 @@ class _SettingsSubMenuTile extends StatelessWidget {
               ),
               SizedBox(width: 12.w),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w600,
-                        color: AppThemeColors.textPrimary,
-                      ),
-                    ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 11.sp,
-                        color: AppThemeColors.textMuted,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w600,
+                    color: AppThemeColors.textPrimary,
+                  ),
                 ),
               ),
               Icon(
