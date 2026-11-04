@@ -588,47 +588,56 @@ class _QuarkAdminMenuCard extends StatelessWidget {
                               child: Column(
                                 children: [
                                   Padding(
-                                    padding: EdgeInsets.fromLTRB(
-                                      14.w,
-                                      12.h,
-                                      14.w,
-                                      8.h,
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 14.w,
+                                      vertical: 13.h,
                                     ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                    child: Row(
                                       children: [
-                                        Text(
-                                          '共享状态',
-                                          style: TextStyle(
-                                            fontSize: 14.sp,
-                                            fontWeight: FontWeight.w600,
-                                            color: AppThemeColors.textPrimary,
+                                        Container(
+                                          width: 36.w,
+                                          height: 36.w,
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFF00897B)
+                                                .withValues(alpha: 0.12),
+                                            borderRadius:
+                                                BorderRadius.circular(12.r),
+                                          ),
+                                          child: Icon(
+                                            Icons.hub_outlined,
+                                            color: const Color(0xFF00897B),
+                                            size: 20.w,
                                           ),
                                         ),
-                                        SizedBox(height: 8.h),
-                                        SegmentedButton<String>(
-                                          segments: const [
-                                            ButtonSegment<String>(
-                                              value: 'shared',
-                                              label: Text('共享'),
-                                              icon: Icon(Icons.groups_outlined),
+                                        SizedBox(width: 12.w),
+                                        Expanded(
+                                          child: Text(
+                                            '共享状态',
+                                            style: TextStyle(
+                                              fontSize: 14.sp,
+                                              fontWeight: FontWeight.w600,
+                                              color:
+                                                  AppThemeColors.textPrimary,
                                             ),
-                                            ButtonSegment<String>(
-                                              value: 'exclusive',
-                                              label: Text('独享'),
-                                              icon: Icon(Icons.person_outline),
+                                          ),
+                                        ),
+                                        if (systemModeSaving)
+                                          Padding(
+                                            padding:
+                                                EdgeInsets.only(right: 8.w),
+                                            child: SizedBox(
+                                              width: 16.w,
+                                              height: 16.w,
+                                              child:
+                                                  const CircularProgressIndicator(
+                                                strokeWidth: 1.8,
+                                              ),
                                             ),
-                                          ],
-                                          selected: {systemMode},
-                                          onSelectionChanged: systemModeSaving
-                                              ? null
-                                              : (values) {
-                                                  if (values.isEmpty) return;
-                                                  onSystemModeChanged(
-                                                    values.first,
-                                                  );
-                                                },
+                                          ),
+                                        _CompactShareModeControl(
+                                          value: systemMode,
+                                          enabled: !systemModeSaving,
+                                          onChanged: onSystemModeChanged,
                                         ),
                                       ],
                                     ),
@@ -676,6 +685,69 @@ class _QuarkAdminMenuCard extends StatelessWidget {
       color: AppThemeColors.divider,
       indent: 16.w,
       endIndent: 16.w,
+    );
+  }
+}
+
+class _CompactShareModeControl extends StatelessWidget {
+  const _CompactShareModeControl({
+    required this.value,
+    required this.enabled,
+    required this.onChanged,
+  });
+
+  final String value;
+  final bool enabled;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Opacity(
+      opacity: enabled ? 1 : 0.55,
+      child: Container(
+        padding: EdgeInsets.all(3.w),
+        decoration: BoxDecoration(
+          color: AppThemeColors.surface,
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(color: AppThemeColors.border),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _option(label: '共享', mode: 'shared'),
+            _option(label: '独享', mode: 'exclusive'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _option({required String label, required String mode}) {
+    final selected = value == mode;
+    return GestureDetector(
+      onTap: !enabled || selected ? null : () => onChanged(mode),
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        curve: Curves.easeOut,
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 7.h),
+        decoration: BoxDecoration(
+          color: selected
+              ? AppThemeColors.primary.withValues(alpha: 0.12)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(9.r),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12.sp,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+            color: selected
+                ? AppThemeColors.primary
+                : AppThemeColors.textSecondary,
+          ),
+        ),
+      ),
     );
   }
 }
