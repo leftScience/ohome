@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -75,38 +77,50 @@ class MainView extends GetView<MainController> {
   }
 
   Widget _buildFloatingTabBar() {
-    return Container(
-      height: _tabBarHeight,
-      padding: const EdgeInsets.symmetric(
-        horizontal: _tabBarInnerHorizontalPadding,
-      ),
+    final radius = BorderRadius.circular(999);
+    return DecoratedBox(
       decoration: BoxDecoration(
-        color: AppThemeColors.surface.withValues(alpha: 0.96),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: AppThemeColors.border, width: 1),
+        borderRadius: radius,
         boxShadow: AppThemeColors.floatingShadow,
       ),
-      child: Row(
-        children: [
-          _buildTabItem(
-            index: 0,
-            label: '首页',
-            icon: Icons.home_outlined,
-            activeIcon: Icons.home_rounded,
+      child: ClipRRect(
+        borderRadius: radius,
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+          child: Container(
+            height: _tabBarHeight,
+            padding: const EdgeInsets.symmetric(
+              horizontal: _tabBarInnerHorizontalPadding,
+            ),
+            decoration: BoxDecoration(
+              color: AppThemeColors.surface.withValues(alpha: 0.88),
+              borderRadius: radius,
+              border: Border.all(color: AppThemeColors.border, width: 1),
+            ),
+            child: Row(
+              children: [
+                _buildTabItem(
+                  index: 0,
+                  label: '首页',
+                  icon: Icons.home_outlined,
+                  activeIcon: Icons.home_rounded,
+                ),
+                _buildTabItem(
+                  index: 1,
+                  label: '任务',
+                  icon: Icons.task_alt_rounded,
+                  activeIcon: Icons.task_alt_rounded,
+                ),
+                _buildTabItem(
+                  index: 2,
+                  label: '设置',
+                  icon: Icons.settings_outlined,
+                  activeIcon: Icons.settings_rounded,
+                ),
+              ],
+            ),
           ),
-          _buildTabItem(
-            index: 1,
-            label: '任务',
-            icon: Icons.task_alt_rounded,
-            activeIcon: Icons.task_alt_rounded,
-          ),
-          _buildTabItem(
-            index: 2,
-            label: '设置',
-            icon: Icons.settings_outlined,
-            activeIcon: Icons.settings_rounded,
-          ),
-        ],
+        ),
       ),
     );
   }

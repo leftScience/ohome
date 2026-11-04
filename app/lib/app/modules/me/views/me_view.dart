@@ -20,29 +20,70 @@ class MeView extends GetView<MeController> {
       child: Stack(
         children: [
           const HomeStyleBackdrop(),
-          ListView(
-            padding: EdgeInsets.fromLTRB(20.w, 24.h, 20.w, bottomInset),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                '设置',
-                style: TextStyle(
-                  fontSize: 24.sp,
-                  fontWeight: FontWeight.w700,
-                  color: AppThemeColors.textPrimary,
+              Padding(
+                padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 12.h),
+                child: SizedBox(
+                  height: 42.w,
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      '设置',
+                      style: TextStyle(
+                        fontSize: 22.sp,
+                        height: 1.2,
+                        fontWeight: FontWeight.w800,
+                        color: AppThemeColors.textPrimary,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                  ),
                 ),
               ),
-              SizedBox(height: 20.h),
-              _buildProfileCard(),
-              SizedBox(height: 24.h),
-              Obx(() {
-                if (!controller.isSuperAdmin) {
-                  return const SizedBox.shrink();
-                }
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+              Expanded(
+                child: ListView(
+                  padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, bottomInset),
                   children: [
+                    _buildProfileCard(),
+                    SizedBox(height: 24.h),
+                    Obx(() {
+                      if (!controller.isSuperAdmin) {
+                        return const SizedBox.shrink();
+                      }
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            '基础管理',
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w600,
+                              color: AppThemeColors.textSecondary,
+                            ),
+                          ),
+                          SizedBox(height: 12.h),
+                          _SettingsMenuCard(
+                            icon: Icons.group_outlined,
+                            iconColor: const Color(0xFF00897B),
+                            title: '用户管理',
+                            onTap: controller.openUserManagement,
+                          ),
+                          SizedBox(height: 12.h),
+                          _QuarkAdminMenuCard(
+                            expanded: controller.quarkAdminMenuExpanded.value,
+                            onTap: controller.toggleQuarkAdminMenu,
+                            onLoginTap: controller.openQuarkLogin,
+                            onSearchTap: controller.openQuarkSearchSettings,
+                            onStreamTap: controller.openQuarkStreamSettings,
+                          ),
+                        ],
+                      );
+                    }),
+                    SizedBox(height: 24.h),
                     Text(
-                      '基础管理',
+                      '系统',
                       style: TextStyle(
                         fontSize: 14.sp,
                         fontWeight: FontWeight.w600,
@@ -51,51 +92,27 @@ class MeView extends GetView<MeController> {
                     ),
                     SizedBox(height: 12.h),
                     _SettingsMenuCard(
-                      icon: Icons.group_outlined,
-                      iconColor: const Color(0xFF00897B),
-                      title: '用户管理',
-                      onTap: controller.openUserManagement,
+                      icon: Icons.lock_reset_rounded,
+                      iconColor: const Color(0xFFF57C00),
+                      title: '修改密码',
+                      onTap: controller.openChangePassword,
                     ),
                     SizedBox(height: 12.h),
-                    _QuarkAdminMenuCard(
-                      expanded: controller.quarkAdminMenuExpanded.value,
-                      onTap: controller.toggleQuarkAdminMenu,
-                      onLoginTap: controller.openQuarkLogin,
-                      onSearchTap: controller.openQuarkSearchSettings,
-                      onStreamTap: controller.openQuarkStreamSettings,
+                    _SettingsMenuCard(
+                      icon: Icons.info_outline_rounded,
+                      iconColor: const Color(0xFF1E88E5),
+                      title: '关于wpan',
+                      onTap: controller.openServerUpdate,
+                    ),
+                    SizedBox(height: 12.h),
+                    _SettingsMenuCard(
+                      icon: Icons.logout_rounded,
+                      iconColor: const Color(0xFFE53935),
+                      title: '退出登录',
+                      onTap: controller.logout,
                     ),
                   ],
-                );
-              }),
-              SizedBox(height: 24.h),
-              Text(
-                '系统',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w600,
-                  color: AppThemeColors.textSecondary,
                 ),
-              ),
-              SizedBox(height: 12.h),
-              _SettingsMenuCard(
-                icon: Icons.lock_reset_rounded,
-                iconColor: const Color(0xFFF57C00),
-                title: '修改密码',
-                onTap: controller.openChangePassword,
-              ),
-              SizedBox(height: 12.h),
-              _SettingsMenuCard(
-                icon: Icons.info_outline_rounded,
-                iconColor: const Color(0xFF1E88E5),
-                title: '关于wpan',
-                onTap: controller.openServerUpdate,
-              ),
-              SizedBox(height: 12.h),
-              _SettingsMenuCard(
-                icon: Icons.logout_rounded,
-                iconColor: const Color(0xFFE53935),
-                title: '退出登录',
-                onTap: controller.logout,
               ),
             ],
           ),

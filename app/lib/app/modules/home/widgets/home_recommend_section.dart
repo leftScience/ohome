@@ -37,7 +37,7 @@ class _HomeRecommendSectionState extends State<HomeRecommendSection> {
     if (!_pageController.hasClients) return;
     _pageController.animateToPage(
       index,
-      duration: const Duration(milliseconds: 220),
+      duration: const Duration(milliseconds: 260),
       curve: Curves.easeOutCubic,
     );
   }
@@ -52,16 +52,32 @@ class _HomeRecommendSectionState extends State<HomeRecommendSection> {
   Widget build(BuildContext context) {
     return Obx(() {
       final tabs = <_DoubanSectionData>[
-        _DoubanSectionData(title: '电影', items: controller.hotMovies),
-        _DoubanSectionData(title: '电视剧', items: controller.hotCnDramas),
-        _DoubanSectionData(title: '短剧', items: controller.hotPlaylets),
-        _DoubanSectionData(title: '有声书', items: controller.hotAudiobooks),
+        _DoubanSectionData(
+          title: '电影',
+          icon: Icons.movie_creation_rounded,
+          items: controller.hotMovies,
+        ),
+        _DoubanSectionData(
+          title: '电视剧',
+          icon: Icons.tv_rounded,
+          items: controller.hotCnDramas,
+        ),
+        _DoubanSectionData(
+          title: '短剧',
+          icon: Icons.local_fire_department_rounded,
+          items: controller.hotPlaylets,
+        ),
+        _DoubanSectionData(
+          title: '有声书',
+          icon: Icons.headphones_rounded,
+          items: controller.hotAudiobooks,
+        ),
       ];
 
       return Container(
         decoration: BoxDecoration(
-          color: AppThemeColors.surface,
-          borderRadius: BorderRadius.circular(20.r),
+          color: AppThemeColors.surface.withValues(alpha: 0.94),
+          borderRadius: BorderRadius.circular(22.r),
           border: Border.all(color: AppThemeColors.border, width: 1),
           boxShadow: AppThemeColors.cardShadow,
         ),
@@ -130,7 +146,7 @@ class _HomeRecommendSectionState extends State<HomeRecommendSection> {
           SizedBox(height: 10.h),
           _DoubanTabBar(
             index: controller.recommendTabIndex.value,
-            tabs: tabs.map((e) => e.title).toList(growable: false),
+            tabs: tabs,
             onChanged: _handleTabChanged,
           ),
         ],
@@ -142,7 +158,7 @@ class _HomeRecommendSectionState extends State<HomeRecommendSection> {
     final allEmpty = tabs.every((e) => e.items.isEmpty);
     if (allEmpty) {
       if (controller.recommendLoading.value) {
-        return const Center(child: CircularProgressIndicator());
+        return const _RecommendShimmerLoading();
       }
       final err = controller.recommendError.value.trim();
       if (err.isNotEmpty) {
@@ -240,6 +256,8 @@ class _RecommendListPage extends GetView<HomeRecommendController> {
 
   @override
   Widget build(BuildContext context) {
+    final disableAnimations = MediaQuery.disableAnimationsOf(context);
+
     return NotificationListener<ScrollNotification>(
       onNotification: (notification) {
         if (notification.metrics.axis != Axis.vertical) return false;
@@ -259,58 +277,13 @@ class _RecommendListPage extends GetView<HomeRecommendController> {
                 ),
               ),
             )
-          : ListView.separated(
+          : ListView.builder(
               primary: false,
               padding: EdgeInsets.fromLTRB(10.w, 8.h, 10.w, 12.h),
               itemCount: items.length + 1,
-              separatorBuilder: (_, _) => Divider(
-                height: 10.h,
-                thickness: 0.7,
-                indent: 72.w,
-                endIndent: 4.w,
-                color: AppThemeColors.divider,
-              ),
               itemBuilder: (context, index) {
                 if (index >= items.length) {
-                  final err = loadMoreError.trim();
-                  if (err.isNotEmpty) {
-                    return Padding(
-                      padding: EdgeInsets.symmetric(vertical: 8.h),
-                      child: Center(
-                        child: TextButton(
-                          onPressed: onRetryLoadMore,
-                          child: Text(
-                            '加载更多失败，点我重试',
-                            style: TextStyle(fontSize: 12.sp),
-                          ),
-                        ),
-                      ),
-                    );
-                  }
-                  if (isLoadingMore) {
-                    return Padding(
-                      padding: EdgeInsets.symmetric(vertical: 12.h),
-                      child: Center(
-                        child: SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2.w),
-                        ),
-                      ),
-                    );
-                  }
-                  return Padding(
-                    padding: EdgeInsets.symmetric(vertical: 10.h),
-                    child: Center(
-                      child: Text(
-                        hasMore ? '继续上拉加载更多' : '已经到底啦',
-                        style: TextStyle(
-                          fontSize: 11.5.sp,
-                          color: AppThemeColors.textDisabled,
-                        ),
-                      ),
-                    ),
-                  );
+                  return _buildLoadMoreFooter();
                 }
 
                 final item = items[index];
@@ -320,81 +293,180 @@ class _RecommendListPage extends GetView<HomeRecommendController> {
                 final hot = _DoubanItem.hot(item);
                 final remarks = _DoubanItem.remarks(item);
                 final cover = _DoubanItem.cover(item).trim();
+                final rank = index + 1;
 
-                return Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () => onTapItem(name),
-                    borderRadius: BorderRadius.circular(12.r),
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 4.w,
-                        vertical: 4.h,
+                final rowWidget = _buildRankRow(
+                  name: name,
+                  subtitle: subtitle,
+                  rating: rating,
+                  hot: hot,
+                  remarks: remarks,
+                  cover: cover,
+                  rank: rank,
+                );
+
+                if (disableAnimations || index >= 8) {
+                  return rowWidget;
+                }
+
+                return TweenAnimationBuilder<double>(
+                  key: ValueKey<String>('rec_${tabIndex}_$index'),
+                  tween: Tween<double>(begin: 0, end: 1),
+                  duration: Duration(milliseconds: 260 + (index * 36)),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, value, child) {
+                    return Opacity(
+                      opacity: value.clamp(0.0, 1.0),
+                      child: Transform.translate(
+                        offset: Offset(0, (1 - value) * 14),
+                        child: child,
                       ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          _buildPoster(cover: cover, rank: index + 1),
-                          SizedBox(width: 12.w),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  name,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 14.sp,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppThemeColors.textPrimary,
-                                    height: 1.2,
-                                  ),
-                                ),
-                                if (subtitle.isNotEmpty) ...[
-                                  SizedBox(height: 5.h),
-                                  Text(
-                                    subtitle,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontSize: 11.5.sp,
-                                      color: AppThemeColors.textMuted,
-                                      height: 1.25,
-                                    ),
-                                  ),
-                                ],
-                                SizedBox(height: 7.h),
-                                _buildMetaBadge(
-                                  rating: rating,
-                                  hot: hot,
-                                  remarks: remarks,
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(width: 8.w),
-                          Icon(
-                            Icons.chevron_right_rounded,
-                            size: 18.w,
-                            color: AppThemeColors.textDisabled,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                    );
+                  },
+                  child: rowWidget,
                 );
               },
             ),
     );
   }
 
+  Widget _buildLoadMoreFooter() {
+    final err = loadMoreError.trim();
+    if (err.isNotEmpty) {
+      return Padding(
+        padding: EdgeInsets.symmetric(vertical: 8.h),
+        child: Center(
+          child: TextButton(
+            onPressed: onRetryLoadMore,
+            child: Text('加载更多失败，点我重试', style: TextStyle(fontSize: 12.sp)),
+          ),
+        ),
+      );
+    }
+    if (isLoadingMore) {
+      return Padding(
+        padding: EdgeInsets.symmetric(vertical: 12.h),
+        child: Center(
+          child: SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2.w),
+          ),
+        ),
+      );
+    }
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 10.h),
+      child: Center(
+        child: Text(
+          hasMore ? '继续上拉加载更多' : '已经到底啦',
+          style: TextStyle(
+            fontSize: 11.5.sp,
+            color: AppThemeColors.textDisabled,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRankRow({
+    required String name,
+    required String subtitle,
+    required String rating,
+    required String hot,
+    required String remarks,
+    required String cover,
+    required int rank,
+  }) {
+    final isTopThree = rank <= 3;
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: 8.h),
+      child: Material(
+        color: isTopThree
+            ? AppThemeColors.primary.withValues(alpha: 0.028)
+            : AppThemeColors.surfaceMuted.withValues(alpha: 0.65),
+        borderRadius: BorderRadius.circular(14.r),
+        child: InkWell(
+          onTap: () => onTapItem(name),
+          borderRadius: BorderRadius.circular(14.r),
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 7.h),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14.r),
+              border: Border.all(
+                color: isTopThree
+                    ? AppThemeColors.primary.withValues(alpha: 0.12)
+                    : AppThemeColors.divider,
+                width: 0.8,
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                _buildPoster(cover: cover, rank: rank),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w700,
+                          color: AppThemeColors.textPrimary,
+                          height: 1.2,
+                        ),
+                      ),
+                      if (subtitle.isNotEmpty) ...[
+                        SizedBox(height: 5.h),
+                        Text(
+                          subtitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11.5.sp,
+                            color: AppThemeColors.textMuted,
+                            height: 1.25,
+                          ),
+                        ),
+                      ],
+                      if (rating.isNotEmpty ||
+                          hot.isNotEmpty ||
+                          remarks.isNotEmpty) ...[
+                        SizedBox(height: 7.h),
+                        _buildMetaBadge(
+                          rating: rating,
+                          hot: hot,
+                          remarks: remarks,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                SizedBox(width: 8.w),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 18.w,
+                  color: AppThemeColors.textDisabled,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildPoster({required String cover, required int rank}) {
     final isTopThree = rank <= 3;
     final badgeColors = switch (rank) {
-      1 => const [Color(0xFFFF8A00), Color(0xFFFF5252)],
-      2 => const [Color(0xFF64748B), Color(0xFF475569)],
+      1 => const [Color(0xFFFF8A00), Color(0xFFFF3D57)],
+      2 => const [Color(0xFF3B82F6), Color(0xFF6366F1)],
       _ => const [Color(0xFFD97706), Color(0xFFB45309)],
     };
 
@@ -403,9 +475,9 @@ class _RecommendListPage extends GetView<HomeRecommendController> {
         borderRadius: BorderRadius.circular(10.r),
         boxShadow: [
           BoxShadow(
-            color: AppThemeColors.shadowSoft.withValues(alpha: 0.08),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
+            color: AppThemeColors.shadowSoft.withValues(alpha: 0.12),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -433,7 +505,7 @@ class _RecommendListPage extends GetView<HomeRecommendController> {
                   child: Container(
                     padding: EdgeInsets.symmetric(
                       horizontal: 5.5.w,
-                      vertical: 1.5.h,
+                      vertical: 2.h,
                     ),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(colors: badgeColors),
@@ -464,102 +536,180 @@ class _RecommendListPage extends GetView<HomeRecommendController> {
     required String hot,
     required String remarks,
   }) {
-    if (rating.isNotEmpty || hot.isNotEmpty || remarks.isNotEmpty) {
-      return Wrap(
-        spacing: 6.w,
-        runSpacing: 4.h,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          if (rating.isNotEmpty)
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFF8EB),
-                borderRadius: BorderRadius.circular(6.r),
-                border: Border.all(
-                  color: const Color(0xFFF59E0B).withValues(alpha: 0.22),
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.star_rounded,
-                    size: 13.w,
-                    color: const Color(0xFFF59E0B),
-                  ),
-                  SizedBox(width: 2.5.w),
-                  Text(
-                    rating,
-                    style: TextStyle(
-                      fontSize: 11.5.sp,
-                      color: const Color(0xFFD97706),
-                      fontWeight: FontWeight.w700,
-                      height: 1.1,
-                    ),
-                  ),
-                ],
+    return Wrap(
+      spacing: 6.w,
+      runSpacing: 4.h,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        if (rating.isNotEmpty)
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF8EB),
+              borderRadius: BorderRadius.circular(6.r),
+              border: Border.all(
+                color: const Color(0xFFF59E0B).withValues(alpha: 0.22),
               ),
             ),
-          if (hot.isNotEmpty)
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFF1F0),
-                borderRadius: BorderRadius.circular(6.r),
-                border: Border.all(
-                  color: const Color(0xFFFF4D4F).withValues(alpha: 0.2),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.star_rounded,
+                  size: 13.w,
+                  color: const Color(0xFFF59E0B),
                 ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.local_fire_department_rounded,
-                    size: 12.5.w,
-                    color: const Color(0xFFF97316),
+                SizedBox(width: 2.5.w),
+                Text(
+                  rating,
+                  style: TextStyle(
+                    fontSize: 11.5.sp,
+                    color: const Color(0xFFD97706),
+                    fontWeight: FontWeight.w700,
+                    height: 1.1,
                   ),
-                  SizedBox(width: 2.5.w),
-                  Text(
-                    '人气 $hot',
-                    style: TextStyle(
-                      fontSize: 11.sp,
-                      color: const Color(0xFFEA580C),
-                      fontWeight: FontWeight.w700,
-                      height: 1.1,
-                    ),
-                  ),
-                ],
+                ),
+              ],
+            ),
+          ),
+        if (hot.isNotEmpty)
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF1F0),
+              borderRadius: BorderRadius.circular(6.r),
+              border: Border.all(
+                color: const Color(0xFFFF4D4F).withValues(alpha: 0.2),
               ),
             ),
-          if (remarks.isNotEmpty)
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
-              decoration: BoxDecoration(
-                color: AppThemeColors.surfaceSunken,
-                borderRadius: BorderRadius.circular(6.r),
-              ),
-              child: Text(
-                remarks,
-                style: TextStyle(
-                  fontSize: 10.5.sp,
-                  color: AppThemeColors.textSecondary,
-                  fontWeight: FontWeight.w600,
-                  height: 1.1,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.local_fire_department_rounded,
+                  size: 12.5.w,
+                  color: const Color(0xFFF97316),
                 ),
+                SizedBox(width: 2.5.w),
+                Text(
+                  '人气 $hot',
+                  style: TextStyle(
+                    fontSize: 11.sp,
+                    color: const Color(0xFFEA580C),
+                    fontWeight: FontWeight.w700,
+                    height: 1.1,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        if (remarks.isNotEmpty)
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+            decoration: BoxDecoration(
+              color: AppThemeColors.surfaceSunken,
+              borderRadius: BorderRadius.circular(6.r),
+            ),
+            child: Text(
+              remarks,
+              style: TextStyle(
+                fontSize: 10.5.sp,
+                color: AppThemeColors.textSecondary,
+                fontWeight: FontWeight.w600,
+                height: 1.1,
               ),
             ),
-        ],
-      );
-    }
+          ),
+      ],
+    );
+  }
+}
 
-    return Text(
-      '暂无评分',
-      style: TextStyle(
-        fontSize: 11.sp,
-        color: AppThemeColors.textDisabled,
-        fontWeight: FontWeight.w500,
-      ),
+/// 推荐加载中的流光骨架屏（Shimmer Skeleton）
+class _RecommendShimmerLoading extends StatefulWidget {
+  const _RecommendShimmerLoading();
+
+  @override
+  State<_RecommendShimmerLoading> createState() =>
+      _RecommendShimmerLoadingState();
+}
+
+class _RecommendShimmerLoadingState extends State<_RecommendShimmerLoading>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _shimmerController;
+
+  @override
+  void initState() {
+    super.initState();
+    _shimmerController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1300),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _shimmerController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _shimmerController,
+      builder: (context, _) {
+        final t = _shimmerController.value;
+        final baseColor = AppThemeColors.surfaceSunken;
+        final highlightColor = AppThemeColors.surface;
+
+        Widget shimmerBox({
+          required double width,
+          required double height,
+          double radius = 10,
+        }) {
+          return Container(
+            width: width,
+            height: height,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(radius.r),
+              gradient: LinearGradient(
+                begin: Alignment(-1.5 + 3.0 * t, -0.2),
+                end: Alignment(-0.5 + 3.0 * t, 0.2),
+                colors: [baseColor, highlightColor, baseColor],
+              ),
+            ),
+          );
+        }
+
+        return ListView(
+          primary: false,
+          padding: EdgeInsets.fromLTRB(12.w, 10.h, 12.w, 12.h),
+          children: [
+            for (int i = 0; i < 5; i++)
+              Padding(
+                padding: EdgeInsets.only(bottom: 12.h),
+                child: Row(
+                  children: [
+                    shimmerBox(width: 56.w, height: 76.w, radius: 10),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          shimmerBox(width: 140.w, height: 15.h, radius: 6),
+                          SizedBox(height: 8.h),
+                          shimmerBox(width: 200.w, height: 12.h, radius: 6),
+                          SizedBox(height: 8.h),
+                          shimmerBox(width: 90.w, height: 18.h, radius: 6),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }
@@ -572,13 +722,13 @@ class _DoubanTabBar extends StatelessWidget {
   });
 
   final int index;
-  final List<String> tabs;
+  final List<_DoubanSectionData> tabs;
   final ValueChanged<int> onChanged;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 32.h,
+      height: 34.h,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: EdgeInsets.symmetric(horizontal: 14.w),
@@ -586,23 +736,24 @@ class _DoubanTabBar extends StatelessWidget {
         separatorBuilder: (context, index) => SizedBox(width: 8.w),
         itemBuilder: (context, i) {
           final selected = i == index;
+          final tab = tabs[i];
           return Semantics(
             button: true,
             selected: selected,
-            label: tabs[i],
+            label: tab.title,
             child: InkWell(
               onTap: () => onChanged(i),
               borderRadius: BorderRadius.circular(999),
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
+                duration: const Duration(milliseconds: 220),
                 curve: Curves.easeOutCubic,
-                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 5.h),
+                padding: EdgeInsets.symmetric(horizontal: 13.w, vertical: 5.h),
                 decoration: BoxDecoration(
                   gradient: selected
                       ? const LinearGradient(
                           colors: [
                             AppThemeColors.primary,
-                            AppThemeColors.primaryDeep,
+                            AppThemeColors.accent,
                           ],
                         )
                       : null,
@@ -612,26 +763,39 @@ class _DoubanTabBar extends StatelessWidget {
                       ? [
                           BoxShadow(
                             color: AppThemeColors.primary.withValues(
-                              alpha: 0.24,
+                              alpha: 0.26,
                             ),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
                           ),
                         ]
                       : null,
                 ),
-                child: Center(
-                  child: Text(
-                    tabs[i],
-                    style: TextStyle(
-                      fontSize: 12.sp,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      tab.icon,
+                      size: 13.5.w,
                       color: selected
                           ? AppThemeColors.textOnAccent
-                          : AppThemeColors.textSecondary,
-                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                      height: 1.1,
+                          : AppThemeColors.textMuted,
                     ),
-                  ),
+                    SizedBox(width: 4.5.w),
+                    Text(
+                      tab.title,
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: selected
+                            ? AppThemeColors.textOnAccent
+                            : AppThemeColors.textSecondary,
+                        fontWeight: selected
+                            ? FontWeight.w700
+                            : FontWeight.w600,
+                        height: 1.1,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -643,9 +807,14 @@ class _DoubanTabBar extends StatelessWidget {
 }
 
 class _DoubanSectionData {
-  const _DoubanSectionData({required this.title, required this.items});
+  const _DoubanSectionData({
+    required this.title,
+    required this.icon,
+    required this.items,
+  });
 
   final String title;
+  final IconData icon;
   final List<dynamic> items;
 }
 

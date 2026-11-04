@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -19,8 +20,8 @@ class HomeView extends GetView<HomeController> {
   }
 }
 
-/// 首页采用「头部信息 + 搜索 + 快捷入口 + 推荐面板」结构，
-/// 推荐列表向上滚动时自动收起顶部区域，为内容让出空间。
+/// 首页采用「头部 + 搜索 + 快捷入口 + 推荐面板」结构，
+/// 推荐列表向上滚动时平滑收起顶部区域，为内容让出空间。
 class _HomeBody extends StatefulWidget {
   const _HomeBody({required this.controller});
 
@@ -30,11 +31,29 @@ class _HomeBody extends StatefulWidget {
   State<_HomeBody> createState() => _HomeBodyState();
 }
 
-class _HomeBodyState extends State<_HomeBody> {
+class _HomeBodyState extends State<_HomeBody>
+    with SingleTickerProviderStateMixin {
   static const double _collapseRange = 96;
 
   /// 0 = 展开，1 = 收起顶部区域。
   double _progress = 0;
+
+  late final AnimationController _entranceController;
+
+  @override
+  void initState() {
+    super.initState();
+    _entranceController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 720),
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _entranceController.dispose();
+    super.dispose();
+  }
 
   bool _onScroll(ScrollNotification notification) {
     if (notification.metrics.axis != Axis.vertical) return false;
@@ -62,10 +81,10 @@ class _HomeBodyState extends State<_HomeBody> {
     final t = disableAnimations
         ? (_progress >= 0.5 ? 1.0 : 0.0)
         : Curves.easeOutCubic.transform(_progress);
-    final topPad = lerpDouble(12.h, 4.h, t)!;
     final sectionGap = lerpDouble(12.h, 0, t)!;
     final chromeOpacity = (1 - t * 1.15).clamp(0.0, 1.0);
     final chromeFactor = (1 - t).clamp(0.0, 1.0);
+    final chromeScale = lerpDouble(1.0, 0.96, t)!;
 
     return SafeArea(
       bottom: false,
@@ -73,13 +92,13 @@ class _HomeBodyState extends State<_HomeBody> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: EdgeInsets.only(top: topPad),
+            padding: EdgeInsets.only(top: 12.h),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16.w),
-                  child: _buildHeader(t: t),
+                  child: _buildHeader(),
                 ),
                 ClipRect(
                   clipBehavior: chromeFactor >= 0.999
@@ -90,16 +109,26 @@ class _HomeBodyState extends State<_HomeBody> {
                     heightFactor: chromeFactor,
                     child: Opacity(
                       opacity: chromeOpacity,
-                      child: Padding(
-                        padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 10.h),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SizedBox(height: sectionGap <= 0 ? 0 : sectionGap),
-                            _buildSearchBar(),
-                            SizedBox(height: sectionGap <= 0 ? 0 : sectionGap),
-                            _buildResourceMenu(),
-                          ],
+                      child: Transform.scale(
+                        scale: chromeScale,
+                        alignment: Alignment.topCenter,
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 10.h),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SizedBox(
+                                height: sectionGap <= 0 ? 0 : sectionGap,
+                              ),
+                              _buildSearchBar(),
+                              SizedBox(
+                                height: sectionGap <= 0 ? 0 : sectionGap,
+                              ),
+                              _buildResourceMenu(
+                                disableAnimations: disableAnimations,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -122,192 +151,213 @@ class _HomeBodyState extends State<_HomeBody> {
     );
   }
 
-  Widget _buildHeader({required double t}) {
-    final titleSize = lerpDouble(22.sp, 17.5.sp, t)!;
-
+  Widget _buildHeader() {
     return Obx(() {
       final displayName = widget.controller.name.trim().isEmpty
           ? '欢迎回来'
           : widget.controller.name.trim();
 
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  displayName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: titleSize,
-                    height: 1.2,
-                    fontWeight: FontWeight.w800,
-                    color: AppThemeColors.textPrimary,
-                    letterSpacing: 0.3,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(width: 12.w),
-          _buildMessageButton(t: t),
-        ],
-      );
-    });
-  }
-
-  Widget _buildMessageButton({required double t}) {
-    return Obx(() {
-      final unreadCount = widget.controller.unreadMessageCount;
-      final size = lerpDouble(42.w, 36.w, t)!;
-      final iconSize = lerpDouble(21.w, 19.w, t)!;
-      final radius = BorderRadius.circular(14.r);
-
-      return Semantics(
-        button: true,
-        label: unreadCount > 0 ? '通知消息，$unreadCount条未读' : '通知消息',
-        child: Stack(
-          clipBehavior: Clip.none,
+      return SizedBox(
+        height: 42.w,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            DecoratedBox(
-              decoration: BoxDecoration(
-                borderRadius: radius,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppThemeColors.shadowSoft.withValues(alpha: 0.04),
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: radius,
-                child: Material(
-                  color: AppThemeColors.surface,
-                  borderRadius: radius,
-                  child: InkWell(
-                    onTap: widget.controller.openMessages,
-                    borderRadius: radius,
-                    child: Ink(
-                      width: size,
-                      height: size,
-                      decoration: BoxDecoration(
-                        borderRadius: radius,
-                        border: Border.all(color: AppThemeColors.border),
-                      ),
-                      child: Center(
-                        child: Icon(
-                          Icons.notifications_none_rounded,
-                          color: AppThemeColors.textPrimary,
-                          size: iconSize,
-                        ),
-                      ),
-                    ),
-                  ),
+            Expanded(
+              child: Text(
+                displayName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 22.sp,
+                  height: 1.2,
+                  fontWeight: FontWeight.w800,
+                  color: AppThemeColors.textPrimary,
+                  letterSpacing: 0.3,
                 ),
               ),
             ),
-            if (unreadCount > 0)
-              Positioned(
-                right: -3.w,
-                top: -3.h,
-                child: Container(
-                  constraints: BoxConstraints(minWidth: 17.w, minHeight: 17.h),
-                  padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 1.h),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFFF5252), Color(0xFFD32F2F)],
-                    ),
-                    borderRadius: BorderRadius.circular(999.r),
-                    border: Border.all(
-                      color: AppThemeColors.surface,
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFFF5252).withValues(alpha: 0.35),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Center(
-                    child: Text(
-                      unreadCount > 99 ? '99+' : '$unreadCount',
-                      style: TextStyle(
-                        fontSize: 8.5.sp,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                        height: 1.0,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+            SizedBox(width: 12.w),
+            _buildMessageButton(),
           ],
         ),
       );
     });
   }
 
-  Widget _buildSearchBar() {
-    final radius = BorderRadius.circular(16.r);
-    return Semantics(
-      button: true,
-      label: '搜索影视、短剧、播客和阅读资源',
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: radius,
-          boxShadow: AppThemeColors.cardShadow,
-        ),
-        child: ClipRRect(
-          borderRadius: radius,
-          child: Material(
-            color: AppThemeColors.surface,
-            child: InkWell(
-              onTap: () => Get.toNamed(Routes.SEARCH),
-              borderRadius: radius,
-              child: Ink(
-                height: 50.h,
-                padding: EdgeInsets.symmetric(horizontal: 10.w),
+  Widget _buildMessageButton() {
+    return Obx(() {
+      final unreadCount = widget.controller.unreadMessageCount;
+      final size = 42.w;
+      final iconSize = 21.w;
+      final radius = BorderRadius.circular(14.r);
+
+      return Semantics(
+        button: true,
+        label: unreadCount > 0 ? '通知消息，$unreadCount条未读' : '通知消息',
+        child: _PressableScale(
+          onTap: widget.controller.openMessages,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                width: size,
+                height: size,
                 decoration: BoxDecoration(
+                  color: AppThemeColors.surface.withValues(alpha: 0.92),
                   borderRadius: radius,
-                  border: Border.all(color: AppThemeColors.border, width: 1),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 34.w,
-                      height: 34.w,
-                      decoration: BoxDecoration(
-                        color: AppThemeColors.primary.withValues(alpha: 0.09),
-                        borderRadius: BorderRadius.circular(11.r),
-                      ),
-                      child: Icon(
-                        Icons.search_rounded,
-                        color: AppThemeColors.primary,
-                        size: 19.w,
-                      ),
-                    ),
-                    SizedBox(width: 10.w),
-                    Expanded(
-                      child: Text(
-                        '搜索资源',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: AppThemeColors.textMuted,
-                          fontSize: 13.5.sp,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
+                  border: Border.all(
+                    color: unreadCount > 0
+                        ? AppThemeColors.primary.withValues(alpha: 0.28)
+                        : AppThemeColors.border,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color:
+                          (unreadCount > 0
+                                  ? AppThemeColors.primary
+                                  : AppThemeColors.shadowSoft)
+                              .withValues(alpha: unreadCount > 0 ? 0.14 : 0.05),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
+                child: Center(
+                  child: Icon(
+                    unreadCount > 0
+                        ? Icons.notifications_active_rounded
+                        : Icons.notifications_none_rounded,
+                    color: unreadCount > 0
+                        ? AppThemeColors.primary
+                        : AppThemeColors.textPrimary,
+                    size: iconSize,
+                  ),
+                ),
               ),
+              if (unreadCount > 0)
+                Positioned(
+                  right: -3.w,
+                  top: -3.h,
+                  child: Container(
+                    constraints: BoxConstraints(
+                      minWidth: 17.w,
+                      minHeight: 17.h,
+                    ),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 5.w,
+                      vertical: 1.h,
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFFF5252), Color(0xFFD32F2F)],
+                      ),
+                      borderRadius: BorderRadius.circular(999.r),
+                      border: Border.all(
+                        color: AppThemeColors.surface,
+                        width: 1.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(
+                            0xFFFF5252,
+                          ).withValues(alpha: 0.38),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Text(
+                        unreadCount > 99 ? '99+' : '$unreadCount',
+                        style: TextStyle(
+                          fontSize: 8.5.sp,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          height: 1.0,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
+  Widget _buildSearchBar() {
+    final radius = BorderRadius.circular(18.r);
+
+    return Semantics(
+      button: true,
+      label: '搜索影视、短剧、播客和阅读资源',
+      child: _PressableScale(
+        onTap: () => Get.toNamed(Routes.SEARCH),
+        child: Container(
+          height: 50.h,
+          padding: EdgeInsets.all(1.2.w),
+          decoration: BoxDecoration(
+            borderRadius: radius,
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppThemeColors.primary.withValues(alpha: 0.28),
+                AppThemeColors.accent.withValues(alpha: 0.20),
+                AppThemeColors.border,
+              ],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppThemeColors.primary.withValues(alpha: 0.08),
+                blurRadius: 18,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 10.w),
+            decoration: BoxDecoration(
+              color: AppThemeColors.surface.withValues(alpha: 0.95),
+              borderRadius: BorderRadius.circular(16.8.r),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 34.w,
+                  height: 34.w,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        AppThemeColors.primary.withValues(alpha: 0.14),
+                        AppThemeColors.accent.withValues(alpha: 0.09),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(11.r),
+                  ),
+                  child: Icon(
+                    Icons.search_rounded,
+                    color: AppThemeColors.primary,
+                    size: 19.w,
+                  ),
+                ),
+                SizedBox(width: 10.w),
+                Expanded(
+                  child: Text(
+                    '搜索资源',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: AppThemeColors.textMuted,
+                      fontSize: 13.5.sp,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -315,100 +365,190 @@ class _HomeBodyState extends State<_HomeBody> {
     );
   }
 
-  // ─── 一行四个快捷入口 ───
+  // ─── 一行四个 3D Bento 质感快捷入口 ───
 
-  Widget _buildResourceMenu() {
+  Widget _buildResourceMenu({required bool disableAnimations}) {
     final entries = [
       _ResourceEntry(
         icon: Icons.movie_filter_rounded,
         label: '影视',
-        gradientColors: const [Color(0xFFEAF2FF), Color(0xFFD8E7FF)],
-        iconColor: const Color(0xFF186EEF),
+        gradientColors: const [Color(0xFFEFF5FF), Color(0xFFDBEAFE)],
+        iconGradient: const [Color(0xFF3B82F6), Color(0xFF1D4ED8)],
+        accentColor: const Color(0xFF186EEF),
         onTap: () => Get.toNamed(Routes.TV),
       ),
       _ResourceEntry(
-        icon: Icons.live_tv_rounded,
+        icon: Icons.bolt_rounded,
         label: '短剧',
-        gradientColors: const [Color(0xFFFFF4E5), Color(0xFFFFE6C2)],
-        iconColor: const Color(0xFFE66A00),
+        gradientColors: const [Color(0xFFFFF7ED), Color(0xFFFFEDD5)],
+        iconGradient: const [Color(0xFFF97316), Color(0xFFEA580C)],
+        accentColor: const Color(0xFFE66A00),
         onTap: () => Get.toNamed(Routes.PLAYLET),
       ),
       _ResourceEntry(
         icon: Icons.podcasts_rounded,
         label: '播客',
-        gradientColors: const [Color(0xFFFFEDF1), Color(0xFFFFDAE3)],
-        iconColor: const Color(0xFFE11D48),
+        gradientColors: const [Color(0xFFFFF1F2), Color(0xFFFFE4E6)],
+        iconGradient: const [Color(0xFFF43F5E), Color(0xFFE11D48)],
+        accentColor: const Color(0xFFE11D48),
         onTap: () => Get.toNamed(Routes.MUSIC),
       ),
       _ResourceEntry(
-        icon: Icons.menu_book_rounded,
+        icon: Icons.auto_stories_rounded,
         label: '阅读',
-        gradientColors: const [Color(0xFFE7F8F2), Color(0xFFD0F0E4)],
-        iconColor: const Color(0xFF0D9488),
+        gradientColors: const [Color(0xFFECFDF5), Color(0xFFD1FAE5)],
+        iconGradient: const [Color(0xFF14B8A6), Color(0xFF0D9488)],
+        accentColor: const Color(0xFF0D9488),
         onTap: () => Get.toNamed(Routes.READ),
       ),
     ];
 
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 10.h),
-      decoration: BoxDecoration(
-        color: AppThemeColors.surface,
-        borderRadius: BorderRadius.circular(18.r),
-        border: Border.all(color: AppThemeColors.border, width: 1),
-        boxShadow: AppThemeColors.cardShadow,
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: entries
-            .map((entry) => Expanded(child: _buildResourceItem(entry)))
-            .toList(growable: false),
-      ),
+    return Row(
+      children: List.generate(entries.length, (i) {
+        final entry = entries[i];
+        final card = _buildBentoResourceCard(entry);
+        return Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: i == 0 ? 0 : 4.5.w,
+              right: i == entries.length - 1 ? 0 : 4.5.w,
+            ),
+            child: disableAnimations
+                ? card
+                : AnimatedBuilder(
+                    animation: _entranceController,
+                    builder: (context, child) {
+                      final start = (i * 0.12).clamp(0.0, 0.6);
+                      final end = (start + 0.52).clamp(0.0, 1.0);
+                      final curved = CurvedAnimation(
+                        parent: _entranceController,
+                        curve: Interval(start, end, curve: Curves.easeOutBack),
+                      ).value;
+                      final opacity = CurvedAnimation(
+                        parent: _entranceController,
+                        curve: Interval(start, end, curve: Curves.easeOut),
+                      ).value;
+                      return Opacity(
+                        opacity: opacity.clamp(0.0, 1.0),
+                        child: Transform.translate(
+                          offset: Offset(0, (1 - curved) * 16),
+                          child: Transform.scale(
+                            scale: 0.92 + 0.08 * curved,
+                            child: child,
+                          ),
+                        ),
+                      );
+                    },
+                    child: card,
+                  ),
+          ),
+        );
+      }),
     );
   }
 
-  Widget _buildResourceItem(_ResourceEntry entry) {
+  Widget _buildBentoResourceCard(_ResourceEntry entry) {
+    final radius = BorderRadius.circular(18.r);
     return Semantics(
       button: true,
       label: '进入${entry.label}',
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: entry.onTap,
-          borderRadius: BorderRadius.circular(14.r),
-          child: Padding(
-            padding: EdgeInsets.symmetric(vertical: 2.h),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 44.w,
-                  height: 44.w,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: entry.gradientColors,
-                    ),
-                    borderRadius: BorderRadius.circular(14.r),
-                    border: Border.all(
-                      color: entry.iconColor.withValues(alpha: 0.12),
-                    ),
-                  ),
-                  child: Icon(entry.icon, color: entry.iconColor, size: 22.w),
-                ),
-                SizedBox(height: 6.h),
-                Text(
-                  entry.label,
-                  maxLines: 1,
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    height: 1.15,
-                    fontWeight: FontWeight.w600,
-                    color: AppThemeColors.textPrimary,
-                  ),
-                ),
+      child: _PressableScale(
+        onTap: entry.onTap,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: radius,
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppThemeColors.surface,
+                entry.gradientColors.first.withValues(alpha: 0.85),
+                entry.gradientColors.last.withValues(alpha: 0.65),
               ],
             ),
+            border: Border.all(
+              color: entry.accentColor.withValues(alpha: 0.16),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: entry.accentColor.withValues(alpha: 0.10),
+                blurRadius: 14,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Stack(
+            children: [
+              // 右下角微光装饰水印图标
+              Positioned(
+                right: -10.w,
+                bottom: -10.h,
+                child: Transform.rotate(
+                  angle: -math.pi / 12,
+                  child: Icon(
+                    entry.icon,
+                    size: 44.w,
+                    color: entry.accentColor.withValues(alpha: 0.07),
+                  ),
+                ),
+              ),
+              Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 6.w,
+                    vertical: 11.h,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 44.w,
+                        height: 44.w,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: entry.iconGradient,
+                          ),
+                          borderRadius: BorderRadius.circular(14.r),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.35),
+                            width: 1,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: entry.accentColor.withValues(alpha: 0.30),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: Icon(
+                            entry.icon,
+                            color: Colors.white,
+                            size: 22.w,
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 7.h),
+                      Text(
+                        entry.label,
+                        maxLines: 1,
+                        style: TextStyle(
+                          fontSize: 12.5.sp,
+                          height: 1.15,
+                          fontWeight: FontWeight.w700,
+                          color: AppThemeColors.textPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -421,13 +561,54 @@ class _ResourceEntry {
     required this.icon,
     required this.label,
     required this.gradientColors,
-    required this.iconColor,
+    required this.iconGradient,
+    required this.accentColor,
     this.onTap,
   });
 
   final IconData icon;
   final String label;
   final List<Color> gradientColors;
-  final Color iconColor;
+  final List<Color> iconGradient;
+  final Color accentColor;
   final VoidCallback? onTap;
+}
+
+/// 轻量按压回弹反馈组件，提供顺滑的缩放阻尼手感。
+class _PressableScale extends StatefulWidget {
+  const _PressableScale({required this.child, this.onTap});
+
+  final Widget child;
+  final VoidCallback? onTap;
+
+  @override
+  State<_PressableScale> createState() => _PressableScaleState();
+}
+
+class _PressableScaleState extends State<_PressableScale> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final disableAnimations = MediaQuery.disableAnimationsOf(context);
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTapDown: widget.onTap == null
+          ? null
+          : (_) => setState(() => _pressed = true),
+      onTapUp: widget.onTap == null
+          ? null
+          : (_) => setState(() => _pressed = false),
+      onTapCancel: widget.onTap == null
+          ? null
+          : () => setState(() => _pressed = false),
+      onTap: widget.onTap,
+      child: AnimatedScale(
+        scale: (_pressed && !disableAnimations) ? 0.95 : 1.0,
+        duration: Duration(milliseconds: _pressed ? 90 : 220),
+        curve: _pressed ? Curves.easeOut : Curves.easeOutBack,
+        child: widget.child,
+      ),
+    );
+  }
 }

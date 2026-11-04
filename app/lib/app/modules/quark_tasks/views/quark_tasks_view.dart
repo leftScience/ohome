@@ -83,14 +83,20 @@ class _QuarkTasksViewState extends State<QuarkTasksView>
             children: [
               Padding(
                 padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 12.h),
-                child: Text(
-                  '任务中心',
-                  style: TextStyle(
-                    fontSize: 22.sp,
-                    height: 1.2,
-                    fontWeight: FontWeight.w800,
-                    color: AppThemeColors.textPrimary,
-                    letterSpacing: 0.3,
+                child: SizedBox(
+                  height: 42.w,
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      '任务中心',
+                      style: TextStyle(
+                        fontSize: 22.sp,
+                        height: 1.2,
+                        fontWeight: FontWeight.w800,
+                        color: AppThemeColors.textPrimary,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
                   ),
                 ),
               ),
