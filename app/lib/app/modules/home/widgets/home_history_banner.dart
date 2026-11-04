@@ -40,7 +40,7 @@ class HomeHistoryBanner extends GetView<HomeController> {
           : _folderTitle(entry.folderTitle, entry.folderPath);
 
       final summary = hasActiveAudio
-          ? '${_itemTitle(_pickActiveTrackTitle(musicController!))} · 点击进入播放页'
+          ? _itemTitle(_pickActiveTrackTitle(musicController!))
           : loading && entry == null
           ? '正在加载最近播放...'
           : entry != null

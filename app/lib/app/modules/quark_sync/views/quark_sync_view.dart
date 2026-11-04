@@ -78,7 +78,7 @@ class QuarkSyncView extends GetView<QuarkSyncController> {
           color: AppThemeColors.textPrimary,
         ),
         decoration: InputDecoration(
-          hintText: '搜索同步任务名称...',
+          hintText: '搜索任务',
           hintStyle: TextStyle(
             fontSize: 12.5.sp,
             color: AppThemeColors.textDisabled,
@@ -309,23 +309,11 @@ class QuarkSyncView extends GetView<QuarkSyncController> {
                         ),
                         SizedBox(height: 14.h),
                         Text(
-                          hasKeyword ? '没有找到匹配的同步任务' : '暂无同步任务',
+                          hasKeyword ? '没有匹配的同步任务' : '暂无同步任务',
                           style: TextStyle(
                             fontSize: 15.5.sp,
                             fontWeight: FontWeight.w700,
                             color: AppThemeColors.textPrimary,
-                          ),
-                        ),
-                        SizedBox(height: 6.h),
-                        Text(
-                          hasKeyword
-                              ? '尝试更换搜索关键词或重置筛选条件'
-                              : '配置定时同步规则，自动追更分享链接中的新剧集与文件',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            color: AppThemeColors.textMuted,
-                            height: 1.4,
                           ),
                         ),
                         SizedBox(height: 16.h),
@@ -435,8 +423,8 @@ class _TaskCard extends StatelessWidget {
         ? AppThemeColors.success
         : AppThemeColors.textMuted;
     final lastRunText = task.lastRunAt == null
-        ? '最近执行：暂无记录'
-        : '最近执行：${_formatDate(task.lastRunAt!)}';
+        ? '未执行'
+        : _formatDate(task.lastRunAt!);
 
     return Container(
       padding: EdgeInsets.all(14.w),
@@ -558,8 +546,7 @@ class _TaskCard extends StatelessWidget {
               children: [
                 _buildInfoRow(
                   Icons.folder_outlined,
-                  '保存路径',
-                  task.savePath.isEmpty ? '未设置保存路径' : task.savePath,
+                  task.savePath.isEmpty ? '—' : task.savePath,
                 ),
                 Padding(
                   padding: EdgeInsets.symmetric(vertical: 6.h),
@@ -571,8 +558,7 @@ class _TaskCard extends StatelessWidget {
                 ),
                 _buildInfoRow(
                   Icons.link_rounded,
-                  '分享链接',
-                  task.shareUrl.isEmpty ? '未设置分享链接' : task.shareUrl,
+                  task.shareUrl.isEmpty ? '—' : task.shareUrl,
                   maxLines: 1,
                 ),
               ],
@@ -623,27 +609,13 @@ class _TaskCard extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoRow(
-    IconData icon,
-    String label,
-    String text, {
-    int maxLines = 1,
-  }) {
+  Widget _buildInfoRow(IconData icon, String text, {int maxLines = 1}) {
     return Row(
       crossAxisAlignment: maxLines > 1
           ? CrossAxisAlignment.start
           : CrossAxisAlignment.center,
       children: [
         Icon(icon, size: 15.w, color: AppThemeColors.textMuted),
-        SizedBox(width: 6.w),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11.5.sp,
-            fontWeight: FontWeight.w500,
-            color: AppThemeColors.textMuted,
-          ),
-        ),
         SizedBox(width: 8.w),
         Expanded(
           child: Text(

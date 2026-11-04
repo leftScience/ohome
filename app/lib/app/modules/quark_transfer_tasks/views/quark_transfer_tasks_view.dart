@@ -87,7 +87,7 @@ class QuarkTransferTasksView extends GetView<QuarkTransferTasksController> {
           color: AppThemeColors.textPrimary,
         ),
         decoration: InputDecoration(
-          hintText: '搜索任务名称、分享链接或保存路径...',
+          hintText: '搜索任务',
           hintStyle: TextStyle(
             fontSize: 12.5.sp,
             color: AppThemeColors.textDisabled,
@@ -269,23 +269,11 @@ class QuarkTransferTasksView extends GetView<QuarkTransferTasksController> {
                         ),
                         SizedBox(height: 14.h),
                         Text(
-                          hasFilter ? '没有找到匹配的转存任务' : '暂无转存任务',
+                          hasFilter ? '没有匹配的转存任务' : '暂无转存任务',
                           style: TextStyle(
                             fontSize: 15.5.sp,
                             fontWeight: FontWeight.w700,
                             color: AppThemeColors.textPrimary,
-                          ),
-                        ),
-                        SizedBox(height: 6.h),
-                        Text(
-                          hasFilter
-                              ? '尝试更换搜索关键词或切换状态筛选条件'
-                              : '添加夸克网盘分享链接，即可在后台自动完成转存',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            color: AppThemeColors.textMuted,
-                            height: 1.4,
                           ),
                         ),
                         SizedBox(height: 16.h),
@@ -484,10 +472,7 @@ class _TaskCard extends StatelessWidget {
               children: [
                 _buildInfoRow(
                   Icons.folder_outlined,
-                  '保存路径',
-                  task.displaySavePath.isEmpty
-                      ? '未记录保存路径'
-                      : task.displaySavePath,
+                  task.displaySavePath.isEmpty ? '—' : task.displaySavePath,
                 ),
                 Padding(
                   padding: EdgeInsets.symmetric(vertical: 6.h),
@@ -499,8 +484,7 @@ class _TaskCard extends StatelessWidget {
                 ),
                 _buildInfoRow(
                   Icons.link_rounded,
-                  '分享链接',
-                  task.shareUrl.isEmpty ? '未记录分享链接' : task.shareUrl,
+                  task.shareUrl.isEmpty ? '—' : task.shareUrl,
                   maxLines: 1,
                 ),
               ],
@@ -570,17 +554,17 @@ class _TaskCard extends StatelessWidget {
 
   String _buildResultText() {
     if (task.isQueued) {
-      return '任务排队中，等待空闲 worker';
+      return '排队中';
     }
     if (task.isProcessing) {
-      return '正在执行网盘转存...';
+      return '转存中...';
     }
     if (task.isFailed) {
       final message = task.resultMessage.trim();
-      return message.isEmpty ? '失败原因未知' : message;
+      return message.isEmpty ? '转存失败' : message;
     }
     final finished = task.finishedAt == null
-        ? '转存已完成'
+        ? '转存完成'
         : '完成于 ${_formatDate(task.finishedAt!)}';
     final message = task.resultMessage.trim();
     if (message.isEmpty) {
@@ -589,27 +573,13 @@ class _TaskCard extends StatelessWidget {
     return '$finished · $message';
   }
 
-  Widget _buildInfoRow(
-    IconData icon,
-    String label,
-    String text, {
-    int maxLines = 1,
-  }) {
+  Widget _buildInfoRow(IconData icon, String text, {int maxLines = 1}) {
     return Row(
       crossAxisAlignment: maxLines > 1
           ? CrossAxisAlignment.start
           : CrossAxisAlignment.center,
       children: [
         Icon(icon, size: 15.w, color: AppThemeColors.textMuted),
-        SizedBox(width: 6.w),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11.5.sp,
-            fontWeight: FontWeight.w500,
-            color: AppThemeColors.textMuted,
-          ),
-        ),
         SizedBox(width: 8.w),
         Expanded(
           child: Text(

@@ -13,68 +13,17 @@ import '../widgets/home_recommend_section.dart';
 class HomeView extends GetView<HomeController> {
   const HomeView({super.key});
 
-  /// 根据当前时段返回问候语与矢量图标信息
-  _GreetingInfo get _greetingInfo {
-    final hour = DateTime.now().hour;
-    if (hour < 6) {
-      return const _GreetingInfo(
-        text: '夜深了，注意休息',
-        icon: Icons.nights_stay_rounded,
-        iconColor: Color(0xFF6366F1),
-      );
-    }
-    if (hour < 12) {
-      return const _GreetingInfo(
-        text: '早上好',
-        icon: Icons.wb_sunny_rounded,
-        iconColor: Color(0xFFF59E0B),
-      );
-    }
-    if (hour < 14) {
-      return const _GreetingInfo(
-        text: '中午好',
-        icon: Icons.light_mode_rounded,
-        iconColor: Color(0xFFF97316),
-      );
-    }
-    if (hour < 18) {
-      return const _GreetingInfo(
-        text: '下午好',
-        icon: Icons.wb_twilight_rounded,
-        iconColor: Color(0xFFEA580C),
-      );
-    }
-    return const _GreetingInfo(
-      text: '晚上好',
-      icon: Icons.dark_mode_rounded,
-      iconColor: Color(0xFF4F46E5),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    return _HomeBody(greetingInfo: _greetingInfo, controller: controller);
+    return _HomeBody(controller: controller);
   }
-}
-
-class _GreetingInfo {
-  const _GreetingInfo({
-    required this.text,
-    required this.icon,
-    required this.iconColor,
-  });
-
-  final String text;
-  final IconData icon;
-  final Color iconColor;
 }
 
 /// 首页采用「头部信息 + 搜索 + 快捷入口 + 推荐面板」结构，
 /// 推荐列表向上滚动时自动收起顶部区域，为内容让出空间。
 class _HomeBody extends StatefulWidget {
-  const _HomeBody({required this.greetingInfo, required this.controller});
+  const _HomeBody({required this.controller});
 
-  final _GreetingInfo greetingInfo;
   final HomeController controller;
 
   @override
@@ -175,7 +124,6 @@ class _HomeBodyState extends State<_HomeBody> {
 
   Widget _buildHeader({required double t}) {
     final titleSize = lerpDouble(22.sp, 17.5.sp, t)!;
-    final greetingFactor = (1 - t * 1.35).clamp(0.0, 1.0);
 
     return Obx(() {
       final displayName = widget.controller.name.trim().isEmpty
@@ -189,38 +137,6 @@ class _HomeBodyState extends State<_HomeBody> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ClipRect(
-                  child: Align(
-                    alignment: Alignment.topLeft,
-                    heightFactor: greetingFactor,
-                    child: Opacity(
-                      opacity: greetingFactor,
-                      child: Padding(
-                        padding: EdgeInsets.only(bottom: 2.h),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              widget.greetingInfo.icon,
-                              size: 14.sp,
-                              color: widget.greetingInfo.iconColor,
-                            ),
-                            SizedBox(width: 5.w),
-                            Text(
-                              widget.greetingInfo.text,
-                              style: TextStyle(
-                                fontSize: 12.5.sp,
-                                fontWeight: FontWeight.w500,
-                                color: AppThemeColors.textSecondary,
-                                letterSpacing: 0.2,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
                 Text(
                   displayName,
                   maxLines: 1,

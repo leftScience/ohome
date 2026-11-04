@@ -284,9 +284,7 @@ class _QuarkSyncFormViewState extends State<QuarkSyncFormView> {
                 ),
                 SizedBox(height: 8.h),
                 Text(
-                  _selectedSavePath.isEmpty
-                      ? '保存路径来自夸克目录配置；如果列表为空，请先在系统里配置夸克目录。'
-                      : '实际保存路径：$_selectedSavePath',
+                  _selectedSavePath.isEmpty ? '暂未配置夸克目录' : _selectedSavePath,
                   style: TextStyle(
                     fontSize: 12.sp,
                     color: AppThemeColors.textMuted,

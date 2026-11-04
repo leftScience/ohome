@@ -1001,7 +1001,6 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
         label: '可选 ${targets.length} 个目标',
         accent: const Color(0xFF059669),
       ),
-      helperText: '点击目标分类即可移动已选资源',
       emptyTitle: '暂无可用目标',
       emptyDescription: '未找到可用移动目标，请先配置对应应用的 rootPath。',
       options: targets
@@ -1234,11 +1233,13 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
                     subtitle,
                     style: const TextStyle(color: AppThemeColors.textSecondary),
                   ),
-                const SizedBox(height: 2),
-                Text(
-                  displayStatus,
-                  style: const TextStyle(color: AppThemeColors.textMuted),
-                ),
+                if (displayStatus.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    displayStatus,
+                    style: const TextStyle(color: AppThemeColors.textMuted),
+                  ),
+                ],
               ],
             ),
           ),
@@ -1286,7 +1287,7 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
   }
 
   String _defaultStatus(WebdavFileEntry entry) {
-    return entry.isDir ? '文件夹' : '点击播放';
+    return '';
   }
 
   String _formatBytes(int bytes) {

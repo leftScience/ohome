@@ -23,7 +23,6 @@ class MusicView extends GetView<MusicController> {
           entry.isDir ? Icons.folder_rounded : Icons.podcasts_rounded,
       iconColorBuilder: (entry) =>
           entry.isDir ? Colors.amber : Colors.pinkAccent,
-      statusBuilder: (entry) => entry.isDir ? '文件夹' : '点击播放',
       onFolderTap: (entry, _, _) => _onFolderTap(entry),
       onFileTap: (entry, _, currentPath) => _onFileTap(entry, currentPath),
       shouldAutoOpen: (entries, _) => _audioHelper.shouldAutoOpen(entries),

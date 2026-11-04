@@ -84,7 +84,6 @@ Future<T?> showSelectionBottomSheet<T>({
   required BuildContext context,
   required List<SelectionBottomSheetOption<T>> options,
   required SelectionBottomSheetMeta meta,
-  required String helperText,
   required String emptyTitle,
   required String emptyDescription,
   IconData emptyIcon = Icons.folder_off_rounded,
@@ -104,7 +103,6 @@ Future<T?> showSelectionBottomSheet<T>({
           child: SelectionBottomSheet<T>(
             options: options,
             meta: meta,
-            helperText: helperText,
             emptyTitle: emptyTitle,
             emptyDescription: emptyDescription,
             emptyIcon: emptyIcon,
@@ -141,7 +139,6 @@ class SelectionBottomSheet<T> extends StatelessWidget {
     super.key,
     required this.options,
     required this.meta,
-    required this.helperText,
     required this.emptyTitle,
     required this.emptyDescription,
     required this.emptyIcon,
@@ -150,7 +147,6 @@ class SelectionBottomSheet<T> extends StatelessWidget {
 
   final List<SelectionBottomSheetOption<T>> options;
   final SelectionBottomSheetMeta meta;
-  final String helperText;
   final String emptyTitle;
   final String emptyDescription;
   final IconData emptyIcon;
@@ -193,18 +189,6 @@ class SelectionBottomSheet<T> extends StatelessWidget {
                     icon: meta.icon,
                     label: meta.label,
                     accent: meta.accent,
-                  ),
-                  SizedBox(width: 8.w),
-                  Expanded(
-                    child: Text(
-                      helperText,
-                      textAlign: TextAlign.right,
-                      style: TextStyle(
-                        color: AppThemeColors.textMuted,
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
                   ),
                 ],
               ),

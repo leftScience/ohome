@@ -373,7 +373,7 @@ class QuarkSearchSettingsView extends GetView<QuarkSearchSettingsController> {
                     border: Border.all(color: AppThemeColors.border),
                   ),
                   child: Text(
-                    '暂未选择，点击进入页面后添加或勾选标签。',
+                    '暂未选择',
                     style: TextStyle(
                       fontSize: 12.sp,
                       color: AppThemeColors.textMuted,

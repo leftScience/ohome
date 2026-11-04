@@ -437,7 +437,6 @@ class _ManualTransferTaskSheetState extends State<_ManualTransferTaskSheet> {
               ? const Color(0xFFD97706)
               : AppThemeColors.primary,
         ),
-        helperText: '点击目录后自动填入转存路径',
         emptyTitle: '暂无可用目录',
         emptyDescription: '还没有可用的已配置目录，请先在系统中配置目录。',
         options: configs

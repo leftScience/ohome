@@ -225,14 +225,16 @@ class _QuarkTagEditorViewState extends State<QuarkTagEditorView> {
               color: AppThemeColors.textPrimary,
             ),
           ),
-          SizedBox(height: 8.h),
-          Text(
-            _allTags.isEmpty ? widget.emptyStateText : '点击标签切换选中状态。',
-            style: TextStyle(
-              fontSize: 12.sp,
-              color: AppThemeColors.textSecondary,
+          if (_allTags.isEmpty) ...[
+            SizedBox(height: 8.h),
+            Text(
+              widget.emptyStateText,
+              style: TextStyle(
+                fontSize: 12.sp,
+                color: AppThemeColors.textSecondary,
+              ),
             ),
-          ),
+          ],
           if (_allTags.isNotEmpty) ...[
             SizedBox(height: 16.h),
             Wrap(

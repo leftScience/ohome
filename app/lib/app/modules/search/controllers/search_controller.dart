@@ -189,7 +189,6 @@ class SearchController extends GetxController {
             ? const Color(0xFF059669)
             : const Color(0xFFD97706),
       ),
-      helperText: '点击可用分类即可开始转存',
       emptyTitle: '暂无可用分类',
       emptyDescription: '未找到可用的 WebDAV 配置，请先在后台为对应应用配置 rootPath。',
       options: _quarkTargets

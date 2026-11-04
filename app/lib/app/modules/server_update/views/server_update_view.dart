@@ -232,15 +232,6 @@ class ServerUpdateView extends GetView<ServerUpdateController> {
                                       ),
                                     ),
                                   ],
-                                  SizedBox(height: 10.h),
-                                  Text(
-                                    '点击“检查更新”后，会先检查版本，再由你确认是否开始升级。',
-                                    style: TextStyle(
-                                      fontSize: 12.sp,
-                                      color: AppThemeColors.textSecondary,
-                                      height: 1.5,
-                                    ),
-                                  ),
                                   if (controller.hasActiveTask &&
                                       task != null) ...[
                                     SizedBox(height: 16.h),

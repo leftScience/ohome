@@ -101,7 +101,7 @@ class _SearchViewState extends State<SearchView> {
                       color: AppThemeColors.textPrimary,
                     ),
                     decoration: InputDecoration(
-                      hintText: '搜索影视、短剧、播客、阅读...',
+                      hintText: '搜索资源',
                       border: InputBorder.none,
                       isDense: true,
                       contentPadding: EdgeInsets.symmetric(
@@ -507,16 +507,7 @@ class _InitialArea extends GetView<search_controller.SearchController> {
       if (controller.historyKeywords.isNotEmpty) {
         return const _SearchHistorySection();
       }
-      return Align(
-        alignment: Alignment.topLeft,
-        child: Padding(
-          padding: EdgeInsets.only(top: 8.h),
-          child: Text(
-            '输入关键词，搜索影视、短剧、播客、阅读资源',
-            style: TextStyle(fontSize: 13.sp, color: AppThemeColors.textMuted),
-          ),
-        ),
-      );
+      return const SizedBox.shrink();
     });
   }
 }

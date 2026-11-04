@@ -54,7 +54,6 @@ class MeView extends GetView<MeController> {
                       icon: Icons.group_outlined,
                       iconColor: const Color(0xFF00897B),
                       title: '用户管理',
-                      subtitle: '新增、编辑、删除、重置密码',
                       onTap: controller.openUserManagement,
                     ),
                     SizedBox(height: 12.h),
@@ -82,27 +81,20 @@ class MeView extends GetView<MeController> {
                 icon: Icons.lock_reset_rounded,
                 iconColor: const Color(0xFFF57C00),
                 title: '修改密码',
-                subtitle: '更新当前账号的登录密码',
                 onTap: controller.openChangePassword,
               ),
               SizedBox(height: 12.h),
-              Obx(
-                () => _SettingsMenuCard(
-                  icon: Icons.info_outline_rounded,
-                  iconColor: const Color(0xFF1E88E5),
-                  title: '关于oHome',
-                  subtitle: controller.isSuperAdmin
-                      ? '项目介绍、联系方式与 App / 服务端更新'
-                      : '项目介绍、联系方式与 App 更新',
-                  onTap: controller.openServerUpdate,
-                ),
+              _SettingsMenuCard(
+                icon: Icons.info_outline_rounded,
+                iconColor: const Color(0xFF1E88E5),
+                title: '关于oHome',
+                onTap: controller.openServerUpdate,
               ),
               SizedBox(height: 12.h),
               _SettingsMenuCard(
                 icon: Icons.logout_rounded,
                 iconColor: const Color(0xFFE53935),
                 title: '退出登录',
-                subtitle: '退出当前账号并返回登录页',
                 onTap: controller.logout,
               ),
             ],
@@ -279,16 +271,6 @@ class MeView extends GetView<MeController> {
                               color: Colors.white.withValues(alpha: 0.78),
                             ),
                           ),
-                          if (user != null) ...[
-                            SizedBox(height: 6.h),
-                            Text(
-                              '点击更换头像',
-                              style: TextStyle(
-                                fontSize: 11.sp,
-                                color: Colors.white.withValues(alpha: 0.62),
-                              ),
-                            ),
-                          ],
                         ],
                       ),
                     ),
@@ -903,14 +885,12 @@ class _SettingsMenuCard extends StatelessWidget {
     required this.icon,
     required this.iconColor,
     required this.title,
-    required this.subtitle,
     required this.onTap,
   });
 
   final IconData icon;
   final Color iconColor;
   final String title;
-  final String subtitle;
   final VoidCallback? onTap;
 
   @override
@@ -945,26 +925,13 @@ class _SettingsMenuCard extends StatelessWidget {
                   ),
                   SizedBox(width: 14.w),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: TextStyle(
-                            fontSize: 15.sp,
-                            fontWeight: FontWeight.w600,
-                            color: AppThemeColors.textPrimary,
-                          ),
-                        ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          subtitle,
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            color: AppThemeColors.textMuted,
-                          ),
-                        ),
-                      ],
+                    child: Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.w600,
+                        color: AppThemeColors.textPrimary,
+                      ),
                     ),
                   ),
                   Icon(
