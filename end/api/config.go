@@ -1,12 +1,15 @@
 package api
 
 import (
+	"errors"
 	"ohome/model"
+	"ohome/service"
 	"ohome/service/dto"
 	"ohome/utils"
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 const sensitiveConfigKeyQuarkCookies = "quark_cookies"
@@ -18,6 +21,7 @@ const sensitiveConfigKeyQuarkSearchHTTPSProxy = "quark_search_https_proxy"
 const sensitiveConfigKeyQuarkSearchChannels = "quark_search_channels"
 const sensitiveConfigKeyQuarkSearchEnabledPlugins = "quark_search_enabled_plugins"
 const sensitiveConfigKeyQuarkStreamWebProxyMode = "quark_fs_web_proxy_mode"
+const sensitiveConfigKeyQuarkAccountShareMode = "quark_account_share_mode"
 
 var sensitiveConfigKeys = map[string]struct{}{
 	sensitiveConfigKeyQuarkCookies:              {},
@@ -29,10 +33,19 @@ var sensitiveConfigKeys = map[string]struct{}{
 	sensitiveConfigKeyQuarkSearchChannels:       {},
 	sensitiveConfigKeyQuarkSearchEnabledPlugins: {},
 	sensitiveConfigKeyQuarkStreamWebProxyMode:   {},
+	sensitiveConfigKeyQuarkAccountShareMode:     {},
 }
 
 var readableSensitiveConfigKeys = map[string]struct{}{
 	sensitiveConfigKeyQuarkStreamWebProxyMode: {},
+	sensitiveConfigKeyQuarkAccountShareMode:   {},
+}
+
+var quarkCredentialConfigKeys = map[string]struct{}{
+	sensitiveConfigKeyQuarkCookies:        {},
+	sensitiveConfigKeyQuarkTVRefreshToken: {},
+	sensitiveConfigKeyQuarkTVDeviceID:     {},
+	sensitiveConfigKeyQuarkTVQueryToken:   {},
 }
 
 type Config struct {
@@ -58,8 +71,32 @@ func (config *Config) GetConfigList(c *gin.Context) {
 		return
 	}
 
+	if key := strings.TrimSpace(iConfigListDTO.Key); key != "" && isQuarkCredentialConfigKey(key) {
+		target := service.NormalizeQuarkCredentialTargetExport(iConfigListDTO.CredentialTarget)
+		if !canAccessQuarkCredentialAPI(loginUser, target) {
+			utils.PermissionFail("无权限访问", c)
+			return
+		}
+		item, ok, err := service.GetQuarkCredentialConfigAsModel(loginUser.ID, key, target)
+		if err != nil {
+			utils.FailWithMessage(err.Error(), c)
+			return
+		}
+		records := []model.Config{}
+		if ok {
+			records = append(records, item)
+		}
+		utils.OkWithData(gin.H{
+			"records": records,
+			"total":   int64(len(records)),
+		}, c)
+		return
+	}
+
 	if !loginUser.IsSuperAdmin() {
-		if !canReadConfig(loginUser, iConfigListDTO.Key) || containsUnreadableSensitiveConfigKeys(loginUser, iConfigListDTO.Keys) {
+		// 普通用户（含独享）一律看不到全局 sys_config 里的夸克凭证行
+		if containsUnreadableSensitiveConfigKeys(loginUser, iConfigListDTO.Keys) ||
+			(strings.TrimSpace(iConfigListDTO.Key) != "" && !canReadConfig(loginUser, iConfigListDTO.Key)) {
 			utils.PermissionFail("无权限访问", c)
 			return
 		}
@@ -118,20 +155,68 @@ func (config *Config) AddOrUpdateConfig(c *gin.Context) {
 		return
 	}
 
-	if !canWriteConfig(loginUser, iConfigUpdateDTO.Key) {
-		utils.PermissionFail("无权限访问", c)
-		return
-	}
+	key := strings.TrimSpace(iConfigUpdateDTO.Key)
 	if iConfigUpdateDTO.ID != 0 {
 		currentConfig, err := configService.GetConfigById(&dto.CommonIDDTO{ID: iConfigUpdateDTO.ID})
 		if err != nil {
-			utils.FailWithMessage(err.Error(), c)
-			return
+			// 独享模式下凭证可能存在于 user_config，ID 对不上全局表时按 key 处理
+			if !errors.Is(err, gorm.ErrRecordNotFound) || !isQuarkCredentialConfigKey(key) {
+				utils.FailWithMessage(err.Error(), c)
+				return
+			}
+		} else {
+			if key == "" {
+				key = currentConfig.Key
+				iConfigUpdateDTO.Key = currentConfig.Key
+			}
+			if isQuarkCredentialConfigKey(currentConfig.Key) {
+				// 不因全局 ID 写权限拦截；后面按 credentialTarget 落库
+			} else if !canWriteConfig(loginUser, currentConfig.Key) {
+				utils.PermissionFail("无权限访问", c)
+				return
+			}
 		}
-		if !canWriteConfig(loginUser, currentConfig.Key) {
+	}
+
+	if isQuarkCredentialConfigKey(key) {
+		target := service.NormalizeQuarkCredentialTargetExport(iConfigUpdateDTO.CredentialTarget)
+		if !canAccessQuarkCredentialAPI(loginUser, target) {
 			utils.PermissionFail("无权限访问", c)
 			return
 		}
+		// 非超管不允许借全局 ID 改写全局共享凭证
+		if target != service.QuarkCredentialTargetPersonal && !loginUser.IsSuperAdmin() {
+			// auto + exclusive → personal store; auto + shared non-admin should already fail canAccess
+			usePersonal, err := service.ResolveQuarkCredentialUsePersonalExport(loginUser.ID, target)
+			if err != nil {
+				utils.FailWithMessage(err.Error(), c)
+				return
+			}
+			if !usePersonal {
+				utils.PermissionFail("无权限访问", c)
+				return
+			}
+		}
+		if err := service.SaveQuarkCredentialConfig(loginUser.ID, &iConfigUpdateDTO, target); err != nil {
+			utils.FailWithMessage(err.Error(), c)
+			return
+		}
+		utils.Ok(c)
+		return
+	}
+
+	if !canWriteConfig(loginUser, key) {
+		utils.PermissionFail("无权限访问", c)
+		return
+	}
+
+	if key == sensitiveConfigKeyQuarkAccountShareMode {
+		if err := service.SetQuarkAccountSystemModeExport(iConfigUpdateDTO.Value); err != nil {
+			utils.FailWithMessage(err.Error(), c)
+			return
+		}
+		utils.Ok(c)
+		return
 	}
 
 	err = configService.AddOrUpdateConfig(&iConfigUpdateDTO)
@@ -161,7 +246,13 @@ func (config *Config) DeleteConfig(c *gin.Context) {
 		utils.FailWithMessage(err.Error(), c)
 		return
 	}
-	if !canWriteConfig(loginUser, currentConfig.Key) {
+	if isQuarkCredentialConfigKey(currentConfig.Key) {
+		// 全局凭证行仅超管可删；独享用户只能删自己的 user_config，不能借全局 id 删共享号
+		if !loginUser.IsSuperAdmin() {
+			utils.PermissionFail("无权限删除全局夸克凭证", c)
+			return
+		}
+	} else if !canWriteConfig(loginUser, currentConfig.Key) {
 		utils.PermissionFail("无权限访问", c)
 		return
 	}
@@ -179,12 +270,25 @@ func isSensitiveConfigKey(key string) bool {
 	return exists
 }
 
+func isQuarkCredentialConfigKey(key string) bool {
+	_, exists := quarkCredentialConfigKeys[strings.TrimSpace(key)]
+	return exists
+}
+
 func canReadSensitiveConfig(key string) bool {
 	_, exists := readableSensitiveConfigKeys[strings.TrimSpace(key)]
 	return exists
 }
 
 func canReadConfig(loginUser model.LoginUser, key string) bool {
+	key = strings.TrimSpace(key)
+	if key == "" {
+		return true
+	}
+	if isQuarkCredentialConfigKey(key) {
+		// 全局 sys_config 凭证仅超管可读；独享用户走 key 过滤 + GetQuarkCredentialConfigAsModel
+		return loginUser.IsSuperAdmin()
+	}
 	if !isSensitiveConfigKey(key) {
 		return true
 	}
@@ -195,10 +299,28 @@ func canReadConfig(loginUser model.LoginUser, key string) bool {
 }
 
 func canWriteConfig(loginUser model.LoginUser, key string) bool {
+	key = strings.TrimSpace(key)
+	if isQuarkCredentialConfigKey(key) {
+		// 全局凭证写/删：仅超管。独享用户的写入走 SaveQuarkCredentialConfig(personal)。
+		return loginUser.IsSuperAdmin()
+	}
+	if key == sensitiveConfigKeyQuarkAccountShareMode {
+		return loginUser.IsSuperAdmin()
+	}
 	if !isSensitiveConfigKey(key) {
 		return true
 	}
 	return loginUser.IsSuperAdmin()
+}
+
+// canAccessQuarkCredentialAPI 独享用户或超管可访问模式化凭证 API；
+// target=shared 时仅超管可维护全局共享凭证。
+func canAccessQuarkCredentialAPI(loginUser model.LoginUser, target string) bool {
+	target = service.NormalizeQuarkCredentialTargetExport(target)
+	if target == service.QuarkCredentialTargetShared {
+		return loginUser.IsSuperAdmin()
+	}
+	return service.CanManageQuarkCredentialsExport(loginUser)
 }
 
 func containsUnreadableSensitiveConfigKeys(loginUser model.LoginUser, keys []string) bool {

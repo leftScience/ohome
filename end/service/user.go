@@ -140,6 +140,9 @@ func (m *UserService) DeleteUserById(iCommonIDDTO *dto.CommonIDDTO, loginUser mo
 		if err := userMediaHistoryDao.DeleteByUserIDWithDB(tx, target.ID); err != nil {
 			return err
 		}
+		if err := userConfigDao.DeleteByUserIDWithDB(tx, target.ID); err != nil {
+			return err
+		}
 		return userDao.DeleteUserByIdWithDB(tx, iCommonIDDTO.ID)
 	})
 }

@@ -72,10 +72,12 @@ func (s *QuarkTransferTaskService) SubmitSearchManualTransfer(transferDTO *dto.Q
 	passcode := strings.TrimSpace(transferDTO.Passcode)
 
 	if err := precheckQuarkTransfer(quarkSaveTask{
-		TaskName: displayName,
-		ShareURL: shareURL,
-		SavePath: savePath,
-		Passcode: passcode,
+		OwnerUserID: ownerUserID,
+		TaskName:    displayName,
+		ShareURL:    shareURL,
+		SavePath:    savePath,
+		Passcode:    passcode,
+		Application: application,
 	}); err != nil {
 		return model.QuarkTransferTask{}, err
 	}
@@ -145,10 +147,12 @@ func (s *QuarkTransferTaskService) submit(submission quarkTransferTaskSubmission
 		task: transferTask,
 		saveTask: quarkSaveTask{
 			ID:               transferTask.ID,
+			OwnerUserID:      transferTask.OwnerUserID,
 			TaskName:         transferTask.DisplayName,
 			ShareURL:         transferTask.ShareURL,
 			SavePath:         transferTask.SavePath,
 			Passcode:         transferTask.Passcode,
+			Application:      transferTask.Application,
 			RenameTopLevelTo: submission.renameTo,
 		},
 	}); err != nil {

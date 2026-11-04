@@ -162,22 +162,64 @@ var quarkFileLinkCache = struct {
 }
 
 func newManagedQuarkClient() (*quarkClient, error) {
-	cookie, err := loadPrimaryQuarkCookie()
+	return newManagedQuarkClientForUser(0)
+}
+
+func newManagedQuarkClientForUser(userID uint) (*quarkClient, error) {
+	cookie, err := loadPrimaryQuarkCookieForUser(userID)
 	if err != nil {
 		return nil, err
 	}
 	client := newQuarkClient(cookie)
 	client.persistCookie = true
+	client.cookieOwnerUserID = userID
+	client.cookieScopeExclusive = userID != 0 && isQuarkExclusiveMode(userID)
 	client.driveBaseURL = quarkDefaultDriveBaseURL
 	return client, nil
 }
 
 func loadPrimaryQuarkCookie() (string, error) {
-	_, _, cookie, err := loadPrimaryQuarkCookieRecord()
+	return loadPrimaryQuarkCookieForUser(0)
+}
+
+func loadPrimaryQuarkCookieForUser(userID uint) (string, error) {
+	_, _, cookie, err := loadPrimaryQuarkCookieRecordForUser(userID)
 	return cookie, err
 }
 
 func loadPrimaryQuarkCookieRecord() (model.Config, int, string, error) {
+	return loadPrimaryQuarkCookieRecordForUser(0)
+}
+
+func loadPrimaryQuarkCookieRecordForUser(userID uint) (model.Config, int, string, error) {
+	if userID != 0 && isQuarkExclusiveMode(userID) {
+		item, err := userConfigDao.GetByUserAndKey(userID, quarkCookieConfigKey)
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return model.Config{}, -1, "", ErrQuarkLoginRequired
+			}
+			return model.Config{}, -1, "", err
+		}
+		cfg := model.Config{
+			CommonModel: item.CommonModel,
+			Name:        "夸克cookies",
+			Key:         item.Key,
+			Value:       item.Value,
+			IsLock:      "1",
+			Remark:      item.Remark,
+		}
+		if strings.TrimSpace(cfg.Value) == "" {
+			return cfg, -1, "", ErrQuarkLoginRequired
+		}
+		lines := splitCookieConfigLines(cfg.Value)
+		for i, line := range lines {
+			if cookie := strings.TrimSpace(line); cookie != "" {
+				return cfg, i, cookie, nil
+			}
+		}
+		return cfg, -1, "", ErrQuarkLoginRequired
+	}
+
 	cfg, err := configDao.GetByKey(quarkCookieConfigKey)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -198,10 +240,44 @@ func loadPrimaryQuarkCookieRecord() (model.Config, int, string, error) {
 }
 
 func updatePrimaryQuarkCookie(cookieLine string) error {
+	return updatePrimaryQuarkCookieForUser(0, false, cookieLine)
+}
+
+func updatePrimaryQuarkCookieForUser(userID uint, exclusive bool, cookieLine string) error {
 	cookieLine = strings.TrimSpace(cookieLine)
 	if cookieLine == "" {
 		return errors.New("夸克 Cookie 配置无有效内容")
 	}
+
+	if exclusive && userID != 0 {
+		item, err := userConfigDao.GetByUserAndKey(userID, quarkCookieConfigKey)
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				_, err = userConfigDao.Upsert(userID, quarkCookieConfigKey, cookieLine, "用户独享夸克 Cookie")
+				return err
+			}
+			return err
+		}
+		lines := splitCookieConfigLines(item.Value)
+		lineIndex := -1
+		for i, line := range lines {
+			if strings.TrimSpace(line) != "" {
+				lineIndex = i
+				break
+			}
+		}
+		if len(lines) == 0 {
+			lines = []string{cookieLine}
+		} else if lineIndex >= 0 {
+			lines[lineIndex] = cookieLine
+		} else {
+			lines = append(lines, cookieLine)
+		}
+		newValue := strings.Join(lines, "\n")
+		_, err = userConfigDao.Upsert(userID, quarkCookieConfigKey, newValue, item.Remark)
+		return err
+	}
+
 	cfg, lineIndex, _, err := loadPrimaryQuarkCookieRecord()
 	if err != nil {
 		return err
@@ -240,7 +316,7 @@ func (c *quarkClient) syncCookieFromResponse(resp *http.Response) {
 	if !c.persistCookie {
 		return
 	}
-	if err := updatePrimaryQuarkCookie(updated); err != nil && global.Logger != nil {
+	if err := updatePrimaryQuarkCookieForUser(c.cookieOwnerUserID, c.cookieScopeExclusive, updated); err != nil && global.Logger != nil {
 		global.Logger.Warnf("更新 quark_cookies 失败: %v", err)
 	}
 }

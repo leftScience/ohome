@@ -32,7 +32,7 @@ func NewQuarkFsApi() QuarkFs {
 func (a *QuarkFs) GetQuarkFileList(c *gin.Context) {
 	userID, err := a.getLoginUserID(c)
 	if err != nil {
-		utils.FailWithMessage(err.Error(), c)
+		failQuarkFsError(err, c)
 		return
 	}
 	var pathDTO dto.QuarkPathDTO
@@ -42,7 +42,7 @@ func (a *QuarkFs) GetQuarkFileList(c *gin.Context) {
 
 	files, err := quarkFsService.ListFiles(&pathDTO, userID)
 	if err != nil {
-		utils.FailWithMessage(err.Error(), c)
+		failQuarkFsError(err, c)
 		return
 	}
 
@@ -52,7 +52,7 @@ func (a *QuarkFs) GetQuarkFileList(c *gin.Context) {
 func (a *QuarkFs) GetQuarkFileMetadata(c *gin.Context) {
 	userID, err := a.getLoginUserID(c)
 	if err != nil {
-		utils.FailWithMessage(err.Error(), c)
+		failQuarkFsError(err, c)
 		return
 	}
 	var pathDTO dto.QuarkPathDTO
@@ -62,7 +62,7 @@ func (a *QuarkFs) GetQuarkFileMetadata(c *gin.Context) {
 
 	meta, err := quarkFsService.GetFileMetadata(&pathDTO, userID)
 	if err != nil {
-		utils.FailWithMessage(err.Error(), c)
+		failQuarkFsError(err, c)
 		return
 	}
 
@@ -72,7 +72,7 @@ func (a *QuarkFs) GetQuarkFileMetadata(c *gin.Context) {
 func (a *QuarkFs) StreamQuarkFile(c *gin.Context) {
 	userID, err := a.getLoginUserID(c)
 	if err != nil {
-		utils.FailWithMessage(err.Error(), c)
+		failQuarkFsError(err, c)
 		return
 	}
 	var pathDTO dto.QuarkPathDTO
@@ -85,7 +85,7 @@ func (a *QuarkFs) StreamQuarkFile(c *gin.Context) {
 	if !isCast && shouldRedirectQuarkStream(c) {
 		directURL, _, err := quarkFsService.GetDirectFileLink(c.Request.Context(), &pathDTO, userID)
 		if err != nil {
-			utils.FailWithMessage(err.Error(), c)
+			failQuarkFsError(err, c)
 			return
 		}
 		if strings.TrimSpace(directURL) == "" {
@@ -99,7 +99,7 @@ func (a *QuarkFs) StreamQuarkFile(c *gin.Context) {
 	if c.Request.Method == http.MethodHead {
 		meta, err := quarkFsService.DescribeFile(&pathDTO, userID)
 		if err != nil {
-			utils.FailWithMessage(err.Error(), c)
+			failQuarkFsError(err, c)
 			return
 		}
 		responseMeta, err := service.BuildQuarkProxyResponseMeta(meta.Size, rangeHeader)
@@ -114,7 +114,7 @@ func (a *QuarkFs) StreamQuarkFile(c *gin.Context) {
 
 	result, meta, err := quarkFsService.StreamFile(c.Request.Context(), &pathDTO, rangeHeader, userID)
 	if err != nil {
-		utils.FailWithMessage(err.Error(), c)
+		failQuarkFsError(err, c)
 		return
 	}
 	defer result.Body.Close()
@@ -219,12 +219,12 @@ func (a *QuarkFs) RenameQuarkFile(c *gin.Context) {
 	}
 	userID, err := a.getLoginUserID(c)
 	if err != nil {
-		utils.FailWithMessage(err.Error(), c)
+		failQuarkFsError(err, c)
 		return
 	}
 
 	if err := quarkFsService.RenameFile(&renameDTO, userID); err != nil {
-		utils.FailWithMessage(err.Error(), c)
+		failQuarkFsError(err, c)
 		return
 	}
 
@@ -238,12 +238,12 @@ func (a *QuarkFs) DeleteQuarkFile(c *gin.Context) {
 	}
 	userID, err := a.getLoginUserID(c)
 	if err != nil {
-		utils.FailWithMessage(err.Error(), c)
+		failQuarkFsError(err, c)
 		return
 	}
 
 	if err := quarkFsService.DeleteFile(&pathDTO, userID); err != nil {
-		utils.FailWithMessage(err.Error(), c)
+		failQuarkFsError(err, c)
 		return
 	}
 
@@ -253,7 +253,7 @@ func (a *QuarkFs) DeleteQuarkFile(c *gin.Context) {
 func (a *QuarkFs) UploadQuarkFile(c *gin.Context) {
 	userID, err := a.getLoginUserID(c)
 	if err != nil {
-		utils.FailWithMessage(err.Error(), c)
+		failQuarkFsError(err, c)
 		return
 	}
 	var pathDTO dto.QuarkPathDTO
@@ -268,7 +268,7 @@ func (a *QuarkFs) UploadQuarkFile(c *gin.Context) {
 	}
 
 	if err := quarkFsService.UploadFile(&pathDTO, fileHeader, userID); err != nil {
-		utils.FailWithMessage(err.Error(), c)
+		failQuarkFsError(err, c)
 		return
 	}
 
@@ -282,16 +282,25 @@ func (a *QuarkFs) MoveQuarkFile(c *gin.Context) {
 	}
 	userID, err := a.getLoginUserID(c)
 	if err != nil {
-		utils.FailWithMessage(err.Error(), c)
+		failQuarkFsError(err, c)
 		return
 	}
 
 	if err := quarkFsService.MoveFile(&pathDTO, userID); err != nil {
-		utils.FailWithMessage(err.Error(), c)
+		failQuarkFsError(err, c)
 		return
 	}
 
 	utils.OkWithMessage("移动成功", c)
+}
+
+
+func failQuarkFsError(err error, c *gin.Context) {
+	if service.IsQuarkLoginRequiredError(err) {
+		utils.FailWithDetailed(gin.H{"errorCode": service.ErrCodeQuarkLoginRequired}, err.Error(), c)
+		return
+	}
+	utils.FailWithMessage(err.Error(), c)
 }
 
 func (a *QuarkFs) getLoginUserID(c *gin.Context) (uint, error) {

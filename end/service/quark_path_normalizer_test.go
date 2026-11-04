@@ -30,3 +30,27 @@ func TestResolveQuarkRootPathForUserUploadIsShared(t *testing.T) {
 		t.Fatalf("resolveQuarkRootPathForUser(upload) = %q, want %q", got, "/WP/UPLOAD")
 	}
 }
+
+func TestNormalizeQuarkAccountShareMode(t *testing.T) {
+	if got := normalizeQuarkAccountShareMode("EXCLUSIVE"); got != QuarkAccountModeExclusive {
+		t.Fatalf("normalize exclusive = %q", got)
+	}
+	if got := normalizeQuarkAccountShareMode(""); got != QuarkAccountModeShared {
+		t.Fatalf("normalize default = %q", got)
+	}
+	if got := normalizeQuarkAccountShareMode("shared"); got != QuarkAccountModeShared {
+		t.Fatalf("normalize shared = %q", got)
+	}
+}
+
+func TestParsePreferExclusive(t *testing.T) {
+	if !parsePreferExclusive("true") {
+		t.Fatal("expected true")
+	}
+	if parsePreferExclusive("") {
+		t.Fatal("expected false for empty")
+	}
+	if parsePreferExclusive("false") {
+		t.Fatal("expected false")
+	}
+}

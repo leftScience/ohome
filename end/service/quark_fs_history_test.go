@@ -17,6 +17,8 @@ func TestResolveHistoryPathWithUserScopedRoot(t *testing.T) {
 }
 
 func TestIsApplicationRootPathWithConfigsUsesUserScopedRoot(t *testing.T) {
+	quarkAccountModeOverride = func(uint) string { return QuarkAccountModeExclusive }
+	t.Cleanup(func() { quarkAccountModeOverride = nil })
 	svc := QuarkFsService{}
 	configs := []model.QuarkConfig{
 		{Application: "tv", RootPath: "WP/VEDIO"},
@@ -32,6 +34,8 @@ func TestIsApplicationRootPathWithConfigsUsesUserScopedRoot(t *testing.T) {
 }
 
 func TestResolveSourceApplicationAndHistoryPathWithConfigs(t *testing.T) {
+	quarkAccountModeOverride = func(uint) string { return QuarkAccountModeExclusive }
+	t.Cleanup(func() { quarkAccountModeOverride = nil })
 	svc := QuarkFsService{}
 	configs := []model.QuarkConfig{
 		{Application: "tv", RootPath: "WP/VEDIO"},
@@ -53,5 +57,23 @@ func TestResolveSourceApplicationAndHistoryPathWithConfigs(t *testing.T) {
 	}
 	if historyPath != "/电影/第1集.mp4" {
 		t.Fatalf("historyPath = %q, want %q", historyPath, "/电影/第1集.mp4")
+	}
+}
+
+func TestResolveQuarkRootPathSharedDoesNotAppendUser(t *testing.T) {
+	quarkAccountModeOverride = func(uint) string { return QuarkAccountModeShared }
+	t.Cleanup(func() { quarkAccountModeOverride = nil })
+	got := resolveQuarkRootPathForUser("tv", "WP/VEDIO", 12)
+	if got != "/WP/VEDIO" {
+		t.Fatalf("shared root = %q, want /WP/VEDIO", got)
+	}
+}
+
+func TestResolveQuarkRootPathExclusiveAppendsUser(t *testing.T) {
+	quarkAccountModeOverride = func(uint) string { return QuarkAccountModeExclusive }
+	t.Cleanup(func() { quarkAccountModeOverride = nil })
+	got := resolveQuarkRootPathForUser("tv", "WP/VEDIO", 12)
+	if got != "/WP/VEDIO/12" {
+		t.Fatalf("exclusive root = %q, want /WP/VEDIO/12", got)
 	}
 }

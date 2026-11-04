@@ -10,11 +10,18 @@ class ConfigApi {
 
   Future<ConfigModel?> findConfigByKey(
     String key, {
+    String? credentialTarget,
     bool showErrorToast = true,
   }) async {
     final response = await _httpClient.post<Map<String, dynamic>?>(
       '/config/list',
-      data: <String, dynamic>{'key': key, 'page': 1, 'limit': 200},
+      data: <String, dynamic>{
+        'key': key,
+        'page': 1,
+        'limit': 200,
+        if (credentialTarget != null && credentialTarget.trim().isNotEmpty)
+          'credentialTarget': credentialTarget.trim(),
+      },
       showErrorToast: showErrorToast,
       decoder: (data) {
         if (data is Map<String, dynamic>) return data;

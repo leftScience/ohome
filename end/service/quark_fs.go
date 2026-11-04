@@ -25,7 +25,7 @@ type QuarkProxyMeta struct {
 
 func (s *QuarkFsService) ListFiles(pathDTO *dto.QuarkPathDTO, userID uint) ([]dto.QuarkFsInfo, error) {
 	logQuarkWarnf("[quarkFs:list] start application=%s rawPath=%q", strings.TrimSpace(pathDTO.Application), strings.TrimSpace(pathDTO.Path))
-	client, err := newManagedQuarkClient()
+	client, err := newManagedQuarkClientForUser(userID)
 	if err != nil {
 		logQuarkWarnf("[quarkFs:list] init client failed application=%s err=%v", strings.TrimSpace(pathDTO.Application), err)
 		return nil, err
@@ -128,7 +128,7 @@ func (s *QuarkFsService) resolveListSortExpr(pathDTO *dto.QuarkPathDTO, clientPa
 }
 
 func (s *QuarkFsService) GetFileMetadata(pathDTO *dto.QuarkPathDTO, userID uint) (dto.QuarkFsMetaInfo, error) {
-	client, err := newManagedQuarkClient()
+	client, err := newManagedQuarkClientForUser(userID)
 	if err != nil {
 		return dto.QuarkFsMetaInfo{}, err
 	}
@@ -189,7 +189,7 @@ func (s *QuarkFsService) RenameFile(renameDTO *dto.QuarkRenameDTO, userID uint) 
 		return errors.New("新名称不能为空")
 	}
 
-	client, err := newManagedQuarkClient()
+	client, err := newManagedQuarkClientForUser(userID)
 	if err != nil {
 		return err
 	}
@@ -239,7 +239,7 @@ func (s *QuarkFsService) DeleteFile(pathDTO *dto.QuarkPathDTO, userID uint) erro
 		return errors.New("路径不能为空")
 	}
 
-	client, err := newManagedQuarkClient()
+	client, err := newManagedQuarkClientForUser(userID)
 	if err != nil {
 		return err
 	}
@@ -326,7 +326,7 @@ func (s *QuarkFsService) MoveFile(pathDTO *dto.QuarkPathDTO, userID uint) error 
 		return errors.New("不允许移动应用根目录")
 	}
 
-	client, err := newManagedQuarkClient()
+	client, err := newManagedQuarkClientForUser(userID)
 	if err != nil {
 		return err
 	}
@@ -425,7 +425,7 @@ func (s *QuarkFsService) GetDirectFileLink(ctx context.Context, pathDTO *dto.Qua
 		return "", QuarkProxyMeta{}, err
 	}
 
-	link, err := s.resolveDirectPlayableLink(ctx, client, entry)
+	link, err := s.resolveDirectPlayableLink(ctx, client, entry, userID)
 	if err != nil {
 		return "", QuarkProxyMeta{}, err
 	}
@@ -437,7 +437,7 @@ func (s *QuarkFsService) GetDirectFileLink(ctx context.Context, pathDTO *dto.Qua
 	}, nil
 }
 
-func (s *QuarkFsService) resolveDirectPlayableLink(ctx context.Context, client *quarkClient, entry quarkDriveFile) (quarkFileLink, error) {
+func (s *QuarkFsService) resolveDirectPlayableLink(ctx context.Context, client *quarkClient, entry quarkDriveFile, userID uint) (quarkFileLink, error) {
 	if client == nil {
 		return quarkFileLink{}, errors.New("夸克客户端未初始化")
 	}
@@ -445,7 +445,7 @@ func (s *QuarkFsService) resolveDirectPlayableLink(ctx context.Context, client *
 	return resolveQuarkDirectLinkForEntry(
 		entry,
 		func() (quarkFileLink, error) {
-			link, err := getQuarkTVTranscodingLink(ctx, entry.Fid)
+			link, err := getQuarkTVTranscodingLinkForUser(ctx, userID, entry.Fid)
 			if err != nil {
 				logQuarkWarnf("[quarkFs:stream] quark tv transcoding redirect failed fid=%s err=%v", strings.TrimSpace(entry.Fid), err)
 				return quarkFileLink{}, err
@@ -486,7 +486,7 @@ func (s *QuarkFsService) DescribeFile(pathDTO *dto.QuarkPathDTO, userID uint) (Q
 }
 
 func (s *QuarkFsService) resolveFileForRead(pathDTO *dto.QuarkPathDTO, userID uint) (*quarkClient, quarkDriveFile, string, error) {
-	client, err := newManagedQuarkClient()
+	client, err := newManagedQuarkClientForUser(userID)
 	if err != nil {
 		return nil, quarkDriveFile{}, "", err
 	}
@@ -528,7 +528,7 @@ func (s *QuarkFsService) uploadFileToTarget(ctx context.Context, application, ta
 		return err
 	}
 	config.RootPath = resolveQuarkRootPathForUser(application, config.RootPath, userID)
-	client, err := newManagedQuarkClient()
+	client, err := newManagedQuarkClientForUser(userID)
 	if err != nil {
 		return err
 	}
@@ -618,9 +618,17 @@ func (s *QuarkFsService) DeleteUserScopedRoots(userID uint) error {
 		return err
 	}
 
-	client, err := newManagedQuarkClient()
+	// 删除用户时只清理 WP/{类型}/{userId}，绝不碰共享根目录。
+	// Cookie：优先该用户独享凭证；没有则回退全局（兼容历史独享目录仍在共享号下的情况）。
+	client, err := newManagedQuarkClientForUser(userID)
 	if err != nil {
-		return err
+		if !errors.Is(err, ErrQuarkLoginRequired) {
+			return err
+		}
+		client, err = newManagedQuarkClientForUser(0)
+		if err != nil {
+			return err
+		}
 	}
 	ctx := context.Background()
 	seen := make(map[string]struct{}, len(configs))
@@ -629,7 +637,7 @@ func (s *QuarkFsService) DeleteUserScopedRoots(userID uint) error {
 		if !shouldUseUserScopedQuarkRoot(configs[i].Application) {
 			continue
 		}
-		rootPath := resolveQuarkRootPathForUser(configs[i].Application, configs[i].RootPath, userID)
+		rootPath := buildQuarkUserScopedRootPath(configs[i].RootPath, userID)
 		if rootPath == "" || rootPath == "/" {
 			continue
 		}

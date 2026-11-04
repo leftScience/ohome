@@ -71,11 +71,24 @@ func resolveQuarkRootPathForUser(application, raw string, userID uint) string {
 		}
 		return "/"
 	}
+	if !shouldScopeQuarkRootByUser(userID) {
+		if base != "" {
+			return base
+		}
+		return "/"
+	}
 	return buildQuarkUserScopedRootPath(raw, userID)
 }
 
 func shouldUseUserScopedQuarkRoot(application string) bool {
 	return !strings.EqualFold(strings.TrimSpace(application), "upload")
+}
+
+func shouldScopeQuarkRootByUser(userID uint) bool {
+	if userID == 0 {
+		return false
+	}
+	return isQuarkExclusiveMode(userID)
 }
 
 func splitNormalizedQuarkPathSegments(raw string) []string {
@@ -106,4 +119,25 @@ func splitNormalizedQuarkPathSegments(raw string) []string {
 		segments = segments[1:]
 	}
 	return segments
+}
+
+
+// stripTrailingQuarkUserScopeSegment 去掉路径末尾已拼接的 /{userId}，避免二次隔离。
+func stripTrailingQuarkUserScopeSegment(raw string, userID uint) string {
+	if userID == 0 {
+		return raw
+	}
+	segments := splitNormalizedQuarkPathSegments(raw)
+	if len(segments) == 0 {
+		return raw
+	}
+	userSegment := strings.TrimSpace(strconv.FormatUint(uint64(userID), 10))
+	if userSegment == "" || segments[len(segments)-1] != userSegment {
+		return raw
+	}
+	trimmed := segments[:len(segments)-1]
+	if len(trimmed) == 0 {
+		return ""
+	}
+	return path.Join(trimmed...)
 }

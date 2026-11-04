@@ -50,6 +50,7 @@ INSERT INTO `sys_config` (
     is_lock,
     remark
 ) VALUES
+    ('2026-03-20 00:00:00', '2026-03-20 00:00:00', NULL, '夸克账户共享状态', 'quark_account_share_mode', 'shared', '1', 'shared=共享夸克账号；exclusive=强制全员独享'),
     ('2026-03-20 00:00:00', '2026-03-20 00:00:00', NULL, '夸克播放代理模式', 'quark_fs_web_proxy_mode', 'native_proxy', '1', '夸克在线播放代理模式：native_proxy=本地代理，302_redirect=302直连'),
     ('2026-03-20 00:00:00', '2026-03-20 00:00:00', NULL, '夸克搜索 HTTP 代理', 'quark_search_http_proxy', '', '1', 'HTTP 请求代理地址，留空则直连'),
     ('2026-03-20 00:00:00', '2026-03-20 00:00:00', NULL, '夸克搜索 HTTPS 代理', 'quark_search_https_proxy', '', '1', 'HTTPS 请求代理地址，留空则直连'),

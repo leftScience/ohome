@@ -13,4 +13,5 @@ var (
 	doubanDao            dao.DoubanDao
 	quarkAutoSaveTaskDao dao.QuarkAutoSaveTaskDao
 	quarkTransferTaskDao dao.QuarkTransferTaskDao
+	userConfigDao        dao.UserConfigDao
 )

@@ -331,6 +331,18 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
           ? Get.find<AuthService>()
           : null;
       final isSuperAdmin = authService?.user.value?.isSuperAdmin ?? false;
+      final isLoginRequired = QuarkErrorHelper.isQuarkLoginRequired(errText) ||
+          QuarkErrorHelper.isQuarkLoginRequired(error);
+      // 独享缺登录 / 个人凭证失效：用户自己去登录；共享凭证失效：仅超管可修。
+      final canSelfLogin = isLoginRequired || isSuperAdmin;
+      final authHint = isLoginRequired
+          ? QuarkErrorHelper.loginRequiredHint
+          : (isSuperAdmin
+                ? QuarkErrorHelper.authErrorAdminHint
+                : QuarkErrorHelper.authErrorUserHint);
+      final loginTarget = isLoginRequired
+          ? 'personal'
+          : (isSuperAdmin ? 'shared' : 'personal');
 
       return Center(
         child: SingleChildScrollView(
@@ -353,10 +365,10 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
                   ),
                 ),
                 const SizedBox(height: 14),
-                const Text(
-                  '夸克登录已失效',
+                Text(
+                  isLoginRequired ? '需要登录夸克账号' : '夸克登录已失效',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                     color: AppThemeColors.textPrimary,
@@ -365,7 +377,11 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
                 const SizedBox(height: 8),
               ],
               Text(
-                authError ? '无法读取夸克网盘中的内容，请重新登录夸克账号后再试。' : errText,
+                authError
+                    ? (isLoginRequired
+                          ? QuarkErrorHelper.loginRequiredMessage
+                          : '无法读取夸克网盘中的内容，请重新登录夸克账号后再试。')
+                    : errText,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   color: AppThemeColors.textSecondary,
@@ -375,9 +391,7 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
               if (authError) ...[
                 const SizedBox(height: 10),
                 Text(
-                  isSuperAdmin
-                      ? QuarkErrorHelper.authErrorAdminHint
-                      : QuarkErrorHelper.authErrorUserHint,
+                  authHint,
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 13,
@@ -396,15 +410,20 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
                     onPressed: widget.controller.refreshCurrent,
                     child: const Text('重试'),
                   ),
-                  if (authError && isSuperAdmin)
+                  if (authError && canSelfLogin)
                     FilledButton.icon(
                       onPressed: () async {
-                        await Get.toNamed(Routes.QUARK_LOGIN);
+                        await Get.toNamed(
+                          Routes.QUARK_LOGIN,
+                          arguments: <String, dynamic>{
+                            'credentialTarget': loginTarget,
+                          },
+                        );
                         if (!mounted) return;
                         await widget.controller.refreshCurrent();
                       },
                       icon: const Icon(Icons.login_rounded, size: 18),
-                      label: const Text('更新夸克登录'),
+                      label: Text(isLoginRequired ? '去登录夸克' : '更新夸克登录'),
                     ),
                 ],
               ),
