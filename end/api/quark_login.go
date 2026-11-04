@@ -1,6 +1,8 @@
 package api
 
 import (
+	"ohome/model"
+	"ohome/service"
 	"ohome/utils"
 
 	"github.com/gin-gonic/gin"
@@ -17,11 +19,12 @@ func NewQuarkLoginApi() QuarkLogin {
 }
 
 func (a *QuarkLogin) GetQuarkTVStatus(c *gin.Context) {
-	if _, ok := requireSuperAdmin(c); !ok {
+	loginUser, ok := requireQuarkCredentialManager(c)
+	if !ok {
 		return
 	}
 
-	status, err := quarkTVLoginService.GetStatus()
+	status, err := quarkTVLoginService.GetStatus(loginUser.ID)
 	if err != nil {
 		utils.FailWithMessage(err.Error(), c)
 		return
@@ -30,11 +33,12 @@ func (a *QuarkLogin) GetQuarkTVStatus(c *gin.Context) {
 }
 
 func (a *QuarkLogin) StartQuarkTVLogin(c *gin.Context) {
-	if _, ok := requireSuperAdmin(c); !ok {
+	loginUser, ok := requireQuarkCredentialManager(c)
+	if !ok {
 		return
 	}
 
-	result, err := quarkTVLoginService.StartLogin(c.Request.Context())
+	result, err := quarkTVLoginService.StartLogin(c.Request.Context(), loginUser.ID)
 	if err != nil {
 		utils.FailWithMessage(err.Error(), c)
 		return
@@ -43,14 +47,28 @@ func (a *QuarkLogin) StartQuarkTVLogin(c *gin.Context) {
 }
 
 func (a *QuarkLogin) PollQuarkTVLogin(c *gin.Context) {
-	if _, ok := requireSuperAdmin(c); !ok {
+	loginUser, ok := requireQuarkCredentialManager(c)
+	if !ok {
 		return
 	}
 
-	result, err := quarkTVLoginService.PollLogin(c.Request.Context())
+	result, err := quarkTVLoginService.PollLogin(c.Request.Context(), loginUser.ID)
 	if err != nil {
 		utils.FailWithMessage(err.Error(), c)
 		return
 	}
 	utils.OkWithData(result, c)
+}
+
+func requireQuarkCredentialManager(c *gin.Context) (model.LoginUser, bool) {
+	loginUser, err := getLoginUser(c)
+	if err != nil {
+		utils.FailWithMessage(err.Error(), c)
+		return model.LoginUser{}, false
+	}
+	if !service.CanManageQuarkCredentialsExport(loginUser) {
+		utils.PermissionFail("当前模式下无夸克登录权限", c)
+		return model.LoginUser{}, false
+	}
+	return loginUser, true
 }

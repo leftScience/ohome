@@ -19,6 +19,7 @@ import (
 
 type quarkSaveTask struct {
 	ID               uint
+	OwnerUserID      uint
 	TaskName         string
 	ShareURL         string
 	SavePath         string
@@ -33,11 +34,13 @@ type quarkSaveResult struct {
 }
 
 type quarkClient struct {
-	httpClient    *http.Client
-	cookie        string
-	mparam        map[string]string
-	persistCookie bool
-	driveBaseURL  string
+	httpClient          *http.Client
+	cookie              string
+	mparam              map[string]string
+	persistCookie       bool
+	cookieOwnerUserID   uint
+	cookieScopeExclusive bool
+	driveBaseURL        string
 }
 
 const (

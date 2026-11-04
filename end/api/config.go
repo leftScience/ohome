@@ -1,12 +1,15 @@
 package api
 
 import (
+	"errors"
 	"ohome/model"
+	"ohome/service"
 	"ohome/service/dto"
 	"ohome/utils"
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 const sensitiveConfigKeyQuarkCookies = "quark_cookies"
@@ -18,6 +21,7 @@ const sensitiveConfigKeyQuarkSearchHTTPSProxy = "quark_search_https_proxy"
 const sensitiveConfigKeyQuarkSearchChannels = "quark_search_channels"
 const sensitiveConfigKeyQuarkSearchEnabledPlugins = "quark_search_enabled_plugins"
 const sensitiveConfigKeyQuarkStreamWebProxyMode = "quark_fs_web_proxy_mode"
+const sensitiveConfigKeyQuarkAccountShareMode = "quark_account_share_mode"
 
 var sensitiveConfigKeys = map[string]struct{}{
 	sensitiveConfigKeyQuarkCookies:              {},
@@ -29,10 +33,19 @@ var sensitiveConfigKeys = map[string]struct{}{
 	sensitiveConfigKeyQuarkSearchChannels:       {},
 	sensitiveConfigKeyQuarkSearchEnabledPlugins: {},
 	sensitiveConfigKeyQuarkStreamWebProxyMode:   {},
+	sensitiveConfigKeyQuarkAccountShareMode:     {},
 }
 
 var readableSensitiveConfigKeys = map[string]struct{}{
 	sensitiveConfigKeyQuarkStreamWebProxyMode: {},
+	sensitiveConfigKeyQuarkAccountShareMode:   {},
+}
+
+var quarkCredentialConfigKeys = map[string]struct{}{
+	sensitiveConfigKeyQuarkCookies:        {},
+	sensitiveConfigKeyQuarkTVRefreshToken: {},
+	sensitiveConfigKeyQuarkTVDeviceID:     {},
+	sensitiveConfigKeyQuarkTVQueryToken:   {},
 }
 
 type Config struct {
@@ -55,6 +68,27 @@ func (config *Config) GetConfigList(c *gin.Context) {
 
 	var iConfigListDTO dto.ConfigListDTO
 	if err := config.Request(RequestOptions{Ctx: c, DTO: &iConfigListDTO}).GetErrors(); err != nil {
+		return
+	}
+
+	if key := strings.TrimSpace(iConfigListDTO.Key); key != "" && isQuarkCredentialConfigKey(key) {
+		if !canReadConfig(loginUser, key) {
+			utils.PermissionFail("无权限访问", c)
+			return
+		}
+		item, ok, err := service.GetQuarkCredentialConfigAsModel(loginUser.ID, key)
+		if err != nil {
+			utils.FailWithMessage(err.Error(), c)
+			return
+		}
+		records := []model.Config{}
+		if ok {
+			records = append(records, item)
+		}
+		utils.OkWithData(gin.H{
+			"records": records,
+			"total":   int64(len(records)),
+		}, c)
 		return
 	}
 
@@ -118,20 +152,48 @@ func (config *Config) AddOrUpdateConfig(c *gin.Context) {
 		return
 	}
 
-	if !canWriteConfig(loginUser, iConfigUpdateDTO.Key) {
-		utils.PermissionFail("无权限访问", c)
-		return
-	}
+	key := strings.TrimSpace(iConfigUpdateDTO.Key)
 	if iConfigUpdateDTO.ID != 0 {
 		currentConfig, err := configService.GetConfigById(&dto.CommonIDDTO{ID: iConfigUpdateDTO.ID})
 		if err != nil {
+			// 独享模式下凭证可能存在于 user_config，ID 对不上全局表时按 key 处理
+			if !errors.Is(err, gorm.ErrRecordNotFound) || !isQuarkCredentialConfigKey(key) {
+				utils.FailWithMessage(err.Error(), c)
+				return
+			}
+		} else {
+			if key == "" {
+				key = currentConfig.Key
+				iConfigUpdateDTO.Key = currentConfig.Key
+			}
+			if !canWriteConfig(loginUser, currentConfig.Key) {
+				utils.PermissionFail("无权限访问", c)
+				return
+			}
+		}
+	}
+
+	if !canWriteConfig(loginUser, key) {
+		utils.PermissionFail("无权限访问", c)
+		return
+	}
+
+	if isQuarkCredentialConfigKey(key) {
+		if err := service.SaveQuarkCredentialConfig(loginUser.ID, &iConfigUpdateDTO); err != nil {
 			utils.FailWithMessage(err.Error(), c)
 			return
 		}
-		if !canWriteConfig(loginUser, currentConfig.Key) {
-			utils.PermissionFail("无权限访问", c)
+		utils.Ok(c)
+		return
+	}
+
+	if key == sensitiveConfigKeyQuarkAccountShareMode {
+		if err := service.SetQuarkAccountSystemModeExport(iConfigUpdateDTO.Value); err != nil {
+			utils.FailWithMessage(err.Error(), c)
 			return
 		}
+		utils.Ok(c)
+		return
 	}
 
 	err = configService.AddOrUpdateConfig(&iConfigUpdateDTO)
@@ -179,12 +241,24 @@ func isSensitiveConfigKey(key string) bool {
 	return exists
 }
 
+func isQuarkCredentialConfigKey(key string) bool {
+	_, exists := quarkCredentialConfigKeys[strings.TrimSpace(key)]
+	return exists
+}
+
 func canReadSensitiveConfig(key string) bool {
 	_, exists := readableSensitiveConfigKeys[strings.TrimSpace(key)]
 	return exists
 }
 
 func canReadConfig(loginUser model.LoginUser, key string) bool {
+	key = strings.TrimSpace(key)
+	if key == "" {
+		return true
+	}
+	if isQuarkCredentialConfigKey(key) {
+		return service.CanManageQuarkCredentialsExport(loginUser)
+	}
 	if !isSensitiveConfigKey(key) {
 		return true
 	}
@@ -195,6 +269,13 @@ func canReadConfig(loginUser model.LoginUser, key string) bool {
 }
 
 func canWriteConfig(loginUser model.LoginUser, key string) bool {
+	key = strings.TrimSpace(key)
+	if isQuarkCredentialConfigKey(key) {
+		return service.CanManageQuarkCredentialsExport(loginUser)
+	}
+	if key == sensitiveConfigKeyQuarkAccountShareMode {
+		return loginUser.IsSuperAdmin()
+	}
 	if !isSensitiveConfigKey(key) {
 		return true
 	}

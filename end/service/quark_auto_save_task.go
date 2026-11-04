@@ -81,7 +81,7 @@ func (s *QuarkAutoSaveTaskService) TransferOnce(transferDTO *dto.QuarkAutoSaveTr
 }
 
 func executeQuarkTransfer(ctx context.Context, task quarkSaveTask) (quarkSaveResult, error) {
-	cookie, err := loadPrimaryQuarkCookie()
+	cookie, err := loadPrimaryQuarkCookieForUser(task.OwnerUserID)
 	if err != nil {
 		return quarkSaveResult{Status: "fail", Message: err.Error()}, err
 	}
@@ -98,7 +98,7 @@ func precheckQuarkTransfer(task quarkSaveTask) error {
 	ctx, cancel := context.WithTimeout(context.Background(), quarkTransferPrecheckTimeout)
 	defer cancel()
 
-	cookie, err := loadPrimaryQuarkCookie()
+	cookie, err := loadPrimaryQuarkCookieForUser(task.OwnerUserID)
 	if err != nil {
 		return err
 	}

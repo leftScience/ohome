@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
 import '../../../data/models/user_model.dart';
+import '../../../data/models/quark_account_status.dart';
 import '../../../theme/app_theme.dart';
 import '../../../widgets/home_style_backdrop.dart';
 import '../controllers/me_controller.dart';
@@ -49,12 +50,31 @@ class MeView extends GetView<MeController> {
                     _buildProfileCard(),
                     SizedBox(height: 24.h),
                     Obx(() {
-                      if (!controller.isSuperAdmin) {
-                        return const SizedBox.shrink();
-                      }
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
+                      final status = controller.accountStatus;
+                      final children = <Widget>[
+                        Text(
+                          '夸克账户',
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w600,
+                            color: AppThemeColors.textSecondary,
+                          ),
+                        ),
+                        SizedBox(height: 12.h),
+                        _QuarkAccountCard(
+                          status: status,
+                          loading: controller.quarkAccountLoading.value,
+                          preferSaving: controller.quarkPreferSaving.value,
+                          onPreferChanged: controller.setPreferExclusive,
+                          onLoginTap: controller.canOpenQuarkLogin
+                              ? controller.openQuarkLogin
+                              : null,
+                        ),
+                      ];
+
+                      if (controller.isSuperAdmin) {
+                        children.addAll([
+                          SizedBox(height: 24.h),
                           Text(
                             '基础管理',
                             style: TextStyle(
@@ -73,12 +93,21 @@ class MeView extends GetView<MeController> {
                           SizedBox(height: 12.h),
                           _QuarkAdminMenuCard(
                             expanded: controller.quarkAdminMenuExpanded.value,
+                            systemMode: status.systemMode,
+                            systemModeSaving:
+                                controller.quarkSystemModeSaving.value,
                             onTap: controller.toggleQuarkAdminMenu,
+                            onSystemModeChanged: controller.setSystemShareMode,
                             onLoginTap: controller.openQuarkLogin,
                             onSearchTap: controller.openQuarkSearchSettings,
                             onStreamTap: controller.openQuarkStreamSettings,
                           ),
-                        ],
+                        ]);
+                      }
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: children,
                       );
                     }),
                     SizedBox(height: 24.h),
@@ -318,17 +347,161 @@ class MeView extends GetView<MeController> {
   }
 }
 
+class _QuarkAccountCard extends StatelessWidget {
+  const _QuarkAccountCard({
+    required this.status,
+    required this.loading,
+    required this.preferSaving,
+    required this.onPreferChanged,
+    required this.onLoginTap,
+  });
+
+  final QuarkAccountStatus status;
+  final bool loading;
+  final bool preferSaving;
+  final ValueChanged<bool> onPreferChanged;
+  final VoidCallback? onLoginTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final canPrefer = status.canPreferExclusive == true;
+    final preferExclusive = status.preferExclusive == true;
+    final forcedExclusive = status.systemMode == 'exclusive';
+    final effectiveExclusive = status.effectiveMode == 'exclusive';
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(22.r),
+        boxShadow: AppThemeColors.cardShadow,
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(22.r),
+        child: Material(
+          color: AppThemeColors.surface,
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(22.r),
+              border: Border.all(color: AppThemeColors.border),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 40.w,
+                      height: 40.w,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF00897B).withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(14.r),
+                      ),
+                      child: Icon(
+                        Icons.share_outlined,
+                        color: const Color(0xFF00897B),
+                        size: 22.w,
+                      ),
+                    ),
+                    SizedBox(width: 14.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '夸克数据范围',
+                            style: TextStyle(
+                              fontSize: 15.sp,
+                              fontWeight: FontWeight.w600,
+                              color: AppThemeColors.textPrimary,
+                            ),
+                          ),
+                          SizedBox(height: 4.h),
+                          Text(
+                            forcedExclusive
+                                ? '管理员已强制独享，请登录自己的夸克账号'
+                                : (effectiveExclusive
+                                    ? '当前使用你自己的夸克账号与目录'
+                                    : '当前使用家庭共享夸克账号与目录'),
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              color: AppThemeColors.textMuted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (loading)
+                      SizedBox(
+                        width: 18.w,
+                        height: 18.w,
+                        child: const CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                  ],
+                ),
+                if (canPrefer) ...[
+                  SizedBox(height: 12.h),
+                  SwitchListTile.adaptive(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(
+                      '使用独享夸克账号',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w600,
+                        color: AppThemeColors.textPrimary,
+                      ),
+                    ),
+                    subtitle: Text(
+                      preferExclusive
+                          ? '已开启：读写你自己的 WP/类型/用户目录'
+                          : '关闭时跟随共享库，无需个人登录',
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: AppThemeColors.textMuted,
+                      ),
+                    ),
+                    value: preferExclusive,
+                    onChanged: preferSaving ? null : onPreferChanged,
+                  ),
+                ],
+                if (effectiveExclusive && onLoginTap != null) ...[
+                  SizedBox(height: 4.h),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton.icon(
+                      onPressed: onLoginTap,
+                      icon: const Icon(Icons.login_rounded, size: 18),
+                      label: Text(
+                        status.cookieConfigured == true ? '管理夸克登录' : '去登录夸克',
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _QuarkAdminMenuCard extends StatelessWidget {
   const _QuarkAdminMenuCard({
     required this.expanded,
+    required this.systemMode,
+    required this.systemModeSaving,
     required this.onTap,
+    required this.onSystemModeChanged,
     required this.onLoginTap,
     required this.onSearchTap,
     required this.onStreamTap,
   });
 
   final bool expanded;
+  final String systemMode;
+  final bool systemModeSaving;
   final VoidCallback? onTap;
+  final ValueChanged<String> onSystemModeChanged;
   final VoidCallback? onLoginTap;
   final VoidCallback? onSearchTap;
   final VoidCallback? onStreamTap;
@@ -386,7 +559,7 @@ class _QuarkAdminMenuCard extends StatelessWidget {
                             ),
                             SizedBox(height: 4.h),
                             Text(
-                              '统一管理夸克登录、搜索和播放设置',
+                              '统一管理共享状态、登录、搜索和播放设置',
                               style: TextStyle(
                                 fontSize: 12.sp,
                                 color: AppThemeColors.textMuted,
@@ -422,11 +595,68 @@ class _QuarkAdminMenuCard extends StatelessWidget {
                               ),
                               child: Column(
                                 children: [
+                                  Padding(
+                                    padding: EdgeInsets.fromLTRB(
+                                      14.w,
+                                      12.h,
+                                      14.w,
+                                      8.h,
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '共享状态',
+                                          style: TextStyle(
+                                            fontSize: 14.sp,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppThemeColors.textPrimary,
+                                          ),
+                                        ),
+                                        SizedBox(height: 4.h),
+                                        Text(
+                                          '共享：默认全家共用；独享：强制每人登录自己的夸克',
+                                          style: TextStyle(
+                                            fontSize: 12.sp,
+                                            color: AppThemeColors.textMuted,
+                                          ),
+                                        ),
+                                        SizedBox(height: 8.h),
+                                        SegmentedButton<String>(
+                                          segments: const [
+                                            ButtonSegment<String>(
+                                              value: 'shared',
+                                              label: Text('共享'),
+                                              icon: Icon(Icons.groups_outlined),
+                                            ),
+                                            ButtonSegment<String>(
+                                              value: 'exclusive',
+                                              label: Text('独享'),
+                                              icon: Icon(Icons.person_outline),
+                                            ),
+                                          ],
+                                          selected: {systemMode},
+                                          onSelectionChanged: systemModeSaving
+                                              ? null
+                                              : (values) {
+                                                  if (values.isEmpty) return;
+                                                  onSystemModeChanged(
+                                                    values.first,
+                                                  );
+                                                },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  _buildDivider(),
                                   _SettingsSubMenuTile(
                                     icon: Icons.cookie_outlined,
                                     iconColor: const Color(0xFFF57C00),
                                     title: '夸克登录',
-                                    subtitle: '设置 quark_cookies 参数',
+                                    subtitle: systemMode == 'exclusive'
+                                        ? '维护当前账号自己的夸克凭证'
+                                        : '维护共享夸克 Cookie / TV 登录',
                                     onTap: onLoginTap,
                                   ),
                                   _buildDivider(),
@@ -442,7 +672,8 @@ class _QuarkAdminMenuCard extends StatelessWidget {
                                     icon: Icons.smart_display_outlined,
                                     iconColor: const Color(0xFF8E24AA),
                                     title: '夸克播放',
-                                    subtitle: '配置 302 / 本地代理，更多代理参数请在后端配置文件设置',
+                                    subtitle:
+                                        '配置 302 / 本地代理，更多代理参数请在后端配置文件设置',
                                     onTap: onStreamTap,
                                   ),
                                 ],

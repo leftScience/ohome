@@ -19,6 +19,7 @@ func InitSchema(db *gorm.DB) error {
 		&model.QuarkTransferTask{},
 		&model.UserMediaHistory{},
 		&model.AppMessage{},
+		&model.UserConfig{},
 	); err != nil {
 		return err
 	}

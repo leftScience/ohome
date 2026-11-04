@@ -18,6 +18,7 @@ var initSQLTables = []string{
 	"sys_quark_config",
 	"sys_role",
 	"sys_user",
+	"sys_user_config",
 	"user_media_history",
 }
 

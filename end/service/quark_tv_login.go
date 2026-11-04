@@ -144,16 +144,16 @@ var quarkTVAccessTokenCache = struct {
 	expiresAt    time.Time
 }{}
 
-func (s *QuarkTVLoginService) GetStatus() (QuarkTVLoginStatus, error) {
-	snapshot, err := loadQuarkTVConfigSnapshot()
+func (s *QuarkTVLoginService) GetStatus(userID uint) (QuarkTVLoginStatus, error) {
+	snapshot, err := loadQuarkTVConfigSnapshotForUser(userID)
 	if err != nil {
 		return QuarkTVLoginStatus{}, err
 	}
 	return buildQuarkTVLoginStatus(snapshot), nil
 }
 
-func (s *QuarkTVLoginService) StartLogin(ctx context.Context) (QuarkTVLoginStartResult, error) {
-	snapshot, err := loadQuarkTVConfigSnapshot()
+func (s *QuarkTVLoginService) StartLogin(ctx context.Context, userID uint) (QuarkTVLoginStartResult, error) {
+	snapshot, err := loadQuarkTVConfigSnapshotForUser(userID)
 	if err != nil {
 		return QuarkTVLoginStartResult{}, err
 	}
@@ -174,10 +174,10 @@ func (s *QuarkTVLoginService) StartLogin(ctx context.Context) (QuarkTVLoginStart
 		return QuarkTVLoginStartResult{}, errors.New("夸克TV登录二维码生成失败")
 	}
 
-	if _, err := upsertQuarkTVConfig(quarkTVDeviceIDConfigKey, deviceID); err != nil {
+	if _, err := upsertQuarkTVConfigForUser(userID, quarkTVDeviceIDConfigKey, deviceID); err != nil {
 		return QuarkTVLoginStartResult{}, err
 	}
-	if _, err := upsertQuarkTVConfig(quarkTVQueryTokenConfigKey, queryToken); err != nil {
+	if _, err := upsertQuarkTVConfigForUser(userID, quarkTVQueryTokenConfigKey, queryToken); err != nil {
 		return QuarkTVLoginStartResult{}, err
 	}
 
@@ -187,8 +187,8 @@ func (s *QuarkTVLoginService) StartLogin(ctx context.Context) (QuarkTVLoginStart
 	}, nil
 }
 
-func (s *QuarkTVLoginService) PollLogin(ctx context.Context) (QuarkTVLoginPollResult, error) {
-	snapshot, err := loadQuarkTVConfigSnapshot()
+func (s *QuarkTVLoginService) PollLogin(ctx context.Context, userID uint) (QuarkTVLoginPollResult, error) {
+	snapshot, err := loadQuarkTVConfigSnapshotForUser(userID)
 	if err != nil {
 		return QuarkTVLoginPollResult{}, err
 	}
@@ -207,7 +207,7 @@ func (s *QuarkTVLoginService) PollLogin(ctx context.Context) (QuarkTVLoginPollRe
 	deviceID := snapshot.DeviceIDValue()
 	if deviceID == "" {
 		deviceID = generateQuarkTVDeviceID()
-		if _, err := upsertQuarkTVConfig(quarkTVDeviceIDConfigKey, deviceID); err != nil {
+		if _, err := upsertQuarkTVConfigForUser(userID, quarkTVDeviceIDConfigKey, deviceID); err != nil {
 			return QuarkTVLoginPollResult{}, err
 		}
 		snapshot.DeviceID.Value = deviceID
@@ -221,7 +221,7 @@ func (s *QuarkTVLoginService) PollLogin(ctx context.Context) (QuarkTVLoginPollRe
 	if err != nil {
 		status := classifyQuarkTVPollError(err)
 		if status == "expired" {
-			if clearErr := deleteQuarkTVConfigByKey(quarkTVQueryTokenConfigKey); clearErr != nil {
+			if clearErr := deleteQuarkTVConfigByKeyForUser(userID, quarkTVQueryTokenConfigKey); clearErr != nil {
 				return QuarkTVLoginPollResult{}, clearErr
 			}
 			snapshot.HasQueryToken = false
@@ -257,19 +257,19 @@ func (s *QuarkTVLoginService) PollLogin(ctx context.Context) (QuarkTVLoginPollRe
 		}, nil
 	}
 
-	if _, err := upsertQuarkTVConfig(quarkTVRefreshTokenConfigKey, tokenResp.Data.RefreshToken); err != nil {
+	if _, err := upsertQuarkTVConfigForUser(userID, quarkTVRefreshTokenConfigKey, tokenResp.Data.RefreshToken); err != nil {
 		return QuarkTVLoginPollResult{}, err
 	}
-	if _, err := upsertQuarkTVConfig(quarkTVDeviceIDConfigKey, client.deviceID); err != nil {
+	if _, err := upsertQuarkTVConfigForUser(userID, quarkTVDeviceIDConfigKey, client.deviceID); err != nil {
 		return QuarkTVLoginPollResult{}, err
 	}
-	if err := deleteQuarkTVConfigByKey(quarkTVQueryTokenConfigKey); err != nil {
+	if err := deleteQuarkTVConfigByKeyForUser(userID, quarkTVQueryTokenConfigKey); err != nil {
 		return QuarkTVLoginPollResult{}, err
 	}
 
 	cacheQuarkTVAccessToken(tokenResp.Data.RefreshToken, tokenResp.Data.AccessToken, tokenResp.Data.ExpiresIn)
 
-	latestSnapshot, err := loadQuarkTVConfigSnapshot()
+	latestSnapshot, err := loadQuarkTVConfigSnapshotForUser(userID)
 	if err != nil {
 		return QuarkTVLoginPollResult{}, err
 	}
@@ -284,7 +284,11 @@ func (s *QuarkTVLoginService) PollLogin(ctx context.Context) (QuarkTVLoginPollRe
 }
 
 func getQuarkTVTranscodingLink(ctx context.Context, fid string) (quarkFileLink, error) {
-	snapshot, err := loadQuarkTVConfigSnapshot()
+	return getQuarkTVTranscodingLinkForUser(ctx, 0, fid)
+}
+
+func getQuarkTVTranscodingLinkForUser(ctx context.Context, userID uint, fid string) (quarkFileLink, error) {
+	snapshot, err := loadQuarkTVConfigSnapshotForUser(userID)
 	if err != nil {
 		return quarkFileLink{}, err
 	}
@@ -658,15 +662,19 @@ func latestQuarkTVUpdatedAt(snapshot quarkTVConfigSnapshot) *time.Time {
 }
 
 func loadQuarkTVConfigSnapshot() (quarkTVConfigSnapshot, error) {
-	refreshToken, hasRefreshToken, err := getOptionalConfigByKey(quarkTVRefreshTokenConfigKey)
+	return loadQuarkTVConfigSnapshotForUser(0)
+}
+
+func loadQuarkTVConfigSnapshotForUser(userID uint) (quarkTVConfigSnapshot, error) {
+	refreshToken, hasRefreshToken, err := getOptionalConfigByKeyForUser(userID, quarkTVRefreshTokenConfigKey)
 	if err != nil {
 		return quarkTVConfigSnapshot{}, err
 	}
-	deviceID, hasDeviceID, err := getOptionalConfigByKey(quarkTVDeviceIDConfigKey)
+	deviceID, hasDeviceID, err := getOptionalConfigByKeyForUser(userID, quarkTVDeviceIDConfigKey)
 	if err != nil {
 		return quarkTVConfigSnapshot{}, err
 	}
-	queryToken, hasQueryToken, err := getOptionalConfigByKey(quarkTVQueryTokenConfigKey)
+	queryToken, hasQueryToken, err := getOptionalConfigByKeyForUser(userID, quarkTVQueryTokenConfigKey)
 	if err != nil {
 		return quarkTVConfigSnapshot{}, err
 	}
@@ -694,6 +702,27 @@ func (s quarkTVConfigSnapshot) QueryTokenValue() string {
 }
 
 func getOptionalConfigByKey(key string) (model.Config, bool, error) {
+	return getOptionalConfigByKeyForUser(0, key)
+}
+
+func getOptionalConfigByKeyForUser(userID uint, key string) (model.Config, bool, error) {
+	if userID != 0 && isQuarkExclusiveMode(userID) {
+		item, err := userConfigDao.GetByUserAndKey(userID, key)
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return model.Config{}, false, nil
+			}
+			return model.Config{}, false, err
+		}
+		return model.Config{
+			CommonModel: item.CommonModel,
+			Name:        key,
+			Key:         item.Key,
+			Value:       item.Value,
+			IsLock:      "1",
+			Remark:      item.Remark,
+		}, true, nil
+	}
 	cfg, err := configDao.GetByKey(key)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -705,7 +734,38 @@ func getOptionalConfigByKey(key string) (model.Config, bool, error) {
 }
 
 func upsertQuarkTVConfig(key, value string) (model.Config, error) {
+	return upsertQuarkTVConfigForUser(0, key, value)
+}
+
+func upsertQuarkTVConfigForUser(userID uint, key, value string) (model.Config, error) {
 	name, remark := quarkTVConfigMeta(key)
+	if userID != 0 && isQuarkExclusiveMode(userID) {
+		if strings.TrimSpace(value) == "" {
+			if err := userConfigDao.DeleteByUserAndKey(userID, key); err != nil {
+				return model.Config{}, err
+			}
+			if key == quarkTVRefreshTokenConfigKey {
+				clearCachedQuarkTVAccessToken()
+			}
+			return model.Config{}, nil
+		}
+		item, err := userConfigDao.Upsert(userID, key, strings.TrimSpace(value), remark)
+		if err != nil {
+			return model.Config{}, err
+		}
+		if key == quarkTVRefreshTokenConfigKey {
+			clearCachedQuarkTVAccessToken()
+		}
+		return model.Config{
+			CommonModel: item.CommonModel,
+			Name:        name,
+			Key:         item.Key,
+			Value:       item.Value,
+			IsLock:      "1",
+			Remark:      item.Remark,
+		}, nil
+	}
+
 	existing, exists, err := getOptionalConfigByKey(key)
 	if err != nil {
 		return model.Config{}, err
@@ -747,6 +807,19 @@ func upsertQuarkTVConfig(key, value string) (model.Config, error) {
 }
 
 func deleteQuarkTVConfigByKey(key string) error {
+	return deleteQuarkTVConfigByKeyForUser(0, key)
+}
+
+func deleteQuarkTVConfigByKeyForUser(userID uint, key string) error {
+	if userID != 0 && isQuarkExclusiveMode(userID) {
+		if err := userConfigDao.DeleteByUserAndKey(userID, key); err != nil {
+			return err
+		}
+		if key == quarkTVRefreshTokenConfigKey {
+			clearCachedQuarkTVAccessToken()
+		}
+		return nil
+	}
 	existing, exists, err := getOptionalConfigByKey(key)
 	if err != nil {
 		return err

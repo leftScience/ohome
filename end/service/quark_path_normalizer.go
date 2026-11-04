@@ -71,11 +71,24 @@ func resolveQuarkRootPathForUser(application, raw string, userID uint) string {
 		}
 		return "/"
 	}
+	if !shouldScopeQuarkRootByUser(userID) {
+		if base != "" {
+			return base
+		}
+		return "/"
+	}
 	return buildQuarkUserScopedRootPath(raw, userID)
 }
 
 func shouldUseUserScopedQuarkRoot(application string) bool {
 	return !strings.EqualFold(strings.TrimSpace(application), "upload")
+}
+
+func shouldScopeQuarkRootByUser(userID uint) bool {
+	if userID == 0 {
+		return false
+	}
+	return isQuarkExclusiveMode(userID)
 }
 
 func splitNormalizedQuarkPathSegments(raw string) []string {

@@ -12,6 +12,14 @@ class QuarkErrorHelper {
 
   static const String authErrorUserHint = '请联系管理员前往「设置 - 夸克登录」更新夸克登录信息后再试。';
 
+  static const String loginRequiredMessage = '请先登录夸克账号后再试';
+  static const String loginRequiredHint = '请前往「设置 - 夸克账户」登录自己的夸克账号。';
+
+  static const List<String> _loginRequiredMarkers = <String>[
+    'quark_login_required',
+    '请先登录夸克账号',
+  ];
+
   static const List<String> _authErrorMarkers = <String>[
     '50051',
     'st invalid',
@@ -34,9 +42,16 @@ class QuarkErrorHelper {
   ];
 
   /// 判断是否为夸克登录态失效（token / cookie 无效或过期）。
+  static bool isQuarkLoginRequired(Object? error) {
+    final text = error?.toString().toLowerCase().trim() ?? '';
+    if (text.isEmpty) return false;
+    return _loginRequiredMarkers.any(text.contains);
+  }
+
   static bool isQuarkAuthError(Object? error) {
     final text = error?.toString().toLowerCase().trim() ?? '';
     if (text.isEmpty) return false;
+    if (isQuarkLoginRequired(text)) return true;
     return _authErrorMarkers.any(text.contains);
   }
 
@@ -49,6 +64,7 @@ class QuarkErrorHelper {
   }) {
     final raw = error?.toString().trim() ?? '';
     if (raw.isEmpty) return fallback;
+    if (isQuarkLoginRequired(raw)) return loginRequiredMessage;
     if (!isQuarkAuthError(raw)) return raw;
     return authErrorMessage;
   }
