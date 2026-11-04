@@ -1,44 +1,45 @@
-# ohome
+# wpan
 
-`ohome` 是一个以夸克网盘为资源底座，把影视、短剧、播客、有声书和电子书整理到同一个 App 中，并围绕资源发现、搜索转存、播放阅读和消息提醒提供完整体验。
+`wpan` 是基于夸克网盘的二次封装与功能补强项目：在夸克官方 API 之上补齐网盘管理、资源搜索转存、在线播放阅读、任务调度与消息通知等能力，并提供配套的 Flutter 客户端。
 
 ## 功能概览
 
-### 首页与资源发现
+### 夸克网盘能力
 
-- 影视、短剧、播客、阅读四个快捷入口
-- 热门推荐：豆瓣实时榜单（电影、电视剧）、红果短剧榜单、懒人听书榜单
-- 榜单支持分页加载，点击条目可直接联动全网资源搜索
-- 搜索资源、消息提醒和播放历史一屏直达
-- 首页历史记录浮层支持断点续播和查看播放列表
+- 夸克 Cookie / TV 扫码登录，多账号配置管理
+- 网盘文件浏览、重命名、移动、上传、删除、批量操作
+- 文件流式播放，支持 302 直连与本地代理两种模式
+- 目录历史与路径规范化，常用目录快速跳转
+- 并发下载与传输进度跟踪
 
-### 家庭影音资源中心
+### 资源搜索与转存
+
+- 基于 pansou 的网盘资源聚合搜索，支持多搜索源插件
+- 搜索结果支持复制分享链接、一键转存
+- 手动转存支持填写分享链接、提取码和保存路径
+- 自动转存 / 定时同步，支持每天、每周规则
+- 转存 / 同步完成后推送站内消息
+
+### 任务中心
+
+- 统一管理转存任务与自动同步任务
+- 支持任务搜索、状态筛选、执行详情、去同步和删除
+- 任务执行记录与失败原因回显
+
+### 播放与阅读
 
 - 影视、短剧、播客 / 有声书等资源浏览与在线播放
-- 基于夸克网盘文件流播放，支持 302 直连和本地代理
 - 视频播放器支持全屏、倍速、字幕、音轨、跳过片头片尾和投屏
 - 短剧播放器支持选集、连续播放和手势控制
 - 播客 / 有声书音频播放，支持后台播放、定时关闭和断点续播
 - EPUB / TXT / PDF 电子书阅读，保留阅读进度
 - 播放历史记录与首页最近观看回显
 
-### 资源搜索与任务中心
+### 资源发现
 
-- 基于 pansou 的网盘资源聚合搜索
-- 搜索结果支持复制分享链接、一键转存
-- 手动转存支持填写分享链接、提取码和保存路径
-- 任务中心统一管理转存任务与同步任务
-- 支持任务搜索、状态筛选、执行详情、去同步和删除
-- 自动转存 / 定时同步，支持每天、每周规则
-- 转存 / 同步完成后推送站内消息
-
-### 夸克网盘能力
-
-- 夸克 Cookie / TV 扫码登录
-- 夸克目录配置管理
-- 网盘文件浏览、重命名、移动、上传、删除、流式播放
-- 支持夸克 302 播放
-- 夸克资源搜索
+- 热门推荐：豆瓣实时榜单（电影、电视剧）、短剧榜单、听书榜单
+- 榜单支持分页加载，点击条目可直接联动全网资源搜索
+- 搜索资源、消息提醒和播放历史一屏直达
 
 ### 消息与账号
 
@@ -55,7 +56,6 @@
 2. 再安装 Android 客户端
 3. 在客户端登录页通过局域网发现或手动输入服务端地址完成连接
 
-
 > 视频录制于早期版本，部分界面和功能已经调整，请以当前版本为准。
 
 ## 服务端
@@ -63,9 +63,9 @@
 #### 快速启动（docker run）
 
 ```bash
-mkdir -p /opt/ohome/conf /opt/ohome/data /opt/ohome/log 
+mkdir -p /opt/wpan/conf /opt/wpan/data /opt/wpan/log
 
-docker run -d --name ohome-server --restart unless-stopped -p 18090:18090  --add-host host.docker.internal:host-gateway -v /opt/ohome/conf:/app/conf -v /opt/ohome/data:/app/data -v /opt/ohome/log:/app/log hanlinwang0606/ohome:runtime-v2026.11.03  
+docker run -d --name wpan-server --restart unless-stopped -p 18090:18090 --add-host host.docker.internal:host-gateway -v /opt/wpan/conf:/app/conf -v /opt/wpan/data:/app/data -v /opt/wpan/log:/app/log hanlinwang0606/ohome:runtime-v2026.11.03
 ```
 
 #### 独立运行包（Windows / macOS / Linux）
@@ -77,15 +77,15 @@ docker run -d --name ohome-server --restart unless-stopped -p 18090:18090  --add
 - `conf/config.yaml`
 - `sql/init_data.sql`
 
-首次启动请运行 `launcher`（不要直接运行 `server`），后续 App 可通过“关于oHome”页触发后端拉取最新二进制并自动重启服务。
+首次启动请运行 `launcher`（不要直接运行 `server`），后续 App 可通过“关于wpan”页触发后端拉取最新二进制并自动重启服务。
 
 ### 服务端数据持久化
 
 服务端部署时，下面几个目录最重要：
 
-- [`/opt/ohome/conf/config.yaml`](./end/conf/config.yaml)：运行配置
-- [`/opt/ohome/data`](./end/data)：数据库和实例标识
-- [`/opt/ohome/log`](./end/log)：日志文件
+- [`/opt/wpan/conf/config.yaml`](./end/conf/config.yaml)：运行配置
+- [`/opt/wpan/data`](./end/data)：数据库和实例标识
+- [`/opt/wpan/log`](./end/log)：日志文件
 
 建议定期备份
 
@@ -127,9 +127,9 @@ admin/123
 <table>
   <tr>
     <td align="center">
-      <img src="./.github/assets/资源管理.jpg" width="220" alt="影视资源库" />
+      <img src="./.github/assets/资源管理.jpg" width="220" alt="网盘文件管理" />
       <br />
-      影视资源库
+      网盘文件管理
     </td>
     <td align="center">
       <img src="./.github/assets/夸克资源全网搜索.jpg" width="220" alt="资源搜索与一键转存" />

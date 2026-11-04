@@ -26,7 +26,7 @@ Widget _buildApp({required String initialRoute}) {
     designSize: const Size(375, 876),
     minTextAdapt: true,
     builder: (context, child) => GetMaterialApp(
-      title: 'oHome',
+      title: 'wpan',
       locale: const Locale('zh', 'CN'),
       fallbackLocale: const Locale('zh', 'CN'),
       supportedLocales: const <Locale>[Locale('zh', 'CN')],

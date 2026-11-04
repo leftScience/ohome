@@ -1,5 +1,5 @@
 name: ohome
-description: "oHome 家庭影音、阅读与网盘资源管理客户端。"
+description: "wpan 夸克网盘二次封装与功能补强客户端。"
 publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
 version: 1.0.0+1

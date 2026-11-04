@@ -20,7 +20,7 @@ class ServerUpdateView extends GetView<ServerUpdateController> {
       backgroundColor: AppThemeColors.pageBackground,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('关于oHome'),
+        title: const Text('关于wpan'),
         backgroundColor: Colors.transparent,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
@@ -352,7 +352,7 @@ class _AboutHeroCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'oHome',
+                          'wpan',
                           style: TextStyle(
                             fontSize: 20.sp,
                             fontWeight: FontWeight.w800,
@@ -362,7 +362,7 @@ class _AboutHeroCard extends StatelessWidget {
                         ),
                         SizedBox(height: 2.h),
                         Text(
-                          '家庭场景下的个人 / 家庭资源管理项目',
+                          '基于夸克网盘的二次封装与功能补强项目',
                           style: TextStyle(
                             fontSize: 12.sp,
                             color: AppThemeColors.textSecondary,

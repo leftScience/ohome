@@ -87,7 +87,7 @@ class MeView extends GetView<MeController> {
               _SettingsMenuCard(
                 icon: Icons.info_outline_rounded,
                 iconColor: const Color(0xFF1E88E5),
-                title: '关于oHome',
+                title: '关于wpan',
                 onTap: controller.openServerUpdate,
               ),
               SizedBox(height: 12.h),

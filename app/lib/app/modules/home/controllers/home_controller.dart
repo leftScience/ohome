@@ -252,7 +252,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       AlertDialog(
         title: const Text('提示'),
         content: const Text(
-          '你目前使用的是开发者提供的免费后端接口。如需稳定的后端，以及数据的绝对安全，请自部署后端服务器并进行连接。部署方式请参考关于oHome-github的文档',
+          '你目前使用的是开发者提供的免费后端接口。如需稳定的后端，以及数据的绝对安全，请自部署后端服务器并进行连接。部署方式请参考关于wpan-github的文档',
         ),
         actions: [
           TextButton(
