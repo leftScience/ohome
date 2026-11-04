@@ -31,9 +31,16 @@ class QuarkLoginController extends GetxController {
   final cookieConfig = Rxn<ConfigModel>();
   final tvStatus = Rxn<QuarkTvLoginStatus>();
 
+  /// shared=维护全局共享凭证；personal=维护当前用户独享凭证；空则后端按 auto。
+  String credentialTarget = '';
+
   @override
   void onInit() {
     super.onInit();
+    final args = Get.arguments;
+    if (args is Map) {
+      credentialTarget = (args['credentialTarget'] ?? '').toString().trim();
+    }
     loadData();
   }
 
@@ -61,7 +68,10 @@ class QuarkLoginController extends GetxController {
 
   Future<void> loadCookieConfig() async {
     try {
-      cookieConfig.value = await _configApi.findConfigByKey(_quarkCookiesKey);
+      cookieConfig.value = await _configApi.findConfigByKey(
+        _quarkCookiesKey,
+        credentialTarget: credentialTarget.isEmpty ? null : credentialTarget,
+      );
     } catch (_) {
       cookieConfig.value = null;
     }
@@ -69,7 +79,10 @@ class QuarkLoginController extends GetxController {
 
   Future<void> loadTvStatus() async {
     try {
-      tvStatus.value = await _quarkTvLoginApi.getStatus(showErrorToast: false);
+      tvStatus.value = await _quarkTvLoginApi.getStatus(
+        credentialTarget: credentialTarget.isEmpty ? null : credentialTarget,
+        showErrorToast: false,
+      );
     } catch (_) {
       tvStatus.value = const QuarkTvLoginStatus(
         configured: false,
@@ -99,7 +112,9 @@ class QuarkLoginController extends GetxController {
     if (tvLoading.value) return;
     tvLoading.value = true;
     try {
-      final startResult = await _quarkTvLoginApi.startLogin();
+      final startResult = await _quarkTvLoginApi.startLogin(
+        credentialTarget: credentialTarget.isEmpty ? null : credentialTarget,
+      );
       if (startResult.qrData.isEmpty) {
         Get.snackbar('提示', '未获取到夸克TV二维码');
         return;
@@ -108,6 +123,7 @@ class QuarkLoginController extends GetxController {
         () => QuarkTvQrLoginView(
           api: _quarkTvLoginApi,
           initialQrData: startResult.qrData,
+          credentialTarget: credentialTarget.isEmpty ? null : credentialTarget,
         ),
       );
       await loadTvStatus();
@@ -159,7 +175,11 @@ class QuarkLoginController extends GetxController {
       return;
     }
     await _configApi.saveConfig(
-      ConfigUpsertPayload.fromConfig(existing, value: ''),
+      ConfigUpsertPayload.fromConfig(
+        existing,
+        value: '',
+        credentialTarget: credentialTarget.isEmpty ? null : credentialTarget,
+      ),
     );
     await loadCookieConfig();
   }
@@ -174,14 +194,20 @@ class QuarkLoginController extends GetxController {
     cookieSaving.value = true;
     try {
       final existing = cookieConfig.value;
+      final target = credentialTarget.isEmpty ? null : credentialTarget;
       final payload = existing != null
-          ? ConfigUpsertPayload.fromConfig(existing, value: normalized)
+          ? ConfigUpsertPayload.fromConfig(
+              existing,
+              value: normalized,
+              credentialTarget: target,
+            )
           : ConfigUpsertPayload(
               name: '夸克cookies',
               key: _quarkCookiesKey,
               value: normalized,
               isLock: '1',
               remark: '',
+              credentialTarget: target,
             );
       await _configApi.saveConfig(payload);
       Get.snackbar('提示', '夸克网页登录 Cookies 已保存');

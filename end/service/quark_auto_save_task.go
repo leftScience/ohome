@@ -128,7 +128,7 @@ func precheckQuarkTransfer(task quarkSaveTask) error {
 		return err
 	}
 
-	saveRootPath := buildQuarkSavePath(task.SavePath)
+	saveRootPath := buildQuarkSavePath(task.SavePath, task.OwnerUserID, task.Application)
 	saveRootFid, err := client.ensurePathFid(ctx, saveRootPath)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {

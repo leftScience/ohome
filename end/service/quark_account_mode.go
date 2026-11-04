@@ -18,6 +18,10 @@ const (
 	QuarkAccountModeShared    = "shared"
 	QuarkAccountModeExclusive = "exclusive"
 
+	QuarkCredentialTargetAuto     = "auto"
+	QuarkCredentialTargetShared   = "shared"
+	QuarkCredentialTargetPersonal = "personal"
+
 	ErrCodeQuarkLoginRequired = "QUARK_LOGIN_REQUIRED"
 )
 
@@ -147,6 +151,35 @@ func isQuarkExclusiveMode(userID uint) bool {
 	return resolveQuarkAccountMode(userID) == QuarkAccountModeExclusive
 }
 
+
+func normalizeQuarkCredentialTarget(raw string) string {
+	switch strings.ToLower(strings.TrimSpace(raw)) {
+	case QuarkCredentialTargetShared:
+		return QuarkCredentialTargetShared
+	case QuarkCredentialTargetPersonal:
+		return QuarkCredentialTargetPersonal
+	default:
+		return QuarkCredentialTargetAuto
+	}
+}
+
+// resolveQuarkCredentialUsePersonal 决定凭证读写落库位置。
+// shared → 全局 sys_config；personal → 用户 sys_user_config；
+// auto → 跟随生效模式（独享走个人，共享走全局）。
+func resolveQuarkCredentialUsePersonal(userID uint, target string) (bool, error) {
+	switch normalizeQuarkCredentialTarget(target) {
+	case QuarkCredentialTargetShared:
+		return false, nil
+	case QuarkCredentialTargetPersonal:
+		if userID == 0 {
+			return false, errors.New("用户信息不存在")
+		}
+		return true, nil
+	default:
+		return userID != 0 && isQuarkExclusiveMode(userID), nil
+	}
+}
+
 func canManageQuarkCredentials(loginUser model.LoginUser) bool {
 	if loginUser.ID == 0 {
 		return false
@@ -238,12 +271,28 @@ func CanManageQuarkCredentialsExport(loginUser model.LoginUser) bool {
 	return canManageQuarkCredentials(loginUser)
 }
 
-func GetQuarkCredentialConfigAsModel(userID uint, key string) (model.Config, bool, error) {
+func NormalizeQuarkCredentialTargetExport(raw string) string {
+	return normalizeQuarkCredentialTarget(raw)
+}
+
+func ResolveQuarkCredentialUsePersonalExport(userID uint, target string) (bool, error) {
+	return resolveQuarkCredentialUsePersonal(userID, target)
+}
+
+func IsQuarkExclusiveModeExport(userID uint) bool {
+	return isQuarkExclusiveMode(userID)
+}
+
+func GetQuarkCredentialConfigAsModel(userID uint, key string, target string) (model.Config, bool, error) {
 	key = strings.TrimSpace(key)
 	if !isQuarkCredentialConfigKey(key) {
 		return model.Config{}, false, errors.New("不是夸克凭证配置")
 	}
-	if isQuarkExclusiveMode(userID) {
+	usePersonal, err := resolveQuarkCredentialUsePersonal(userID, target)
+	if err != nil {
+		return model.Config{}, false, err
+	}
+	if usePersonal {
 		item, err := userConfigDao.GetByUserAndKey(userID, key)
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -271,7 +320,7 @@ func GetQuarkCredentialConfigAsModel(userID uint, key string) (model.Config, boo
 	return cfg, true, nil
 }
 
-func SaveQuarkCredentialConfig(userID uint, update *dto.ConfigUpdateDTO) error {
+func SaveQuarkCredentialConfig(userID uint, update *dto.ConfigUpdateDTO, target string) error {
 	if update == nil {
 		return errors.New("配置不能为空")
 	}
@@ -290,12 +339,17 @@ func SaveQuarkCredentialConfig(userID uint, update *dto.ConfigUpdateDTO) error {
 		update.IsLock = "1"
 	}
 
-	if isQuarkExclusiveMode(userID) {
-		_, err := userConfigDao.Upsert(userID, key, update.Value, update.Remark)
+	usePersonal, err := resolveQuarkCredentialUsePersonal(userID, target)
+	if err != nil {
 		return err
 	}
-	if userID != 0 && !isQuarkExclusiveMode(userID) {
-		// 共享模式下仅超管可写全局凭证；调用方已校验权限
+	if usePersonal {
+		update.ID = 0 // 避免把 user_config 的 ID 误当成全局 sys_config 主键
+		if strings.TrimSpace(update.Value) == "" {
+			return userConfigDao.DeleteByUserAndKey(userID, key)
+		}
+		_, err := userConfigDao.Upsert(userID, key, update.Value, update.Remark)
+		return err
 	}
 	existing, err := configDao.GetByKey(key)
 	if err == nil {
@@ -307,6 +361,28 @@ func SaveQuarkCredentialConfig(userID uint, update *dto.ConfigUpdateDTO) error {
 		return err
 	}
 	return configDao.AddOrUpdateConfig(update)
+}
+
+func DeleteQuarkCredentialConfig(userID uint, key string, target string) error {
+	key = strings.TrimSpace(key)
+	if !isQuarkCredentialConfigKey(key) {
+		return errors.New("不是夸克凭证配置")
+	}
+	usePersonal, err := resolveQuarkCredentialUsePersonal(userID, target)
+	if err != nil {
+		return err
+	}
+	if usePersonal {
+		return userConfigDao.DeleteByUserAndKey(userID, key)
+	}
+	existing, err := configDao.GetByKey(key)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil
+		}
+		return err
+	}
+	return configDao.DeleteConfig(existing.ID)
 }
 
 func quarkCredentialMeta(key string) (string, string) {
@@ -331,4 +407,13 @@ func firstNonEmpty(values ...string) string {
 		}
 	}
 	return ""
+}
+
+
+func SetQuarkAccountModeOverrideForTest(fn func(userID uint) string) {
+	quarkAccountModeOverride = fn
+}
+
+func ClearQuarkAccountModeOverrideForTest() {
+	quarkAccountModeOverride = nil
 }

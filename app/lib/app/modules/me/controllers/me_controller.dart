@@ -82,13 +82,34 @@ class MeController extends GetxController {
     ChangePasswordSheet.show();
   }
 
-  Future<void> openQuarkLogin() async {
+  Future<void> openQuarkLogin({String? credentialTarget}) async {
     if (!canOpenQuarkLogin) {
       Get.snackbar('提示', '当前共享模式下无需个人夸克登录');
       return;
     }
-    await Get.toNamed(Routes.QUARK_LOGIN);
+    final target = (credentialTarget ?? '').trim();
+    await Get.toNamed(
+      Routes.QUARK_LOGIN,
+      arguments: target.isEmpty
+          ? null
+          : <String, dynamic>{'credentialTarget': target},
+    );
     await refreshQuarkAccountStatus();
+  }
+
+  /// 超管「夸克配置 - 夸克登录」：系统共享时始终维护全局共享凭证。
+  Future<void> openSharedQuarkLogin() async {
+    if (!_ensureSuperAdmin()) return;
+    if (accountStatus.systemMode == 'shared') {
+      await openQuarkLogin(credentialTarget: 'shared');
+      return;
+    }
+    await openQuarkLogin(credentialTarget: 'personal');
+  }
+
+  /// 用户独享入口：始终写个人凭证。
+  Future<void> openPersonalQuarkLogin() async {
+    await openQuarkLogin(credentialTarget: 'personal');
   }
 
   void openQuarkSearchSettings() {
@@ -142,7 +163,7 @@ class MeController extends GetxController {
       await refreshQuarkAccountStatus();
       if (prefer) {
         Get.snackbar('提示', '已开启独享，请登录自己的夸克账号');
-        await openQuarkLogin();
+        await openPersonalQuarkLogin();
       } else {
         Get.snackbar('提示', '已关闭独享，将使用共享夸克数据');
       }

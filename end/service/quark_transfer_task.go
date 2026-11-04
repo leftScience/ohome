@@ -77,6 +77,7 @@ func (s *QuarkTransferTaskService) SubmitSearchManualTransfer(transferDTO *dto.Q
 		ShareURL:    shareURL,
 		SavePath:    savePath,
 		Passcode:    passcode,
+		Application: application,
 	}); err != nil {
 		return model.QuarkTransferTask{}, err
 	}
@@ -151,6 +152,7 @@ func (s *QuarkTransferTaskService) submit(submission quarkTransferTaskSubmission
 			ShareURL:         transferTask.ShareURL,
 			SavePath:         transferTask.SavePath,
 			Passcode:         transferTask.Passcode,
+			Application:      transferTask.Application,
 			RenameTopLevelTo: submission.renameTo,
 		},
 	}); err != nil {

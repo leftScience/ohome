@@ -120,3 +120,24 @@ func splitNormalizedQuarkPathSegments(raw string) []string {
 	}
 	return segments
 }
+
+
+// stripTrailingQuarkUserScopeSegment 去掉路径末尾已拼接的 /{userId}，避免二次隔离。
+func stripTrailingQuarkUserScopeSegment(raw string, userID uint) string {
+	if userID == 0 {
+		return raw
+	}
+	segments := splitNormalizedQuarkPathSegments(raw)
+	if len(segments) == 0 {
+		return raw
+	}
+	userSegment := strings.TrimSpace(strconv.FormatUint(uint64(userID), 10))
+	if userSegment == "" || segments[len(segments)-1] != userSegment {
+		return raw
+	}
+	trimmed := segments[:len(segments)-1]
+	if len(trimmed) == 0 {
+		return ""
+	}
+	return path.Join(trimmed...)
+}

@@ -300,7 +300,7 @@ func failQuarkFsError(err error, c *gin.Context) {
 		utils.FailWithDetailed(gin.H{"errorCode": service.ErrCodeQuarkLoginRequired}, err.Error(), c)
 		return
 	}
-	failQuarkFsError(err, c)
+	utils.FailWithMessage(err.Error(), c)
 }
 
 func (a *QuarkFs) getLoginUserID(c *gin.Context) (uint, error) {

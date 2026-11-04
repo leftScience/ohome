@@ -4,6 +4,7 @@ import (
 	"ohome/model"
 	"ohome/service"
 	"ohome/utils"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -19,12 +20,12 @@ func NewQuarkLoginApi() QuarkLogin {
 }
 
 func (a *QuarkLogin) GetQuarkTVStatus(c *gin.Context) {
-	loginUser, ok := requireQuarkCredentialManager(c)
+	loginUser, target, ok := requireQuarkCredentialManagerWithTarget(c)
 	if !ok {
 		return
 	}
 
-	status, err := quarkTVLoginService.GetStatus(loginUser.ID)
+	status, err := quarkTVLoginService.GetStatus(loginUser.ID, target)
 	if err != nil {
 		utils.FailWithMessage(err.Error(), c)
 		return
@@ -33,12 +34,12 @@ func (a *QuarkLogin) GetQuarkTVStatus(c *gin.Context) {
 }
 
 func (a *QuarkLogin) StartQuarkTVLogin(c *gin.Context) {
-	loginUser, ok := requireQuarkCredentialManager(c)
+	loginUser, target, ok := requireQuarkCredentialManagerWithTarget(c)
 	if !ok {
 		return
 	}
 
-	result, err := quarkTVLoginService.StartLogin(c.Request.Context(), loginUser.ID)
+	result, err := quarkTVLoginService.StartLogin(c.Request.Context(), loginUser.ID, target)
 	if err != nil {
 		utils.FailWithMessage(err.Error(), c)
 		return
@@ -47,12 +48,12 @@ func (a *QuarkLogin) StartQuarkTVLogin(c *gin.Context) {
 }
 
 func (a *QuarkLogin) PollQuarkTVLogin(c *gin.Context) {
-	loginUser, ok := requireQuarkCredentialManager(c)
+	loginUser, target, ok := requireQuarkCredentialManagerWithTarget(c)
 	if !ok {
 		return
 	}
 
-	result, err := quarkTVLoginService.PollLogin(c.Request.Context(), loginUser.ID)
+	result, err := quarkTVLoginService.PollLogin(c.Request.Context(), loginUser.ID, target)
 	if err != nil {
 		utils.FailWithMessage(err.Error(), c)
 		return
@@ -60,15 +61,17 @@ func (a *QuarkLogin) PollQuarkTVLogin(c *gin.Context) {
 	utils.OkWithData(result, c)
 }
 
-func requireQuarkCredentialManager(c *gin.Context) (model.LoginUser, bool) {
+func requireQuarkCredentialManagerWithTarget(c *gin.Context) (model.LoginUser, string, bool) {
 	loginUser, err := getLoginUser(c)
 	if err != nil {
 		utils.FailWithMessage(err.Error(), c)
-		return model.LoginUser{}, false
+		return model.LoginUser{}, "", false
 	}
-	if !service.CanManageQuarkCredentialsExport(loginUser) {
+
+	target := service.NormalizeQuarkCredentialTargetExport(strings.TrimSpace(c.Query("credentialTarget")))
+	if !canAccessQuarkCredentialAPI(loginUser, target) {
 		utils.PermissionFail("当前模式下无夸克登录权限", c)
-		return model.LoginUser{}, false
+		return model.LoginUser{}, "", false
 	}
-	return loginUser, true
+	return loginUser, target, true
 }

@@ -9,28 +9,46 @@ class QuarkTvLoginApi {
 
   final HttpClient _httpClient;
 
-  Future<QuarkTvLoginStatus> getStatus({bool showErrorToast = true}) {
+  Future<QuarkTvLoginStatus> getStatus({
+    String? credentialTarget,
+    bool showErrorToast = true,
+  }) {
     return _httpClient.get<QuarkTvLoginStatus>(
       '/quarkLogin/tv/status',
+      queryParameters: _targetQuery(credentialTarget),
       showErrorToast: showErrorToast,
       decoder: (data) => _decodeStatus(data),
     );
   }
 
-  Future<QuarkTvLoginStartResponse> startLogin({bool showErrorToast = true}) {
+  Future<QuarkTvLoginStartResponse> startLogin({
+    String? credentialTarget,
+    bool showErrorToast = true,
+  }) {
     return _httpClient.post<QuarkTvLoginStartResponse>(
       '/quarkLogin/tv/start',
+      queryParameters: _targetQuery(credentialTarget),
       showErrorToast: showErrorToast,
       decoder: (data) => _decodeStart(data),
     );
   }
 
-  Future<QuarkTvLoginPollResponse> pollLogin({bool showErrorToast = true}) {
+  Future<QuarkTvLoginPollResponse> pollLogin({
+    String? credentialTarget,
+    bool showErrorToast = true,
+  }) {
     return _httpClient.post<QuarkTvLoginPollResponse>(
       '/quarkLogin/tv/poll',
+      queryParameters: _targetQuery(credentialTarget),
       showErrorToast: showErrorToast,
       decoder: (data) => _decodePoll(data),
     );
+  }
+
+  static Map<String, dynamic>? _targetQuery(String? credentialTarget) {
+    final value = credentialTarget?.trim() ?? '';
+    if (value.isEmpty) return null;
+    return <String, dynamic>{'credentialTarget': value};
   }
 
   static QuarkTvLoginStatus _decodeStatus(dynamic data) {

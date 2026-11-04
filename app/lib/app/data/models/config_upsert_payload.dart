@@ -8,6 +8,7 @@ class ConfigUpsertPayload {
     required this.value,
     required this.isLock,
     required this.remark,
+    this.credentialTarget,
   });
 
   final int? id;
@@ -16,8 +17,13 @@ class ConfigUpsertPayload {
   final String value;
   final String isLock;
   final String remark;
+  final String? credentialTarget;
 
-  factory ConfigUpsertPayload.fromConfig(ConfigModel config, {String? value}) {
+  factory ConfigUpsertPayload.fromConfig(
+    ConfigModel config, {
+    String? value,
+    String? credentialTarget,
+  }) {
     return ConfigUpsertPayload(
       id: config.id,
       name: config.name,
@@ -25,6 +31,7 @@ class ConfigUpsertPayload {
       value: value ?? config.value,
       isLock: config.isLock,
       remark: config.remark,
+      credentialTarget: credentialTarget,
     );
   }
 
@@ -36,6 +43,8 @@ class ConfigUpsertPayload {
       'value': value,
       'isLock': isLock.trim(),
       'remark': remark.trim(),
+      if (credentialTarget != null && credentialTarget!.trim().isNotEmpty)
+        'credentialTarget': credentialTarget!.trim(),
     };
   }
 }

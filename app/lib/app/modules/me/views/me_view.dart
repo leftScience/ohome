@@ -67,7 +67,7 @@ class MeView extends GetView<MeController> {
                           preferSaving: controller.quarkPreferSaving.value,
                           onPreferChanged: controller.setPreferExclusive,
                           onLoginTap: controller.canOpenQuarkLogin
-                              ? controller.openQuarkLogin
+                              ? controller.openPersonalQuarkLogin
                               : null,
                         ),
                       ];
@@ -98,7 +98,7 @@ class MeView extends GetView<MeController> {
                                 controller.quarkSystemModeSaving.value,
                             onTap: controller.toggleQuarkAdminMenu,
                             onSystemModeChanged: controller.setSystemShareMode,
-                            onLoginTap: controller.openQuarkLogin,
+                            onLoginTap: controller.openSharedQuarkLogin,
                             onSearchTap: controller.openQuarkSearchSettings,
                             onStreamTap: controller.openQuarkStreamSettings,
                           ),

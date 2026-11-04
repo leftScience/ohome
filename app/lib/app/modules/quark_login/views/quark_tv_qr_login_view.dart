@@ -15,10 +15,12 @@ class QuarkTvQrLoginView extends StatefulWidget {
     super.key,
     required this.api,
     required this.initialQrData,
+    this.credentialTarget,
   });
 
   final QuarkTvLoginApi api;
   final String initialQrData;
+  final String? credentialTarget;
 
   @override
   State<QuarkTvQrLoginView> createState() => _QuarkTvQrLoginViewState();
@@ -58,7 +60,10 @@ class _QuarkTvQrLoginViewState extends State<QuarkTvQrLoginView> {
     if (_polling || !mounted) return;
     _polling = true;
     try {
-      final result = await widget.api.pollLogin(showErrorToast: false);
+      final result = await widget.api.pollLogin(
+        credentialTarget: widget.credentialTarget,
+        showErrorToast: false,
+      );
       if (!mounted) return;
       _handlePollResult(result);
     } catch (error) {
@@ -104,7 +109,9 @@ class _QuarkTvQrLoginViewState extends State<QuarkTvQrLoginView> {
       _statusText = '正在获取新的二维码...';
     });
     try {
-      final result = await widget.api.startLogin();
+      final result = await widget.api.startLogin(
+        credentialTarget: widget.credentialTarget,
+      );
       if (!mounted) return;
       setState(() {
         _qrData = result.qrData;

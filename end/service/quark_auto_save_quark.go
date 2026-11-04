@@ -24,6 +24,7 @@ type quarkSaveTask struct {
 	ShareURL         string
 	SavePath         string
 	Passcode         string
+	Application      string
 	RenameTopLevelTo string
 }
 
@@ -181,7 +182,7 @@ func (c *quarkClient) saveFromShare(ctx context.Context, task quarkSaveTask) (qu
 		return quarkSaveResult{Status: "fail", Message: err.Error()}, err
 	}
 
-	saveRootPath := buildQuarkSavePath(task.SavePath)
+	saveRootPath := buildQuarkSavePath(task.SavePath, task.OwnerUserID, task.Application)
 	saveRootFid, err := c.ensurePathFid(ctx, saveRootPath)
 	if err != nil {
 		return quarkSaveResult{Status: "fail", Message: err.Error()}, err
@@ -223,9 +224,15 @@ func (c *quarkClient) saveFromShare(ctx context.Context, task quarkSaveTask) (qu
 	return quarkSaveResult{Status: "ok", Message: message, SavedCount: saved}, nil
 }
 
-func buildQuarkSavePath(storePath string) string {
-	p := strings.TrimSpace(storePath)
-	p = normalizeQuarkPath(p)
+// buildQuarkSavePath 将转存/同步保存路径对齐浏览根。
+// OwnerUserID=0 的旧任务按共享路径处理，不追加用户目录（安全跳过独享隔离）。
+func buildQuarkSavePath(storePath string, ownerUserID uint, application string) string {
+	raw := strings.TrimSpace(storePath)
+	if ownerUserID != 0 {
+		raw = stripTrailingQuarkUserScopeSegment(raw, ownerUserID)
+		raw = resolveQuarkRootPathForUser(application, raw, ownerUserID)
+	}
+	p := normalizeQuarkPath(raw)
 	if p == "/" || p == "" {
 		return "/"
 	}
