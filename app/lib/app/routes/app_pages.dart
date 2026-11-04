@@ -98,7 +98,8 @@ class AppPages {
       name: _Paths.QUARK_LOGIN,
       page: () => const QuarkLoginView(),
       binding: QuarkLoginBinding(),
-      middlewares: [AuthMiddleware(), SuperAdminMiddleware()],
+      // 独享用户需自行登录夸克；入口鉴权由 openQuarkLogin / 后端 requireQuarkCredentialManager 负责。
+      middlewares: [AuthMiddleware()],
     ),
     GetPage(
       name: _Paths.QUARK_SEARCH_SETTINGS,
