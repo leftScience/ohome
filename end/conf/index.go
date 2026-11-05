@@ -16,7 +16,7 @@ func InitConfig() {
 	viper.SetDefault("DB.InitData", true)
 	viper.SetDefault("DB.InitSQLPath", "./sql/init_data.sql")
 	viper.SetDefault("DB.ImportInitSQLOnFirstRun", true)
-	viper.SetDefault("config.allowUserRegistration", false)
+	viper.SetDefault("config.allowUserRegistration", true)
 	viper.SetDefault("quark.transfer.workers", 2)
 	viper.SetDefault("quark.transfer.queueSize", 32)
 	viper.SetDefault("quark.stream.concurrency", 3)
