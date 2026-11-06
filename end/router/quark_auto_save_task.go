@@ -19,6 +19,7 @@ func InitQuarkAutoSaveTaskRoutes() {
 			rg.DELETE("/:id", taskApi.Delete)
 			rg.POST("/run/:id", taskApi.RunOnce)
 			rg.POST("/transfer", taskApi.TransferOnce)
+			rg.POST("/share-preview", taskApi.SharePreview)
 		}
 	})
 }

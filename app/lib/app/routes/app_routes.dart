@@ -18,6 +18,7 @@ abstract class Routes {
   static const QUARK_SYNC = _Paths.QUARK_SYNC;
   static const QUARK_TRANSFER_TASKS = _Paths.QUARK_TRANSFER_TASKS;
   static const SEARCH = _Paths.SEARCH;
+  static const SHARE_PREVIEW = _Paths.SHARE_PREVIEW;
   static const TV = _Paths.TV;
   static const PLAYLET = _Paths.PLAYLET;
   static const PLAYLET_PLAYER = _Paths.PLAYLET_PLAYER;
@@ -47,6 +48,7 @@ abstract class _Paths {
   static const QUARK_SYNC = '/quark-sync';
   static const QUARK_TRANSFER_TASKS = '/quark-transfer-tasks';
   static const SEARCH = '/search';
+  static const SHARE_PREVIEW = '/search/share-preview';
   static const TV = '/tv';
   static const PLAYLET = '/playlet';
   static const PLAYLET_PLAYER = '/playlet-player';

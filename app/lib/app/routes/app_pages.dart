@@ -29,7 +29,9 @@ import '../modules/quark_sync/views/quark_sync_view.dart';
 import '../modules/quark_transfer_tasks/bindings/quark_transfer_tasks_binding.dart';
 import '../modules/quark_transfer_tasks/views/quark_transfer_tasks_view.dart';
 import '../modules/search/bindings/search_binding.dart';
+import '../modules/search/bindings/share_preview_binding.dart';
 import '../modules/search/views/search_view.dart';
+import '../modules/search/views/share_preview_view.dart';
 import '../modules/server_update/bindings/server_update_binding.dart';
 import '../modules/server_update/views/server_update_view.dart';
 import '../modules/user_management/bindings/user_management_binding.dart';
@@ -148,6 +150,12 @@ class AppPages {
       name: _Paths.SEARCH,
       page: () => const SearchView(),
       binding: SearchBinding(),
+    ),
+    GetPage(
+      name: _Paths.SHARE_PREVIEW,
+      page: () => const SharePreviewView(),
+      binding: SharePreviewBinding(),
+      middlewares: [AuthMiddleware()],
     ),
     GetPage(
       name: _Paths.TV,

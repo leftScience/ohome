@@ -244,6 +244,8 @@ type quarkShareFile struct {
 	ShareFidToken string `json:"share_fid_token"`
 	FileName      string `json:"file_name"`
 	Dir           bool   `json:"dir"`
+	Size          int64  `json:"size"`
+	UpdatedAt     int64  `json:"updated_at"`
 }
 
 func extractShareParams(raw string) (pwdID string, passcode string, pdirFid string, err error) {

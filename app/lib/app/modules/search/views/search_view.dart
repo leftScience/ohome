@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
+import '../../../data/models/pansou_resource_item.dart';
+import '../../../routes/app_pages.dart';
 import '../../../theme/app_theme.dart';
 import '../controllers/search_controller.dart' as search_controller;
 
@@ -45,6 +47,19 @@ class _SearchViewState extends State<SearchView> {
       return;
     }
     Get.back();
+  }
+
+  void _openSharePreview(PansouResourceItem item) {
+    final url = item.url.trim();
+    if (url.isEmpty) return;
+    FocusScope.of(context).unfocus();
+    Get.toNamed(
+      Routes.SHARE_PREVIEW,
+      arguments: <String, dynamic>{
+        'shareUrl': url,
+        'title': item.textParts.title,
+      },
+    );
   }
 
   @override
@@ -434,6 +449,41 @@ class _SearchViewState extends State<SearchView> {
                                   icon: Icon(Icons.copy_rounded, size: 16.w),
                                   label: Text(
                                     '复制链接',
+                                    style: TextStyle(
+                                      fontSize: 13.sp,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              // 竖分割
+                              Container(
+                                width: 1,
+                                height: 30.h,
+                                color: AppThemeColors.border,
+                              ),
+                              // 查看（预览分享内容）
+                              Expanded(
+                                child: TextButton.icon(
+                                  onPressed: itemUrl.isEmpty
+                                      ? null
+                                      : () => _openSharePreview(item),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: itemUrl.isEmpty
+                                        ? AppThemeColors.textDisabled
+                                        : AppThemeColors.primary,
+                                    minimumSize: Size(0, 58.h),
+                                    padding: EdgeInsets.symmetric(
+                                      vertical: 16.h,
+                                    ),
+                                    shape: const RoundedRectangleBorder(),
+                                  ),
+                                  icon: Icon(
+                                    Icons.folder_open_rounded,
+                                    size: 16.w,
+                                  ),
+                                  label: Text(
+                                    '查看',
                                     style: TextStyle(
                                       fontSize: 13.sp,
                                       fontWeight: FontWeight.w500,
