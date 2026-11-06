@@ -98,9 +98,7 @@ class QuarkLoginController extends GetxController {
     if (shouldResetSession) {
       await _logoutCurrentCookies();
     }
-    final result = await Get.to<String>(
-      () => QuarkCookieWebLoginView(resetSessionOnOpen: shouldResetSession),
-    );
+    final result = await Get.to<String>(() => const QuarkCookieWebLoginView());
     final value = result?.trim() ?? '';
     if (value.isEmpty) {
       return;

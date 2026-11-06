@@ -8,9 +8,7 @@ import 'package:get/get.dart';
 import '../../../theme/app_theme.dart';
 
 class QuarkCookieWebLoginView extends StatefulWidget {
-  const QuarkCookieWebLoginView({super.key, this.resetSessionOnOpen = false});
-
-  final bool resetSessionOnOpen;
+  const QuarkCookieWebLoginView({super.key});
 
   @override
   State<QuarkCookieWebLoginView> createState() =>
@@ -115,23 +113,23 @@ class _QuarkCookieWebLoginViewState extends State<QuarkCookieWebLoginView> {
     return parts.join('; ');
   }
 
+  Future<void> _clearQuarkCookies() async {
+    for (final scope in _cookieScopes) {
+      await _cookieManager.deleteCookies(url: scope);
+    }
+  }
+
   Future<void> _openInitialPage() async {
     final controller = _webViewController;
     if (controller == null) {
       return;
     }
-    if (widget.resetSessionOnOpen) {
-      for (final scope in _cookieScopes) {
-        await _cookieManager.deleteCookies(url: scope);
-      }
-    }
+    await _clearQuarkCookies();
     await controller.loadUrl(urlRequest: URLRequest(url: _initialUri));
   }
 
   Future<void> _resetQuarkSession() async {
-    for (final scope in _cookieScopes) {
-      await _cookieManager.deleteCookies(url: scope);
-    }
+    await _clearQuarkCookies();
     await _webViewController?.loadUrl(urlRequest: URLRequest(url: _initialUri));
     if (!mounted) {
       return;
@@ -173,8 +171,8 @@ class _QuarkCookieWebLoginViewState extends State<QuarkCookieWebLoginView> {
                   databaseEnabled: true,
                   useHybridComposition: false,
                   thirdPartyCookiesEnabled: true,
-                  clearCache: false,
-                  clearSessionCache: false,
+                  clearCache: true,
+                  clearSessionCache: true,
                   allowsInlineMediaPlayback: true,
                   transparentBackground: false,
                   mediaPlaybackRequiresUserGesture: false,
