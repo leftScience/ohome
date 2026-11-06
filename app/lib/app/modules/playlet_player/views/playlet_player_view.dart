@@ -9,6 +9,7 @@ import 'package:media_kit_video/media_kit_video.dart';
 
 import '../../../theme/app_theme.dart';
 import '../../../widgets/media_player_header_title.dart';
+import '../../../widgets/playlist_loading_view.dart';
 import '../../player/controllers/player_controller.dart';
 
 class PlayletPlayerView extends StatefulWidget {
@@ -97,48 +98,65 @@ class _PlayletPlayerViewState extends State<PlayletPlayerView>
     return '\u9009\u96c6 \u00b7 \u7b2c$current\u96c6 / \u5171$total\u96c6';
   }
 
+  String _currentEpisodeLabel() {
+    final total = controller.episodes.length;
+    if (total <= 0) return '\u9009\u96c6';
+    final current = (controller.currentIndex.value + 1).clamp(1, total);
+    return '\u7b2c$current\u96c6';
+  }
+
   Future<void> _showEpisodeSheet(BuildContext context) async {
     if (controller.episodes.isEmpty) return;
     final scrollController = ScrollController();
+    final width = MediaQuery.of(context).size.width;
+    final crossAxisCount = width >= 420 ? 6 : 5;
+    final horizontalPadding = 14.w;
+    final crossSpacing = 10.w;
+    final mainSpacing = 10.h;
+    const cellAspectRatio = 1.1;
+
+    void scrollToCurrentEpisode() {
+      final total = controller.episodes.length;
+      if (total <= 0) return;
+      if (!scrollController.hasClients) return;
+
+      final current = controller.currentIndex.value.clamp(0, total - 1);
+      final gridContentWidth =
+          width - horizontalPadding * 2 - crossSpacing * (crossAxisCount - 1);
+      if (gridContentWidth <= 0) return;
+      final cellWidth = gridContentWidth / crossAxisCount;
+      final cellHeight = cellWidth / cellAspectRatio;
+      final row = current ~/ crossAxisCount;
+      final target = row * (cellHeight + mainSpacing);
+      final position = scrollController.position;
+      final clamped = target.clamp(
+        position.minScrollExtent,
+        position.maxScrollExtent,
+      );
+      scrollController.animateTo(
+        clamped,
+        duration: const Duration(milliseconds: 260),
+        curve: Curves.easeOutCubic,
+      );
+    }
+
+    void scheduleInitialLocate({int attemptsLeft = 8}) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (scrollController.hasClients) {
+          scrollToCurrentEpisode();
+          return;
+        }
+        if (attemptsLeft > 0) {
+          scheduleInitialLocate(attemptsLeft: attemptsLeft - 1);
+        }
+      });
+    }
+
     final future = showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) {
-        final width = MediaQuery.of(ctx).size.width;
-        final crossAxisCount = width >= 420 ? 6 : 5;
-        final horizontalPadding = 14.w;
-        final crossSpacing = 10.w;
-        final mainSpacing = 10.h;
-        const cellAspectRatio = 1.1;
-
-        void scrollToCurrentEpisode() {
-          final total = controller.episodes.length;
-          if (total <= 0) return;
-          if (!scrollController.hasClients) return;
-
-          final current = controller.currentIndex.value.clamp(0, total - 1);
-          final gridContentWidth =
-              width -
-              horizontalPadding * 2 -
-              crossSpacing * (crossAxisCount - 1);
-          if (gridContentWidth <= 0) return;
-          final cellWidth = gridContentWidth / crossAxisCount;
-          final cellHeight = cellWidth / cellAspectRatio;
-          final row = current ~/ crossAxisCount;
-          final target = row * (cellHeight + mainSpacing);
-          final position = scrollController.position;
-          final clamped = target.clamp(
-            position.minScrollExtent,
-            position.maxScrollExtent,
-          );
-          scrollController.animateTo(
-            clamped,
-            duration: const Duration(milliseconds: 260),
-            curve: Curves.easeOutCubic,
-          );
-        }
-
         return SafeArea(
           top: false,
           child: Container(
@@ -181,20 +199,20 @@ class _PlayletPlayerViewState extends State<PlayletPlayerView>
                         onPressed: scrollToCurrentEpisode,
                         icon: const Icon(
                           Icons.my_location_rounded,
-                          color: AppThemeColors.textMuted,
+                          color: AppThemeColors.textSecondary,
                         ),
                       ),
                       IconButton(
                         onPressed: () => Navigator.of(ctx).pop(),
                         icon: const Icon(
                           Icons.close,
-                          color: AppThemeColors.textMuted,
+                          color: AppThemeColors.textSecondary,
                         ),
                       ),
                     ],
                   ),
                 ),
-                const Divider(height: 1, color: AppThemeColors.divider),
+                const Divider(height: 1, color: AppThemeColors.border),
                 Expanded(
                   child: Obx(() {
                     final total = controller.episodes.length;
@@ -227,9 +245,7 @@ class _PlayletPlayerViewState extends State<PlayletPlayerView>
                           child: Container(
                             decoration: BoxDecoration(
                               color: selected
-                                  ? AppThemeColors.primary.withValues(
-                                      alpha: 0.1,
-                                    )
+                                  ? AppThemeColors.surfaceSunken
                                   : AppThemeColors.surfaceMuted,
                               borderRadius: BorderRadius.circular(12.r),
                               border: Border.all(
@@ -261,6 +277,7 @@ class _PlayletPlayerViewState extends State<PlayletPlayerView>
         );
       },
     );
+    scheduleInitialLocate();
     await future.whenComplete(scrollController.dispose);
   }
 
@@ -512,14 +529,6 @@ class _PlayletPlayerViewState extends State<PlayletPlayerView>
         : DateTime.now().difference(pointerDownAt);
     if (movedFar || elapsed > _tapDurationThreshold) return;
 
-    final ro = _videoAreaKey.currentContext?.findRenderObject();
-    if (ro is RenderBox) {
-      final height = ro.size.height;
-      final bottomOverlayHeight =
-          40.h + 12.h + MediaQuery.of(context).viewPadding.bottom;
-      if (end.dy > height - bottomOverlayHeight) return;
-    }
-
     unawaited(_togglePlayPause());
   }
 
@@ -532,23 +541,23 @@ class _PlayletPlayerViewState extends State<PlayletPlayerView>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppThemeColors.pageBackground,
+backgroundColor: const Color(0xFF050505),
       body: Stack(
         fit: StackFit.expand,
         children: [
           Obx(() {
             if (controller.isLoadingPlaylist.value) {
-              return const Center(child: CircularProgressIndicator());
+              return const PlaylistLoadingView(
+                message: '\u6b63\u5728\u52a0\u8f7d\u5267\u96c6...',
+                accentColor: AppThemeColors.primary,
+              );
             }
             final total = controller.episodes.length;
             if (total <= 0) {
               return Center(
                 child: Text(
                   '\u6682\u65e0\u53ef\u64ad\u653e\u5267\u96c6',
-                  style: TextStyle(
-                    color: AppThemeColors.textMuted,
-                    fontSize: 13.sp,
-                  ),
+                  style: TextStyle(color: Colors.white54, fontSize: 13.sp),
                 ),
               );
             }
@@ -584,7 +593,6 @@ class _PlayletPlayerViewState extends State<PlayletPlayerView>
               },
             );
           }),
-          // 顶部标题直接悬浮在视频画面上，保持白字以保证可读性
           SafeArea(
             bottom: false,
             child: Align(
@@ -597,72 +605,65 @@ class _PlayletPlayerViewState extends State<PlayletPlayerView>
                   ),
                   SizedBox(width: 4.w),
                   Expanded(
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(maxWidth: 220.w),
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(vertical: 8.h),
-                        child: Obx(
-                          () => MediaPlayerHeaderTitle(
-                            title: _title(),
-                            titleColor: Colors.white,
-                            fallbackTitle: '短剧',
-                          ),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8.h),
+                      child: Obx(
+                        () => MediaPlayerHeaderTitle(
+                          title: _title(),
+                          titleColor: Colors.white,
+                          fallbackTitle: '短剧',
                         ),
                       ),
                     ),
                   ),
-                ],
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: SafeArea(
-              top: false,
-              minimum: EdgeInsets.fromLTRB(12.w, 0, 12.w, 6.h),
-              child: Obx(() {
-                final hasEpisodes = controller.episodes.isNotEmpty;
-                return Opacity(
-                  opacity: hasEpisodes ? 1.0 : 0.55,
-                  child: GestureDetector(
-                    onTap: hasEpisodes
-                        ? () => _showEpisodeSheet(context)
-                        : null,
-                    child: Container(
-                      width: double.infinity,
-                      height: 40.h,
-                      padding: EdgeInsets.symmetric(horizontal: 12.w),
-                      decoration: BoxDecoration(
-                        color: AppThemeColors.surface,
-                        borderRadius: BorderRadius.circular(8.r),
-                        border: Border.all(color: AppThemeColors.border),
-                        boxShadow: AppThemeColors.floatingShadow,
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              _episodeSummary(),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: AppThemeColors.textPrimary,
-                                fontSize: 15.sp,
-                                fontWeight: FontWeight.w600,
+                  Padding(
+                    padding: EdgeInsets.only(left: 8.w, right: 12.w),
+                    child: Obx(() {
+                      final hasEpisodes = controller.episodes.isNotEmpty;
+                      return Opacity(
+                        opacity: hasEpisodes ? 1.0 : 0.55,
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(18.r),
+                            onTap: hasEpisodes
+                                ? () => _showEpisodeSheet(context)
+                                : null,
+                            child: Container(
+                              height: 36.h,
+                              padding: EdgeInsets.symmetric(horizontal: 12.w),
+                              decoration: BoxDecoration(
+                                color: Colors.black54,
+                                borderRadius: BorderRadius.circular(18.r),
+                                border: Border.all(color: Colors.white24),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    _currentEpisodeLabel(),
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14.sp,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  SizedBox(width: 2.w),
+                                  Icon(
+                                    Icons.keyboard_arrow_down_rounded,
+                                    color: Colors.white70,
+                                    size: 20.w,
+                                  ),
+                                ],
                               ),
                             ),
                           ),
-                          Icon(
-                            Icons.keyboard_arrow_up_rounded,
-                            color: AppThemeColors.textMuted,
-                            size: 22.w,
-                          ),
-                        ],
-                      ),
-                    ),
+                        ),
+                      );
+                    }),
                   ),
-                );
-              }),
+                ],
+              ),
             ),
           ),
         ],
