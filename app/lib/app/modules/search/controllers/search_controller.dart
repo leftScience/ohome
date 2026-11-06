@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../data/api/config.dart';
+import '../../../data/models/pan_web_engine.dart';
 import '../../../data/models/pansou_resource_item.dart';
 import '../../../data/api/pansou.dart';
 import '../../../data/api/quark_transfer.dart';
@@ -15,10 +17,14 @@ class SearchController extends GetxController {
     PansouRepository? pansouRepository,
     QuarkTransferRepository? quarkTransferRepository,
     SearchHistoryStorage? searchHistoryStorage,
+    ConfigApi? configApi,
   }) : _pansouRepository = pansouRepository ?? PansouRepository(),
        _quarkTransferRepository =
            quarkTransferRepository ?? QuarkTransferRepository(),
-       _searchHistoryStorage = searchHistoryStorage ?? SearchHistoryStorage();
+       _searchHistoryStorage = searchHistoryStorage ?? SearchHistoryStorage(),
+       _configApi = configApi ?? Get.find<ConfigApi>();
+
+  static const String panWebEnginesConfigKey = 'quark_search_web_engines';
 
   final TextEditingController searchController = TextEditingController();
   final RxString keyword = ''.obs;
@@ -28,10 +34,19 @@ class SearchController extends GetxController {
   final RxBool searched = false.obs;
   final RxSet<String> transferringUrls = <String>{}.obs;
 
+  final RxList<PanWebEngine> panWebEngines = <PanWebEngine>[].obs;
+  final RxString selectedPanEngineId = PanWebEngine.defaultId.obs;
+  final RxBool panWebEnginesLoading = false.obs;
+  final RxString panWebSearchUrl = ''.obs;
+
   final PansouRepository _pansouRepository;
   final QuarkTransferRepository _quarkTransferRepository;
   final SearchHistoryStorage _searchHistoryStorage;
+  final ConfigApi _configApi;
   int _searchToken = 0;
+  int _panWebEngineToken = 0;
+  Future<void>? _panWebEngineLoadFuture;
+  bool _panWebEnginesLoaded = false;
   static const int _maxHistoryCount = 12;
   final RxList<String> historyKeywords = <String>[].obs;
 
@@ -40,12 +55,29 @@ class SearchController extends GetxController {
 
   static const _quarkTargets = <String>['tv', 'playlet', 'music', 'read'];
 
+  bool get isDefaultPanEngineSelected =>
+      selectedPanEngineId.value.trim().isEmpty ||
+      selectedPanEngineId.value == PanWebEngine.defaultId;
+
+  bool get isPanWebEngineSelected =>
+      panWebEngines.isNotEmpty && !isDefaultPanEngineSelected;
+
+  PanWebEngine? get selectedPanWebEngine {
+    final id = selectedPanEngineId.value.trim();
+    if (id.isEmpty || id == PanWebEngine.defaultId) return null;
+    for (final engine in panWebEngines) {
+      if (engine.id == id) return engine;
+    }
+    return null;
+  }
+
   @override
   void onInit() {
     super.onInit();
     keyword.value = searchController.text.trim();
     searchController.addListener(_syncKeyword);
     unawaited(_loadHistoryKeywords());
+    unawaited(ensurePanWebEnginesLoaded());
   }
 
   void _syncKeyword() {
@@ -56,6 +88,11 @@ class SearchController extends GetxController {
     final query = searchController.text.trim();
     if (query.isEmpty) return const <PansouResourceItem>[];
     unawaited(_recordKeyword(query));
+    await ensurePanWebEnginesLoaded();
+    if (isPanWebEngineSelected) {
+      await searchPanWebEngine(query);
+      return const <PansouResourceItem>[];
+    }
     return searchQuarkPanResources(query);
   }
 
@@ -64,7 +101,95 @@ class SearchController extends GetxController {
     searching.value = false;
     searched.value = false;
     panResources.clear();
+    panWebSearchUrl.value = '';
     searchController.text = '';
+  }
+
+  Future<void> ensurePanWebEnginesLoaded({bool force = false}) {
+    if (!force && _panWebEnginesLoaded) return Future<void>.value();
+    final current = _panWebEngineLoadFuture;
+    if (current != null) return current;
+
+    final future = _loadPanWebEngines();
+    _panWebEngineLoadFuture = future;
+    return future.whenComplete(() {
+      _panWebEngineLoadFuture = null;
+    });
+  }
+
+  Future<void> _loadPanWebEngines() async {
+    final token = ++_panWebEngineToken;
+    panWebEnginesLoading.value = true;
+    try {
+      final config = await _configApi.findConfigByKey(
+        panWebEnginesConfigKey,
+        showErrorToast: false,
+      );
+      if (token != _panWebEngineToken) return;
+      final engines = PanWebEngine.parseConfigValue(config?.value);
+      panWebEngines.assignAll(engines);
+      if (engines.isEmpty) {
+        selectedPanEngineId.value = PanWebEngine.defaultId;
+      } else if (selectedPanEngineId.value != PanWebEngine.defaultId &&
+          !engines.any((e) => e.id == selectedPanEngineId.value)) {
+        selectedPanEngineId.value = PanWebEngine.defaultId;
+      }
+      _panWebEnginesLoaded = true;
+    } catch (_) {
+      if (token != _panWebEngineToken) return;
+      panWebEngines.clear();
+      selectedPanEngineId.value = PanWebEngine.defaultId;
+      _panWebEnginesLoaded = true;
+    } finally {
+      if (token == _panWebEngineToken) {
+        panWebEnginesLoading.value = false;
+      }
+    }
+  }
+
+  Future<void> selectPanEngine(String engineId) async {
+    final id = engineId.trim().isEmpty
+        ? PanWebEngine.defaultId
+        : engineId.trim();
+    if (selectedPanEngineId.value == id) return;
+    if (id != PanWebEngine.defaultId &&
+        !panWebEngines.any((engine) => engine.id == id)) {
+      return;
+    }
+
+    selectedPanEngineId.value = id;
+    _searchToken++;
+    searching.value = false;
+    searched.value = false;
+    panResources.clear();
+    panWebSearchUrl.value = '';
+    if (searchController.text.trim().isNotEmpty) {
+      await performSearch();
+    }
+  }
+
+  Future<void> searchPanWebEngine(String query) async {
+    final kw = query.trim();
+    if (kw.isEmpty) {
+      panWebSearchUrl.value = '';
+      searched.value = false;
+      return;
+    }
+
+    final engine = selectedPanWebEngine;
+    if (engine == null) {
+      await searchQuarkPanResources(kw);
+      return;
+    }
+
+    final token = ++_searchToken;
+    searching.value = false;
+    searched.value = true;
+    panResources.clear();
+
+    final url = engine.buildSearchUrl(kw);
+    if (token != _searchToken) return;
+    panWebSearchUrl.value = url;
   }
 
   Future<List<PansouResourceItem>> searchQuarkPanResources(

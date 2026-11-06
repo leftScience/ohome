@@ -5,10 +5,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
+import '../../../data/models/pan_web_engine.dart';
 import '../../../data/models/pansou_resource_item.dart';
 import '../../../routes/app_pages.dart';
 import '../../../theme/app_theme.dart';
 import '../controllers/search_controller.dart' as search_controller;
+import 'pan_web_search_body.dart';
 
 class SearchView extends StatefulWidget {
   const SearchView({super.key});
@@ -161,390 +163,551 @@ class _SearchViewState extends State<SearchView> {
             ],
           ),
           backgroundColor: AppThemeColors.pageBackground,
-          body: Padding(
-            padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 16.h),
-            child: Obx(() {
-              final showRecommend = controller.keyword.value.trim().isEmpty;
-              if (showRecommend) {
-                return const _InitialArea();
-              }
+          body: Column(
+            children: [
+              Obx(() {
+                if (controller.panWebEngines.isEmpty) {
+                  return const SizedBox.shrink();
+                }
+                return _PanEngineTabs(controller: controller);
+              }),
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 16.h),
+                  child: Obx(() {
+                    final showRecommend = controller.keyword.value
+                        .trim()
+                        .isEmpty;
+                    if (showRecommend) {
+                      return const _InitialArea();
+                    }
 
-              if (!controller.searched.value) return const SizedBox.shrink();
-              if (controller.searching.value) {
-                return const Center(child: CircularProgressIndicator());
-              }
+                    if (!controller.searched.value) {
+                      return const SizedBox.shrink();
+                    }
+                    if (controller.searching.value) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
 
-              final items = controller.panResources;
-              if (items.isEmpty) {
-                return Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 24.h),
-                    child: Text(
-                      '暂无搜索结果',
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        color: AppThemeColors.textMuted,
-                      ),
-                    ),
-                  ),
-                );
-              }
+                    if (controller.isPanWebEngineSelected) {
+                      return _PanWebEngineArea(
+                        url: controller.panWebSearchUrl.value,
+                      );
+                    }
 
-              return ListView.separated(
-                itemCount: items.length,
-                separatorBuilder: (_, _) => SizedBox(height: 10.h),
-                itemBuilder: (context, index) {
-                  final item = items[index];
-                  final textParts = item.textParts;
-                  final title = textParts.title;
-                  final description = textParts.description;
-                  final itemUrl = item.url.trim();
-                  final isTransferring = controller.transferringUrls.contains(
-                    itemUrl,
-                  );
-                  final sourceRaw = item.source.trim();
-                  final sourceName = sourceRaw.startsWith('tg:')
-                      ? sourceRaw.substring(3)
-                      : sourceRaw;
-                  final hasSource = sourceName.isNotEmpty;
-                  final dateStr = item.dateCnYmd.isNotEmpty
-                      ? item.dateCnYmd
-                      : item.datetime.trim();
-                  final hasDate = dateStr.isNotEmpty;
-                  final images = item.images;
-                  final previewImage = images.isNotEmpty
-                      ? images.first.trim()
-                      : '';
-                  final hasPreviewImage = previewImage.isNotEmpty;
+                    final items = controller.panResources;
+                    if (items.isEmpty) {
+                      return Center(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: 24.h),
+                          child: Text(
+                            '暂无搜索结果',
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              color: AppThemeColors.textMuted,
+                            ),
+                          ),
+                        ),
+                      );
+                    }
 
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: AppThemeColors.surface,
-                      borderRadius: BorderRadius.circular(16.r),
-                      border: Border.all(
-                        color: AppThemeColors.border,
-                        width: 1,
-                      ),
-                      boxShadow: AppThemeColors.cardShadow,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 16.h),
-                          child: Row(
+                    return ListView.separated(
+                      itemCount: items.length,
+                      separatorBuilder: (_, _) => SizedBox(height: 10.h),
+                      itemBuilder: (context, index) {
+                        final item = items[index];
+                        final textParts = item.textParts;
+                        final title = textParts.title;
+                        final description = textParts.description;
+                        final itemUrl = item.url.trim();
+                        final isTransferring = controller.transferringUrls
+                            .contains(itemUrl);
+                        final sourceRaw = item.source.trim();
+                        final sourceName = sourceRaw.startsWith('tg:')
+                            ? sourceRaw.substring(3)
+                            : sourceRaw;
+                        final hasSource = sourceName.isNotEmpty;
+                        final dateStr = item.dateCnYmd.isNotEmpty
+                            ? item.dateCnYmd
+                            : item.datetime.trim();
+                        final hasDate = dateStr.isNotEmpty;
+                        final images = item.images;
+                        final previewImage = images.isNotEmpty
+                            ? images.first.trim()
+                            : '';
+                        final hasPreviewImage = previewImage.isNotEmpty;
+
+                        return Container(
+                          decoration: BoxDecoration(
+                            color: AppThemeColors.surface,
+                            borderRadius: BorderRadius.circular(16.r),
+                            border: Border.all(
+                              color: AppThemeColors.border,
+                              width: 1,
+                            ),
+                            boxShadow: AppThemeColors.cardShadow,
+                          ),
+                          child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(12.r),
-                                child: SizedBox(
-                                  width: 84.w,
-                                  height: 112.h,
-                                  child: Stack(
-                                    children: [
-                                      Positioned.fill(
-                                        child: Image.asset(
-                                          _searchPlaceholder,
-                                          fit: BoxFit.cover,
+                              Padding(
+                                padding: EdgeInsets.fromLTRB(
+                                  16.w,
+                                  16.h,
+                                  16.w,
+                                  16.h,
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(12.r),
+                                      child: SizedBox(
+                                        width: 84.w,
+                                        height: 112.h,
+                                        child: Stack(
+                                          children: [
+                                            Positioned.fill(
+                                              child: Image.asset(
+                                                _searchPlaceholder,
+                                                fit: BoxFit.cover,
+                                              ),
+                                            ),
+                                            if (hasPreviewImage)
+                                              Positioned.fill(
+                                                child: Image.network(
+                                                  previewImage,
+                                                  fit: BoxFit.cover,
+                                                  errorBuilder:
+                                                      (context, error, stack) {
+                                                        return Image.asset(
+                                                          _searchPlaceholder,
+                                                          fit: BoxFit.cover,
+                                                        );
+                                                      },
+                                                ),
+                                              ),
+                                          ],
                                         ),
                                       ),
-                                      if (hasPreviewImage)
-                                        Positioned.fill(
-                                          child: Image.network(
-                                            previewImage,
-                                            fit: BoxFit.cover,
-                                            errorBuilder:
-                                                (context, error, stack) {
-                                                  return Image.asset(
-                                                    _searchPlaceholder,
-                                                    fit: BoxFit.cover,
-                                                  );
-                                                },
-                                          ),
+                                    ),
+                                    SizedBox(width: 14.w),
+                                    Expanded(
+                                      child: ConstrainedBox(
+                                        constraints: BoxConstraints(
+                                          minHeight: 112.h,
                                         ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              SizedBox(width: 14.w),
-                              Expanded(
-                                child: ConstrainedBox(
-                                  constraints: BoxConstraints(minHeight: 112.h),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      if (hasSource || hasDate)
-                                        Row(
+                                        child: Column(
                                           crossAxisAlignment:
-                                              CrossAxisAlignment.center,
+                                              CrossAxisAlignment.start,
                                           children: [
-                                            if (hasSource)
-                                              Expanded(
-                                                child: Align(
-                                                  alignment:
-                                                      Alignment.centerLeft,
-                                                  child: Container(
-                                                    padding:
-                                                        EdgeInsets.symmetric(
-                                                          horizontal: 8.w,
-                                                          vertical: 4.h,
-                                                        ),
-                                                    decoration: BoxDecoration(
-                                                      color: AppThemeColors
-                                                          .accent
-                                                          .withValues(
-                                                            alpha: 0.10,
-                                                          ),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            999.r,
-                                                          ),
-                                                      border: Border.all(
-                                                        color: AppThemeColors
-                                                            .accent
-                                                            .withValues(
-                                                              alpha: 0.3,
+                                            if (hasSource || hasDate)
+                                              Row(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.center,
+                                                children: [
+                                                  if (hasSource)
+                                                    Expanded(
+                                                      child: Align(
+                                                        alignment: Alignment
+                                                            .centerLeft,
+                                                        child: Container(
+                                                          padding:
+                                                              EdgeInsets.symmetric(
+                                                                horizontal: 8.w,
+                                                                vertical: 4.h,
+                                                              ),
+                                                          decoration: BoxDecoration(
+                                                            color:
+                                                                AppThemeColors
+                                                                    .accent
+                                                                    .withValues(
+                                                                      alpha:
+                                                                          0.10,
+                                                                    ),
+                                                            borderRadius:
+                                                                BorderRadius.circular(
+                                                                  999.r,
+                                                                ),
+                                                            border: Border.all(
+                                                              color:
+                                                                  AppThemeColors
+                                                                      .accent
+                                                                      .withValues(
+                                                                        alpha:
+                                                                            0.3,
+                                                                      ),
+                                                              width: 0.5,
                                                             ),
-                                                        width: 0.5,
+                                                          ),
+                                                          child: Row(
+                                                            mainAxisSize:
+                                                                MainAxisSize
+                                                                    .min,
+                                                            children: [
+                                                              Padding(
+                                                                padding:
+                                                                    EdgeInsets.only(
+                                                                      top: 1.h,
+                                                                    ),
+                                                                child: Icon(
+                                                                  Icons
+                                                                      .rocket_launch_rounded,
+                                                                  size: 10.w,
+                                                                  color:
+                                                                      AppThemeColors
+                                                                          .accent,
+                                                                ),
+                                                              ),
+                                                              SizedBox(
+                                                                width: 4.w,
+                                                              ),
+                                                              Flexible(
+                                                                child: Text(
+                                                                  sourceName,
+                                                                  maxLines: 1,
+                                                                  overflow:
+                                                                      TextOverflow
+                                                                          .ellipsis,
+                                                                  style: TextStyle(
+                                                                    fontSize:
+                                                                        10.sp,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w500,
+                                                                    color: AppThemeColors
+                                                                        .accent,
+                                                                    height:
+                                                                        1.25,
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
                                                       ),
                                                     ),
-                                                    child: Row(
+                                                  if (hasDate) ...[
+                                                    if (hasSource)
+                                                      SizedBox(width: 8.w),
+                                                    Row(
                                                       mainAxisSize:
                                                           MainAxisSize.min,
                                                       children: [
-                                                        Padding(
-                                                          padding:
-                                                              EdgeInsets.only(
-                                                                top: 1.h,
-                                                              ),
-                                                          child: Icon(
-                                                            Icons
-                                                                .rocket_launch_rounded,
-                                                            size: 10.w,
-                                                            color:
-                                                                AppThemeColors
-                                                                    .accent,
-                                                          ),
+                                                        Icon(
+                                                          Icons
+                                                              .access_time_rounded,
+                                                          size: 11.w,
+                                                          color: AppThemeColors
+                                                              .textDisabled,
                                                         ),
                                                         SizedBox(width: 4.w),
-                                                        Flexible(
-                                                          child: Text(
-                                                            sourceName,
-                                                            maxLines: 1,
-                                                            overflow:
-                                                                TextOverflow
-                                                                    .ellipsis,
-                                                            style: TextStyle(
-                                                              fontSize: 10.sp,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w500,
-                                                              color:
-                                                                  AppThemeColors
-                                                                      .accent,
-                                                              height: 1.25,
-                                                            ),
+                                                        Text(
+                                                          dateStr,
+                                                          style: TextStyle(
+                                                            fontSize: 10.sp,
+                                                            color: AppThemeColors
+                                                                .textDisabled,
                                                           ),
                                                         ),
                                                       ],
                                                     ),
-                                                  ),
-                                                ),
-                                              ),
-                                            if (hasDate) ...[
-                                              if (hasSource)
-                                                SizedBox(width: 8.w),
-                                              Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Icon(
-                                                    Icons.access_time_rounded,
-                                                    size: 11.w,
-                                                    color: AppThemeColors
-                                                        .textDisabled,
-                                                  ),
-                                                  SizedBox(width: 4.w),
-                                                  Text(
-                                                    dateStr,
-                                                    style: TextStyle(
-                                                      fontSize: 10.sp,
-                                                      color: AppThemeColors
-                                                          .textDisabled,
-                                                    ),
-                                                  ),
+                                                  ],
                                                 ],
+                                              ),
+                                            if (hasSource || hasDate)
+                                              SizedBox(height: 10.h),
+                                            Text(
+                                              title,
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                fontSize: 14.sp,
+                                                fontWeight: FontWeight.w600,
+                                                color:
+                                                    AppThemeColors.textPrimary,
+                                                height: 1.45,
+                                              ),
+                                            ),
+                                            if (description.isNotEmpty) ...[
+                                              SizedBox(height: 6.h),
+                                              Text(
+                                                description,
+                                                maxLines: 3,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: TextStyle(
+                                                  fontSize: 12.sp,
+                                                  color: AppThemeColors
+                                                      .textSecondary,
+                                                  height: 1.45,
+                                                ),
                                               ),
                                             ],
                                           ],
                                         ),
-                                      if (hasSource || hasDate)
-                                        SizedBox(height: 10.h),
-                                      Text(
-                                        title,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          fontSize: 14.sp,
-                                          fontWeight: FontWeight.w600,
-                                          color: AppThemeColors.textPrimary,
-                                          height: 1.45,
-                                        ),
                                       ),
-                                      if (description.isNotEmpty) ...[
-                                        SizedBox(height: 6.h),
-                                        Text(
-                                          description,
-                                          maxLines: 3,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                            fontSize: 12.sp,
-                                            color: AppThemeColors.textSecondary,
-                                            height: 1.45,
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              // 底部操作栏
+                              Container(
+                                decoration: BoxDecoration(
+                                  border: Border(
+                                    top: BorderSide(
+                                      color: AppThemeColors.divider,
+                                      width: 1,
+                                    ),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    // 复制链接
+                                    Expanded(
+                                      child: TextButton.icon(
+                                        onPressed: () async {
+                                          await Clipboard.setData(
+                                            ClipboardData(text: itemUrl),
+                                          );
+                                          Get.snackbar('提示', '已复制链接');
+                                        },
+                                        style: TextButton.styleFrom(
+                                          foregroundColor:
+                                              AppThemeColors.textSecondary,
+                                          minimumSize: Size(0, 58.h),
+                                          padding: EdgeInsets.symmetric(
+                                            vertical: 16.h,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.only(
+                                              bottomLeft: Radius.circular(16.r),
+                                            ),
                                           ),
                                         ),
-                                      ],
-                                    ],
-                                  ),
+                                        icon: Icon(
+                                          Icons.copy_rounded,
+                                          size: 16.w,
+                                        ),
+                                        label: Text(
+                                          '复制链接',
+                                          style: TextStyle(
+                                            fontSize: 13.sp,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    // 竖分割
+                                    Container(
+                                      width: 1,
+                                      height: 30.h,
+                                      color: AppThemeColors.border,
+                                    ),
+                                    // 查看（预览分享内容）
+                                    Expanded(
+                                      child: TextButton.icon(
+                                        onPressed: itemUrl.isEmpty
+                                            ? null
+                                            : () => _openSharePreview(item),
+                                        style: TextButton.styleFrom(
+                                          foregroundColor: itemUrl.isEmpty
+                                              ? AppThemeColors.textDisabled
+                                              : AppThemeColors.primary,
+                                          minimumSize: Size(0, 58.h),
+                                          padding: EdgeInsets.symmetric(
+                                            vertical: 16.h,
+                                          ),
+                                          shape: const RoundedRectangleBorder(),
+                                        ),
+                                        icon: Icon(
+                                          Icons.folder_open_rounded,
+                                          size: 16.w,
+                                        ),
+                                        label: Text(
+                                          '查看',
+                                          style: TextStyle(
+                                            fontSize: 13.sp,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    // 竖分割
+                                    Container(
+                                      width: 1,
+                                      height: 30.h,
+                                      color: AppThemeColors.border,
+                                    ),
+                                    // 转存按钮
+                                    Expanded(
+                                      child: TextButton.icon(
+                                        onPressed: isTransferring
+                                            ? null
+                                            : () => controller.transferQuark(
+                                                item,
+                                              ),
+                                        style: TextButton.styleFrom(
+                                          foregroundColor: isTransferring
+                                              ? AppThemeColors.textDisabled
+                                              : AppThemeColors.accent,
+                                          minimumSize: Size(0, 58.h),
+                                          padding: EdgeInsets.symmetric(
+                                            vertical: 16.h,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.only(
+                                              bottomRight: Radius.circular(
+                                                16.r,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        icon: Icon(
+                                          isTransferring
+                                              ? Icons.more_horiz_rounded
+                                              : Icons.cloud_download_rounded,
+                                          size: 16.w,
+                                        ),
+                                        label: Text(
+                                          isTransferring ? '提交中...' : '一键转存',
+                                          style: TextStyle(
+                                            fontSize: 13.sp,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
                           ),
-                        ),
-
-                        // 底部操作栏
-                        Container(
-                          decoration: BoxDecoration(
-                            border: Border(
-                              top: BorderSide(
-                                color: AppThemeColors.divider,
-                                width: 1,
-                              ),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              // 复制链接
-                              Expanded(
-                                child: TextButton.icon(
-                                  onPressed: () async {
-                                    await Clipboard.setData(
-                                      ClipboardData(text: itemUrl),
-                                    );
-                                    Get.snackbar('提示', '已复制链接');
-                                  },
-                                  style: TextButton.styleFrom(
-                                    foregroundColor:
-                                        AppThemeColors.textSecondary,
-                                    minimumSize: Size(0, 58.h),
-                                    padding: EdgeInsets.symmetric(
-                                      vertical: 16.h,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.only(
-                                        bottomLeft: Radius.circular(16.r),
-                                      ),
-                                    ),
-                                  ),
-                                  icon: Icon(Icons.copy_rounded, size: 16.w),
-                                  label: Text(
-                                    '复制链接',
-                                    style: TextStyle(
-                                      fontSize: 13.sp,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              // 竖分割
-                              Container(
-                                width: 1,
-                                height: 30.h,
-                                color: AppThemeColors.border,
-                              ),
-                              // 查看（预览分享内容）
-                              Expanded(
-                                child: TextButton.icon(
-                                  onPressed: itemUrl.isEmpty
-                                      ? null
-                                      : () => _openSharePreview(item),
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: itemUrl.isEmpty
-                                        ? AppThemeColors.textDisabled
-                                        : AppThemeColors.primary,
-                                    minimumSize: Size(0, 58.h),
-                                    padding: EdgeInsets.symmetric(
-                                      vertical: 16.h,
-                                    ),
-                                    shape: const RoundedRectangleBorder(),
-                                  ),
-                                  icon: Icon(
-                                    Icons.folder_open_rounded,
-                                    size: 16.w,
-                                  ),
-                                  label: Text(
-                                    '查看',
-                                    style: TextStyle(
-                                      fontSize: 13.sp,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              // 竖分割
-                              Container(
-                                width: 1,
-                                height: 30.h,
-                                color: AppThemeColors.border,
-                              ),
-                              // 转存按钮
-                              Expanded(
-                                child: TextButton.icon(
-                                  onPressed: isTransferring
-                                      ? null
-                                      : () => controller.transferQuark(item),
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: isTransferring
-                                        ? AppThemeColors.textDisabled
-                                        : AppThemeColors.accent,
-                                    minimumSize: Size(0, 58.h),
-                                    padding: EdgeInsets.symmetric(
-                                      vertical: 16.h,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.only(
-                                        bottomRight: Radius.circular(16.r),
-                                      ),
-                                    ),
-                                  ),
-                                  icon: Icon(
-                                    isTransferring
-                                        ? Icons.more_horiz_rounded
-                                        : Icons.cloud_download_rounded,
-                                    size: 16.w,
-                                  ),
-                                  label: Text(
-                                    isTransferring ? '提交中...' : '一键转存',
-                                    style: TextStyle(
-                                      fontSize: 13.sp,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              );
-            }),
+                        );
+                      },
+                    );
+                  }),
+                ),
+              ),
+            ],
           ),
         ),
       );
     });
+  }
+}
+
+class _PanEngineTabs extends GetView<search_controller.SearchController> {
+  const _PanEngineTabs({required this.controller});
+
+  @override
+  final search_controller.SearchController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final engines = controller.panWebEngines;
+      if (engines.isEmpty) return const SizedBox.shrink();
+      return SizedBox(
+        height: 40.h,
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          padding: EdgeInsets.symmetric(horizontal: 16.w),
+          children: [
+            _buildTab(
+              label: '默认',
+              active: controller.isDefaultPanEngineSelected,
+              onTap: () => controller.selectPanEngine(PanWebEngine.defaultId),
+            ),
+            ...engines.map(
+              (engine) => _buildTab(
+                label: engine.name,
+                active: controller.selectedPanEngineId.value == engine.id,
+                onTap: () => controller.selectPanEngine(engine.id),
+              ),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  Widget _buildTab({
+    required String label,
+    required bool active,
+    required VoidCallback onTap,
+  }) {
+    return Padding(
+      padding: EdgeInsets.only(right: 8.w),
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          alignment: Alignment.center,
+          padding: EdgeInsets.symmetric(horizontal: 14.w),
+          decoration: BoxDecoration(
+            color: active
+                ? AppThemeColors.primary.withValues(alpha: 0.14)
+                : AppThemeColors.surfaceMuted,
+            borderRadius: BorderRadius.circular(999.r),
+            border: Border.all(
+              color: active ? AppThemeColors.primary : AppThemeColors.border,
+            ),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12.sp,
+              fontWeight: active ? FontWeight.w600 : FontWeight.w500,
+              color: active
+                  ? AppThemeColors.primary
+                  : AppThemeColors.textSecondary,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PanWebEngineArea extends GetView<search_controller.SearchController> {
+  const _PanWebEngineArea({required this.url});
+
+  final String url;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.only(bottom: 8.h),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  controller.selectedPanWebEngine?.name ?? '第三方搜索',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w600,
+                    color: AppThemeColors.textPrimary,
+                  ),
+                ),
+              ),
+              Text(
+                '长按链接可复制分享地址',
+                style: TextStyle(
+                  fontSize: 11.sp,
+                  color: AppThemeColors.textMuted,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Expanded(child: PanWebSearchBody(url: url)),
+      ],
+    );
   }
 }
 

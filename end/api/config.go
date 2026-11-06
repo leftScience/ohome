@@ -20,6 +20,7 @@ const sensitiveConfigKeyQuarkSearchHTTPProxy = "quark_search_http_proxy"
 const sensitiveConfigKeyQuarkSearchHTTPSProxy = "quark_search_https_proxy"
 const sensitiveConfigKeyQuarkSearchChannels = "quark_search_channels"
 const sensitiveConfigKeyQuarkSearchEnabledPlugins = "quark_search_enabled_plugins"
+const sensitiveConfigKeyQuarkSearchWebEngines = "quark_search_web_engines"
 const sensitiveConfigKeyQuarkStreamWebProxyMode = "quark_fs_web_proxy_mode"
 const sensitiveConfigKeyQuarkAccountShareMode = "quark_account_share_mode"
 
@@ -32,6 +33,7 @@ var sensitiveConfigKeys = map[string]struct{}{
 	sensitiveConfigKeyQuarkSearchHTTPSProxy:     {},
 	sensitiveConfigKeyQuarkSearchChannels:       {},
 	sensitiveConfigKeyQuarkSearchEnabledPlugins: {},
+	sensitiveConfigKeyQuarkSearchWebEngines:     {},
 	sensitiveConfigKeyQuarkStreamWebProxyMode:   {},
 	sensitiveConfigKeyQuarkAccountShareMode:     {},
 }
@@ -39,6 +41,7 @@ var sensitiveConfigKeys = map[string]struct{}{
 var readableSensitiveConfigKeys = map[string]struct{}{
 	sensitiveConfigKeyQuarkStreamWebProxyMode: {},
 	sensitiveConfigKeyQuarkAccountShareMode:   {},
+	sensitiveConfigKeyQuarkSearchWebEngines:   {},
 }
 
 var quarkCredentialConfigKeys = map[string]struct{}{

@@ -75,6 +75,8 @@ class QuarkSearchSettingsView extends GetView<QuarkSearchSettingsController> {
               ),
               onTap: controller.openPluginsEditor,
             ),
+            SizedBox(height: 12.h),
+            _buildWebEnginesCard(),
           ],
         );
       }),
@@ -135,6 +137,173 @@ class QuarkSearchSettingsView extends GetView<QuarkSearchSettingsController> {
         ],
       ),
     );
+  }
+
+  Widget _buildWebEnginesCard() {
+    return Obx(() {
+      final engines = controller.webEngines.toList(growable: false);
+      return Container(
+        padding: EdgeInsets.all(18.w),
+        decoration: BoxDecoration(
+          color: AppThemeColors.surface,
+          borderRadius: BorderRadius.circular(22.r),
+          border: Border.all(color: AppThemeColors.border),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 40.w,
+                  height: 40.w,
+                  decoration: BoxDecoration(
+                    color: AppThemeColors.primary.withValues(alpha: 0.14),
+                    borderRadius: BorderRadius.circular(14.r),
+                  ),
+                  child: const Icon(
+                    Icons.travel_explore_rounded,
+                    color: AppThemeColors.primary,
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '自定义搜索源',
+                        style: TextStyle(
+                          fontSize: 15.sp,
+                          fontWeight: FontWeight.w600,
+                          color: AppThemeColors.textPrimary,
+                        ),
+                      ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        _formatUpdatedAt(
+                          controller.updatedAtFor(
+                            QuarkSearchSettingsController.webEnginesKey,
+                          ),
+                        ),
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          color: AppThemeColors.textMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: controller.addWebEngine,
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppThemeColors.primary,
+                    padding: EdgeInsets.symmetric(horizontal: 8.w),
+                    minimumSize: Size(0, 32.h),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  icon: Icon(Icons.add_rounded, size: 18.w),
+                  label: Text('新增', style: TextStyle(fontSize: 12.sp)),
+                ),
+              ],
+            ),
+            SizedBox(height: 14.h),
+            Text(
+              '配置第三方网盘 Web 搜索引擎，配置后资源搜索页会出现对应标签，'
+              '点选后以内嵌网页打开搜索结果。',
+              style: TextStyle(
+                fontSize: 12.sp,
+                color: AppThemeColors.textSecondary,
+                height: 1.5,
+              ),
+            ),
+            SizedBox(height: 12.h),
+            if (engines.isEmpty)
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
+                decoration: BoxDecoration(
+                  color: AppThemeColors.surfaceMuted,
+                  borderRadius: BorderRadius.circular(16.r),
+                  border: Border.all(color: AppThemeColors.border),
+                ),
+                child: Text(
+                  '暂未配置自定义搜索源',
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: AppThemeColors.textMuted,
+                  ),
+                ),
+              )
+            else
+              ...List.generate(engines.length, (index) {
+                final engine = engines[index];
+                return Padding(
+                  padding: EdgeInsets.only(bottom: 8.h),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 12.w,
+                      vertical: 10.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppThemeColors.surfaceMuted,
+                      borderRadius: BorderRadius.circular(16.r),
+                      border: Border.all(color: AppThemeColors.border),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                engine.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 13.sp,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppThemeColors.textPrimary,
+                                ),
+                              ),
+                              SizedBox(height: 4.h),
+                              Text(
+                                engine.urlTemplate,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 11.sp,
+                                  color: AppThemeColors.textMuted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => controller.editWebEngine(index),
+                          icon: Icon(
+                            Icons.edit_outlined,
+                            size: 18.w,
+                            color: AppThemeColors.textSecondary,
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => controller.removeWebEngine(index),
+                          icon: Icon(
+                            Icons.delete_outline_rounded,
+                            size: 18.w,
+                            color: AppThemeColors.textDisabled,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+          ],
+        ),
+      );
+    });
   }
 
   Widget _buildProxyFieldCard({

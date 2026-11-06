@@ -4,7 +4,9 @@ import 'package:get/get.dart';
 import '../../../data/api/config.dart';
 import '../../../data/models/config_model.dart';
 import '../../../data/models/config_upsert_payload.dart';
+import '../../../data/models/pan_web_engine.dart';
 import '../views/quark_tag_editor_view.dart';
+import '../views/quark_web_engine_editor_view.dart';
 
 class QuarkSearchSettingsController extends GetxController {
   QuarkSearchSettingsController({ConfigApi? configApi})
@@ -14,6 +16,7 @@ class QuarkSearchSettingsController extends GetxController {
   static const String httpsProxyKey = 'quark_search_https_proxy';
   static const String channelsKey = 'quark_search_channels';
   static const String enabledPluginsKey = 'quark_search_enabled_plugins';
+  static const String webEnginesKey = 'quark_search_web_engines';
   static const String defaultChannelsValue =
       'tgsearchers4,Aliyun_4K_Movies,bdbdndn11,yunpanx,bsbdbfjfjff,yp123pan,sbsbsnsqq,yunpanxunlei,tianyifc,BaiduCloudDisk,txtyzy,peccxinpd,gotopan,PanjClub,kkxlzy,baicaoZY,MCPH01,MCPH02,MCPH03,bdwpzhpd,ysxb48,jdjdn1111,yggpan,MCPH086,zaihuayun,Q66Share,ucwpzy,shareAliyun,alyp_1,dianyingshare,Quark_Movies,XiangxiuNBB,ydypzyfx,ucquark,xx123pan,yingshifenxiang123,zyfb123,tyypzhpd,tianyirigeng,cloudtianyi,hdhhd21,Lsp115,oneonefivewpfx,qixingzhenren,taoxgzy,Channel_Shares_115,tyysypzypd,vip115hot,wp123zy,yunpan139,yunpan189,yunpanuc,yydf_hzl,leoziyuan,Q_dongman,yoyokuakeduanju,TG654TG,WFYSFX02,QukanMovie,yeqingjie_GJG666,movielover8888_film3,Baidu_netdisk,D_wusun,FLMdongtianfudi,KaiPanshare,QQZYDAPP,rjyxfx,PikPak_Share_Channel,btzhi,newproductsourcing,cctv1211,duan_ju,QuarkFree,yunpanNB,kkdj001,xxzlzn,pxyunpanxunlei,jxwpzy,kuakedongman,liangxingzhinan,xiangnikanj,solidsexydoll,guoman4K,zdqxm,kduanju,cilidianying,CBduanju,SharePanFilms,dzsgx,BooksRealm,Oscar_4Kmovies,douerpan,baidu_yppan,Q_jilupian,Netdisk_Movies,yunpanquark,ammmziyuan,ciliziyuanku,cili8888,jzmm_123pan,Q_dianying,domgmingapk,dianying4k,q_dianshiju,tgbokee,ucshare,godupan,gokuapan';
   static const String defaultEnabledPluginsValue =
@@ -26,6 +29,7 @@ class QuarkSearchSettingsController extends GetxController {
   final configs = <String, ConfigModel>{}.obs;
   final selectedChannels = <String>[].obs;
   final selectedPlugins = <String>[].obs;
+  final webEngines = <PanWebEngine>[].obs;
 
   final httpProxyController = TextEditingController();
   final httpsProxyController = TextEditingController();
@@ -55,6 +59,9 @@ class QuarkSearchSettingsController extends GetxController {
       );
       selectedPlugins.assignAll(
         _parseTags(_pluginsValue(result[enabledPluginsKey])),
+      );
+      webEngines.assignAll(
+        PanWebEngine.parseConfigValue(result[webEnginesKey]?.value),
       );
     } finally {
       loading.value = false;
@@ -89,6 +96,12 @@ class QuarkSearchSettingsController extends GetxController {
         name: '夸克搜索 启用插件',
         remark: '指定启用插件，多个插件使用逗号分隔',
         value: _joinTags(selectedPlugins),
+      );
+      await _saveSingle(
+        key: webEnginesKey,
+        name: '夸克搜索 自定义搜索源',
+        remark: '自定义网盘 Web 搜索源 JSON：[{name,url}]，url 使用 {kw} 占位关键词',
+        value: PanWebEngine.serializeConfigValue(webEngines.toList()),
       );
       await loadConfigs();
       Get.snackbar('提示', '夸克搜索配置已保存');
@@ -143,6 +156,43 @@ class QuarkSearchSettingsController extends GetxController {
     if (result != null) {
       selectedPlugins.assignAll(result);
     }
+  }
+
+  Future<void> addWebEngine() async {
+    final result = await Get.to<PanWebEngine>(
+      () => const QuarkWebEngineEditorView(),
+    );
+    if (result == null) return;
+    webEngines.add(
+      PanWebEngine(
+        id: _nextWebEngineId(),
+        name: result.name,
+        urlTemplate: result.urlTemplate,
+      ),
+    );
+  }
+
+  Future<void> editWebEngine(int index) async {
+    if (index < 0 || index >= webEngines.length) return;
+    final result = await Get.to<PanWebEngine>(
+      () => QuarkWebEngineEditorView(initial: webEngines[index]),
+    );
+    if (result == null) return;
+    webEngines[index] = result;
+  }
+
+  void removeWebEngine(int index) {
+    if (index < 0 || index >= webEngines.length) return;
+    webEngines.removeAt(index);
+  }
+
+  String _nextWebEngineId() {
+    final used = webEngines.map((engine) => engine.id).toSet();
+    var index = webEngines.length;
+    while (used.contains('web_$index')) {
+      index++;
+    }
+    return 'web_$index';
   }
 
   Future<void> _saveSingle({
