@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
 const sensitiveConfigKeyQuarkCookies = "quark_cookies"
@@ -159,53 +158,31 @@ func (config *Config) AddOrUpdateConfig(c *gin.Context) {
 	}
 
 	key := strings.TrimSpace(iConfigUpdateDTO.Key)
-	if iConfigUpdateDTO.ID != 0 {
-		currentConfig, err := configService.GetConfigById(&dto.CommonIDDTO{ID: iConfigUpdateDTO.ID})
-		if err != nil {
-			// 独享模式下凭证可能存在于 user_config，ID 对不上全局表时按 key 处理
-			if !errors.Is(err, gorm.ErrRecordNotFound) || !isQuarkCredentialConfigKey(key) {
-				utils.FailWithMessage(err.Error(), c)
-				return
-			}
-		} else {
-			if key == "" {
-				key = currentConfig.Key
-				iConfigUpdateDTO.Key = currentConfig.Key
-			}
-			if isQuarkCredentialConfigKey(currentConfig.Key) {
-				// 不因全局 ID 写权限拦截；后面按 credentialTarget 落库
-			} else if !canWriteConfig(loginUser, currentConfig.Key) {
-				utils.PermissionFail("无权限访问", c)
-				return
-			}
-		}
-	}
-
-	if isQuarkCredentialConfigKey(key) {
-		target := service.NormalizeQuarkCredentialTargetExport(iConfigUpdateDTO.CredentialTarget)
-		if !canAccessQuarkCredentialAPI(loginUser, target) {
-			utils.PermissionFail("无权限访问", c)
-			return
-		}
-		// 非超管不允许借全局 ID 改写全局共享凭证
-		if target != service.QuarkCredentialTargetPersonal && !loginUser.IsSuperAdmin() {
-			// auto + exclusive → personal store; auto + shared non-admin should already fail canAccess
-			usePersonal, err := service.ResolveQuarkCredentialUsePersonalExport(loginUser.ID, target)
-			if err != nil {
-				utils.FailWithMessage(err.Error(), c)
-				return
-			}
-			if !usePersonal {
-				utils.PermissionFail("无权限访问", c)
-				return
-			}
-		}
-		if err := service.SaveQuarkCredentialConfig(loginUser.ID, &iConfigUpdateDTO, target); err != nil {
-			utils.FailWithMessage(err.Error(), c)
+	// 夸克凭证按 credentialTarget 决定落库位置（sys_config 或 user_config），
+	// 请求里的 ID 可能来自 user_config，不能拿去查全局配置做权限判断。
+	if key != "" && isQuarkCredentialConfigKey(key) {
+		if err := saveQuarkCredentialConfig(loginUser, &iConfigUpdateDTO, key); err != nil {
+			utils.PermissionFail(err.Error(), c)
 			return
 		}
 		utils.Ok(c)
 		return
+	}
+
+	if iConfigUpdateDTO.ID != 0 {
+		currentConfig, err := configService.GetConfigById(&dto.CommonIDDTO{ID: iConfigUpdateDTO.ID})
+		if err != nil {
+			utils.FailWithMessage(err.Error(), c)
+			return
+		}
+		if key == "" {
+			key = currentConfig.Key
+			iConfigUpdateDTO.Key = currentConfig.Key
+		}
+		if !canWriteConfig(loginUser, currentConfig.Key) || !canWriteConfig(loginUser, key) {
+			utils.PermissionFail("无权限访问", c)
+			return
+		}
 	}
 
 	if !canWriteConfig(loginUser, key) {
@@ -230,6 +207,25 @@ func (config *Config) AddOrUpdateConfig(c *gin.Context) {
 	}
 
 	utils.Ok(c)
+}
+
+// saveQuarkCredentialConfig 按 credentialTarget 落库夸克凭证，不依赖全局 sys_config 主键。
+func saveQuarkCredentialConfig(loginUser model.LoginUser, update *dto.ConfigUpdateDTO, key string) error {
+	target := service.NormalizeQuarkCredentialTargetExport(update.CredentialTarget)
+	if !canAccessQuarkCredentialAPI(loginUser, target) {
+		return errors.New("无权限访问")
+	}
+	// 非超管不允许借全局 ID 改写全局共享凭证
+	if target != service.QuarkCredentialTargetPersonal && !loginUser.IsSuperAdmin() {
+		usePersonal, err := service.ResolveQuarkCredentialUsePersonalExport(loginUser.ID, target)
+		if err != nil {
+			return err
+		}
+		if !usePersonal {
+			return errors.New("无权限访问")
+		}
+	}
+	return service.SaveQuarkCredentialConfig(loginUser.ID, update, target)
 }
 
 func (config *Config) DeleteConfig(c *gin.Context) {
