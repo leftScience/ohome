@@ -40,8 +40,10 @@ func (m *UserConfigDao) Upsert(userID uint, key, value, remark string) (model.Us
 	if userID == 0 || key == "" {
 		return model.UserConfig{}, errors.New("user config key invalid")
 	}
-
-	existing, err := m.GetByUserAndKey(userID, key)
+	var existing model.UserConfig
+	err := global.DB.Unscoped().
+		Where("user_id = ? AND `key` = ?", userID, key).
+		First(&existing).Error
 	if err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return model.UserConfig{}, err
@@ -62,14 +64,21 @@ func (m *UserConfigDao) Upsert(userID uint, key, value, remark string) (model.Us
 	if strings.TrimSpace(remark) != "" {
 		existing.Remark = strings.TrimSpace(remark)
 	}
-	if err := global.DB.Save(&existing).Error; err != nil {
+	if err := global.DB.Unscoped().Model(&existing).Updates(map[string]interface{}{
+		"value":      existing.Value,
+		"remark":     existing.Remark,
+		"deleted_at": nil,
+	}).Error; err != nil {
 		return model.UserConfig{}, err
 	}
+	existing.DeletedAt = gorm.DeletedAt{}
 	return existing, nil
 }
 
 func (m *UserConfigDao) DeleteByUserAndKey(userID uint, key string) error {
-	return global.DB.Where("user_id = ? AND `key` = ?", userID, strings.TrimSpace(key)).Delete(&model.UserConfig{}).Error
+	return global.DB.Unscoped().
+		Where("user_id = ? AND `key` = ?", userID, strings.TrimSpace(key)).
+		Delete(&model.UserConfig{}).Error
 }
 
 func (m *UserConfigDao) DeleteByUserIDWithDB(db *gorm.DB, userID uint) error {
