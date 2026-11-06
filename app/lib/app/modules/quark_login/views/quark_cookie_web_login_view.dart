@@ -23,6 +23,9 @@ class _QuarkCookieWebLoginViewState extends State<QuarkCookieWebLoginView> {
     WebUri('https://drive-pc.quark.cn/'),
     WebUri('https://drive-m.quark.cn/'),
     WebUri('https://quark.cn/'),
+    WebUri('https://passport.quark.cn/'),
+    WebUri('https://ucdn.quark.cn/'),
+    WebUri('https://open-api.quark.cn/'),
   ];
   static const Set<String> _requiredCookieNames = <String>{'__puus', '__pus'};
   static const String _desktopUserAgent =
@@ -50,6 +53,8 @@ class _QuarkCookieWebLoginViewState extends State<QuarkCookieWebLoginView> {
   @override
   void dispose() {
     _cookieWatchTimer?.cancel();
+    // 离开页面时再清一次，避免登录态残留在 WebView 存储里。
+    unawaited(_clearQuarkSession());
     super.dispose();
   }
 
@@ -113,10 +118,26 @@ class _QuarkCookieWebLoginViewState extends State<QuarkCookieWebLoginView> {
     return parts.join('; ');
   }
 
-  Future<void> _clearQuarkCookies() async {
+  /// 彻底清空 WebView 里的登录痕迹：Cookie、localStorage/IndexedDB、
+  /// HTTP 缓存。只按域名删 Cookie 会漏掉 passport 等域下的登录态，
+  /// 因此这里统一全量清理，保证每次进入都是全新会话。
+  Future<void> _clearQuarkSession() async {
     for (final scope in _cookieScopes) {
-      await _cookieManager.deleteCookies(url: scope);
+      try {
+        await _cookieManager.deleteCookies(url: scope);
+      } catch (_) {
+        // 单个域名清理失败不影响整体重置。
+      }
     }
+    try {
+      await _cookieManager.deleteAllCookies();
+    } catch (_) {}
+    try {
+      await WebStorageManager.instance().deleteAllData();
+    } catch (_) {}
+    try {
+      await InAppWebViewController.clearAllCache();
+    } catch (_) {}
   }
 
   Future<void> _openInitialPage() async {
@@ -124,19 +145,20 @@ class _QuarkCookieWebLoginViewState extends State<QuarkCookieWebLoginView> {
     if (controller == null) {
       return;
     }
-    await _clearQuarkCookies();
+    await _clearQuarkSession();
     await controller.loadUrl(urlRequest: URLRequest(url: _initialUri));
   }
 
   Future<void> _resetQuarkSession() async {
-    await _clearQuarkCookies();
-    await _webViewController?.loadUrl(urlRequest: URLRequest(url: _initialUri));
-    if (!mounted) {
-      return;
+    _checking = false;
+    if (mounted) {
+      setState(() {
+        _canReadCookies = false;
+        _progress = 0;
+      });
     }
-    setState(() {
-      _canReadCookies = false;
-    });
+    await _clearQuarkSession();
+    await _webViewController?.loadUrl(urlRequest: URLRequest(url: _initialUri));
   }
 
   @override
