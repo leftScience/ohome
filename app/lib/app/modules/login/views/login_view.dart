@@ -412,8 +412,8 @@ class _RegisterEntryButton extends GetView<LoginController> {
           TextSpan(
             style: TextStyle(
               fontSize: 13.sp,
-              color: Colors.white70,
-              fontWeight: FontWeight.w500,
+color: AppThemeColors.textMuted,
+                fontWeight: FontWeight.w500,
             ),
             children: const [
               TextSpan(text: '没有账号？ '),
