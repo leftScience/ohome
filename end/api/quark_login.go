@@ -27,7 +27,7 @@ func (a *QuarkLogin) GetQuarkTVStatus(c *gin.Context) {
 
 	status, err := quarkTVLoginService.GetStatus(loginUser.ID, target)
 	if err != nil {
-		utils.FailWithMessage(err.Error(), c)
+		failQuarkError(err, c)
 		return
 	}
 	utils.OkWithData(status, c)
@@ -41,7 +41,7 @@ func (a *QuarkLogin) StartQuarkTVLogin(c *gin.Context) {
 
 	result, err := quarkTVLoginService.StartLogin(c.Request.Context(), loginUser.ID, target)
 	if err != nil {
-		utils.FailWithMessage(err.Error(), c)
+		failQuarkError(err, c)
 		return
 	}
 	utils.OkWithData(result, c)
@@ -55,7 +55,7 @@ func (a *QuarkLogin) PollQuarkTVLogin(c *gin.Context) {
 
 	result, err := quarkTVLoginService.PollLogin(c.Request.Context(), loginUser.ID, target)
 	if err != nil {
-		utils.FailWithMessage(err.Error(), c)
+		failQuarkError(err, c)
 		return
 	}
 	utils.OkWithData(result, c)

@@ -331,13 +331,20 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
           ? Get.find<AuthService>()
           : null;
       final isSuperAdmin = authService?.user.value?.isSuperAdmin ?? false;
-      final isLoginRequired = QuarkErrorHelper.isQuarkLoginRequired(errText) ||
-          QuarkErrorHelper.isQuarkLoginRequired(error);
-      // 独享缺登录 / 个人凭证失效：用户自己去登录；共享凭证失效：仅超管可修。
-      final canSelfLogin = isLoginRequired || isSuperAdmin;
+      // 后端按凭证归属下发原因码：
+      // QUARK_LOGIN_REQUIRED → 独享/个人凭证，用户自己重新登录；
+      // QUARK_SHARED_CREDENTIAL_UNAVAILABLE → 共享凭证，只有超管能修。
+      final isLoginRequired = QuarkErrorHelper.isQuarkLoginRequired(error) ||
+          QuarkErrorHelper.isQuarkLoginRequired(errText);
+      final isSharedUnavailable =
+          QuarkErrorHelper.isQuarkSharedCredentialUnavailable(error) ||
+              QuarkErrorHelper.isQuarkSharedCredentialUnavailable(errText);
+      final canSelfLogin =
+          isLoginRequired || (isSharedUnavailable && isSuperAdmin);
+      // 没有原因码时（老后端）退回按角色推断：超管多半在维护共享凭证。
       final loginTarget = isLoginRequired
           ? 'personal'
-          : (isSuperAdmin ? 'shared' : 'personal');
+          : (isSharedUnavailable || isSuperAdmin ? 'shared' : 'personal');
 
       return Center(
         child: SingleChildScrollView(
@@ -361,7 +368,9 @@ class _ResourceCardPageState extends State<ResourceCardPage> {
                 ),
                 const SizedBox(height: 14),
                 Text(
-                  isLoginRequired ? '需要登录夸克' : '夸克登录已失效',
+                  isLoginRequired
+                      ? '需要登录夸克'
+                      : (isSharedUnavailable ? '共享夸克账号不可用' : '夸克登录已失效'),
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 16,

@@ -20,7 +20,7 @@ func (a *QuarkAutoSaveTask) SharePreview(c *gin.Context) {
 	}
 	result, err := quarkAutoSaveTaskService.SharePreview(&previewDTO, loginUser.ID)
 	if err != nil {
-		utils.FailWithMessage(err.Error(), c)
+		failQuarkError(err, c)
 		return
 	}
 	utils.OkWithData(result, c)

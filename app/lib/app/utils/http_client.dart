@@ -65,16 +65,20 @@ class HttpClient {
       if (decoder != null) return decoder(result);
       return result as T;
     } on DioException catch (e) {
-      final message = _dioExceptionMessage(e);
-      _maybeToastError(message, showErrorToast);
-      throw ApiException(message, code: e.response?.statusCode);
+      final error = ApiException(
+        _dioExceptionMessage(e),
+        code: e.response?.statusCode,
+        reason: _dioExceptionReason(e),
+      );
+      _maybeToastError(error, showErrorToast);
+      throw error;
     } on ApiException catch (e) {
-      _maybeToastError(e.message, showErrorToast);
+      _maybeToastError(e, showErrorToast);
       rethrow;
     } catch (e) {
-      final message = e.toString();
-      _maybeToastError(message, showErrorToast);
-      throw ApiException(message);
+      final error = ApiException(e.toString());
+      _maybeToastError(error, showErrorToast);
+      throw error;
     }
   }
 
@@ -202,10 +206,33 @@ class HttpClient {
     final code = CommonUtils.toInt(body['code']);
     final msg = (body['msg'] as String?)?.trim();
     if (code != null && code != 200) {
-      throw ApiException(msg?.isNotEmpty == true ? msg! : '请求失败', code: code);
+      throw ApiException(
+        msg?.isNotEmpty == true ? msg! : '请求失败',
+        code: code,
+        reason: _businessReason(body),
+      );
     }
 
     return body['data'];
+  }
+
+  /// 后端响应体顶层的机器可读原因码（如 QUARK_LOGIN_REQUIRED）。
+  static String? _businessReason(dynamic body) {
+    if (body is! Map<String, dynamic>) return null;
+    final reason = body['reason'];
+    if (reason is String && reason.trim().isNotEmpty) return reason.trim();
+    final data = body['data'];
+    if (data is Map<String, dynamic>) {
+      final errorCode = data['errorCode'];
+      if (errorCode is String && errorCode.trim().isNotEmpty) {
+        return errorCode.trim();
+      }
+    }
+    return null;
+  }
+
+  static String? _dioExceptionReason(DioException e) {
+    return _businessReason(e.response?.data);
   }
 
   static String _dioExceptionMessage(DioException e) {
@@ -217,13 +244,13 @@ class HttpClient {
     return e.message?.trim().isNotEmpty == true ? e.message!.trim() : '网络请求失败';
   }
 
-  static void _maybeToastError(String message, bool showErrorToast) {
+  static void _maybeToastError(Object error, bool showErrorToast) {
     if (!showErrorToast) return;
-    _toastError(message);
+    _toastError(error);
   }
 
-  static void _toastError(String message) {
-    final text = QuarkErrorHelper.toFriendlyMessage(message);
+  static void _toastError(Object error) {
+    final text = QuarkErrorHelper.toFriendlyMessage(error);
     if (text.isEmpty) return;
     if (Get.overlayContext == null) return;
 
@@ -249,10 +276,13 @@ class HttpClient {
 }
 
 class ApiException implements Exception {
-  ApiException(this.message, {this.code});
+  ApiException(this.message, {this.code, this.reason});
 
   final String message;
   final int? code;
+
+  /// 后端业务原因码，用于前端做分支判断（不要靠中文文案匹配）。
+  final String? reason;
 
   @override
   String toString() => message;

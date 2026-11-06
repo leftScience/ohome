@@ -25,6 +25,7 @@ func (s *QuarkAutoSaveTaskService) SharePreview(previewDTO *dto.QuarkSharePrevie
 	}
 
 	client := newQuarkClient(cookie)
+	client.cookieScopeExclusive = quarkCredentialUsePersonal(ownerUserID)
 	if err := client.initAccount(ctx); err != nil {
 		return nil, wrapQuarkSharePreviewError(err)
 	}

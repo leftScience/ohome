@@ -97,14 +97,11 @@ class MeController extends GetxController {
     await refreshQuarkAccountStatus();
   }
 
-  /// 超管「夸克配置 - 夸克登录」：系统共享时始终维护全局共享凭证。
+  /// 超管「夸克配置 - 夸克登录」：凭证目标由后端下发，前端不再按系统模式推断，
+  /// 否则「系统共享 + 超管开了独享偏好」时会写错位置（写共享、运行时读个人）。
   Future<void> openSharedQuarkLogin() async {
     if (!_ensureSuperAdmin()) return;
-    if (accountStatus.systemMode == 'shared') {
-      await openQuarkLogin(credentialTarget: 'shared');
-      return;
-    }
-    await openQuarkLogin(credentialTarget: 'personal');
+    await openQuarkLogin(credentialTarget: accountStatus.credentialTarget);
   }
 
   /// 用户独享入口：始终写个人凭证。

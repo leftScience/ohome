@@ -14,6 +14,9 @@ type Response struct {
 	Code int    `json:"code"`
 	Data any    `json:"data"`
 	Msg  string `json:"msg"`
+	// Reason 是机器可读的业务原因码（如 QUARK_LOGIN_REQUIRED），
+	// 前端按码分支，避免依赖中文文案匹配。
+	Reason string `json:"reason,omitempty"`
 }
 
 const (
@@ -25,9 +28,19 @@ const (
 
 func Result(code int, data interface{}, msg string, c *gin.Context) {
 	c.JSON(http.StatusOK, Response{
-		code,
-		data,
-		msg,
+		Code: code,
+		Data: data,
+		Msg:  msg,
+	})
+}
+
+// ResultWithReason 输出带业务原因码的失败响应。
+func ResultWithReason(code int, data interface{}, msg string, reason string, c *gin.Context) {
+	c.JSON(http.StatusOK, Response{
+		Code:   code,
+		Data:   data,
+		Msg:    msg,
+		Reason: reason,
 	})
 }
 
@@ -55,6 +68,12 @@ func FailWithMessage(message string, c *gin.Context) {
 func FailWithDetailed(data interface{}, message string, c *gin.Context) {
 	c.Abort()
 	Result(ERROR, data, message, c)
+}
+
+// FailWithReason 输出带业务原因码的失败响应，data 为空对象。
+func FailWithReason(reason string, message string, c *gin.Context) {
+	c.Abort()
+	ResultWithReason(ERROR, map[string]interface{}{}, message, reason, c)
 }
 
 func TokenFail(c *gin.Context) {

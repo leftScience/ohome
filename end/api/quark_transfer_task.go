@@ -18,7 +18,7 @@ func NewQuarkTransferTaskApi() QuarkTransferTask {
 func (a *QuarkTransferTask) GetList(c *gin.Context) {
 	loginUser, err := getLoginUser(c)
 	if err != nil {
-		utils.FailWithMessage(err.Error(), c)
+		failQuarkError(err, c)
 		return
 	}
 	var listDTO dto.QuarkTransferTaskListDTO
@@ -27,7 +27,7 @@ func (a *QuarkTransferTask) GetList(c *gin.Context) {
 	}
 	records, total, err := quarkTransferTaskService.GetList(&listDTO, loginUser.ID)
 	if err != nil {
-		utils.FailWithMessage(err.Error(), c)
+		failQuarkError(err, c)
 		return
 	}
 	utils.OkWithData(gin.H{"records": records, "total": total}, c)
@@ -36,7 +36,7 @@ func (a *QuarkTransferTask) GetList(c *gin.Context) {
 func (a *QuarkTransferTask) Delete(c *gin.Context) {
 	loginUser, err := getLoginUser(c)
 	if err != nil {
-		utils.FailWithMessage(err.Error(), c)
+		failQuarkError(err, c)
 		return
 	}
 	var idDTO dto.CommonIDDTO
@@ -44,7 +44,7 @@ func (a *QuarkTransferTask) Delete(c *gin.Context) {
 		return
 	}
 	if err := quarkTransferTaskService.DeleteByID(&idDTO, loginUser.ID); err != nil {
-		utils.FailWithMessage(err.Error(), c)
+		failQuarkError(err, c)
 		return
 	}
 	utils.OkWithMessage("删除成功", c)

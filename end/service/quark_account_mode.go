@@ -22,11 +22,18 @@ const (
 	QuarkCredentialTargetShared   = "shared"
 	QuarkCredentialTargetPersonal = "personal"
 
-	ErrCodeQuarkLoginRequired = "QUARK_LOGIN_REQUIRED"
+	ErrCodeQuarkLoginRequired             = "QUARK_LOGIN_REQUIRED"
+	ErrCodeQuarkSharedCredentialInvalid   = "QUARK_SHARED_CREDENTIAL_UNAVAILABLE"
+	ErrCodeQuarkPersonalCredentialBlocked = "QUARK_PERSONAL_CREDENTIAL_BLOCKED"
 )
 
 var (
+	// ErrQuarkLoginRequired：独享模式下用户自己的夸克凭证缺失/失效，用户可自行重新登录修复。
 	ErrQuarkLoginRequired = errors.New("请先登录夸克账号")
+	// ErrQuarkSharedCredentialUnavailable：共享模式下全局夸克凭证缺失/失效，普通用户无法自行修复。
+	ErrQuarkSharedCredentialUnavailable = errors.New("共享夸克账号未登录或已失效，请联系管理员")
+	// ErrQuarkPersonalCredentialDisabled：共享模式下不存在个人凭证的读写语义，显式要求个人凭证视为非法请求。
+	ErrQuarkPersonalCredentialDisabled = errors.New("当前为共享夸克账号模式，不维护个人凭证")
 
 	quarkCredentialConfigKeys = map[string]struct{}{
 		quarkCookieConfigKey:         {},
@@ -49,6 +56,8 @@ type QuarkAccountStatus struct {
 	CanManageCredentials bool   `json:"canManageCredentials"`
 	LoginRequired        bool   `json:"loginRequired"`
 	CookieConfigured     bool   `json:"cookieConfigured"`
+	// SuggestedCredentialTarget 由后端统一下发，前端不要再自行推断凭证落库目标。
+	SuggestedCredentialTarget string `json:"suggestedCredentialTarget"`
 }
 
 func isQuarkCredentialConfigKey(key string) bool {
@@ -151,7 +160,6 @@ func isQuarkExclusiveMode(userID uint) bool {
 	return resolveQuarkAccountMode(userID) == QuarkAccountModeExclusive
 }
 
-
 func normalizeQuarkCredentialTarget(raw string) string {
 	switch strings.ToLower(strings.TrimSpace(raw)) {
 	case QuarkCredentialTargetShared:
@@ -163,7 +171,11 @@ func normalizeQuarkCredentialTarget(raw string) string {
 	}
 }
 
-// resolveQuarkCredentialUsePersonal 决定凭证读写落库位置。
+// resolveQuarkCredentialUsePersonal 是凭证落库位置的唯一真源，
+// 读（loadPrimaryQuarkCookieRecordForUser / getOptionalConfigByKeyForUser）
+// 与写（SaveQuarkCredentialConfig / DeleteQuarkCredentialConfig）都必须走这里，
+// 否则会出现「写到 A 处、运行时读 B 处」的静默失效。
+//
 // shared → 全局 sys_config；personal → 用户 sys_user_config；
 // auto → 跟随生效模式（独享走个人，共享走全局）。
 func resolveQuarkCredentialUsePersonal(userID uint, target string) (bool, error) {
@@ -174,10 +186,28 @@ func resolveQuarkCredentialUsePersonal(userID uint, target string) (bool, error)
 		if userID == 0 {
 			return false, errors.New("用户信息不存在")
 		}
+		// 共享模式下运行时永远读全局凭证，个人凭证不会被任何链路使用，
+		// 因此必须显式拒绝，避免写入「死数据」并让配置页误显示已配置。
+		if !isQuarkExclusiveMode(userID) {
+			return false, ErrQuarkPersonalCredentialDisabled
+		}
 		return true, nil
 	default:
-		return userID != 0 && isQuarkExclusiveMode(userID), nil
+		return quarkCredentialUsePersonal(userID), nil
 	}
+}
+
+// quarkCredentialUsePersonal 返回 auto 语义下的落库位置，即「运行时实际读取的位置」。
+func quarkCredentialUsePersonal(userID uint) bool {
+	return userID != 0 && isQuarkExclusiveMode(userID)
+}
+
+// suggestedQuarkCredentialTarget 下发前端应使用的凭证目标，避免前端自行猜测。
+func suggestedQuarkCredentialTarget(userID uint) string {
+	if quarkCredentialUsePersonal(userID) {
+		return QuarkCredentialTargetPersonal
+	}
+	return QuarkCredentialTargetShared
 }
 
 func canManageQuarkCredentials(loginUser model.LoginUser) bool {
@@ -201,13 +231,14 @@ func buildQuarkAccountStatus(loginUser model.LoginUser) QuarkAccountStatus {
 	effectiveMode := resolveQuarkAccountMode(loginUser.ID)
 	cookieConfigured := hasQuarkCookieConfigured(loginUser.ID)
 	return QuarkAccountStatus{
-		SystemMode:           systemMode,
-		PreferExclusive:      preferExclusive,
-		EffectiveMode:        effectiveMode,
-		CanPreferExclusive:   systemMode == QuarkAccountModeShared,
-		CanManageCredentials: canManageQuarkCredentials(loginUser),
-		LoginRequired:        effectiveMode == QuarkAccountModeExclusive && !cookieConfigured,
-		CookieConfigured:     cookieConfigured,
+		SystemMode:                systemMode,
+		PreferExclusive:           preferExclusive,
+		EffectiveMode:             effectiveMode,
+		CanPreferExclusive:        systemMode == QuarkAccountModeShared,
+		CanManageCredentials:      canManageQuarkCredentials(loginUser),
+		LoginRequired:             effectiveMode == QuarkAccountModeExclusive && !cookieConfigured,
+		CookieConfigured:          cookieConfigured,
+		SuggestedCredentialTarget: suggestedQuarkCredentialTarget(loginUser.ID),
 	}
 }
 
@@ -254,6 +285,42 @@ func IsQuarkLoginRequiredError(err error) bool {
 	return err != nil && errors.Is(err, ErrQuarkLoginRequired)
 }
 
+func IsQuarkSharedCredentialUnavailableError(err error) bool {
+	return err != nil && errors.Is(err, ErrQuarkSharedCredentialUnavailable)
+}
+
+func IsQuarkPersonalCredentialDisabledError(err error) bool {
+	return err != nil && errors.Is(err, ErrQuarkPersonalCredentialDisabled)
+}
+
+// QuarkErrorCode 把夸克凭证类错误映射成前端可判别的业务码。
+// 前端不再依赖错误文案做分支，避免后端改文案就悄悄失效。
+func QuarkErrorCode(err error) string {
+	switch {
+	case IsQuarkLoginRequiredError(err):
+		return ErrCodeQuarkLoginRequired
+	case IsQuarkSharedCredentialUnavailableError(err):
+		return ErrCodeQuarkSharedCredentialInvalid
+	case IsQuarkPersonalCredentialDisabledError(err):
+		return ErrCodeQuarkPersonalCredentialBlocked
+	default:
+		return ""
+	}
+}
+
+// QuarkErrorMessage 返回面向终端用户的提示文案。
+func QuarkErrorMessage(err error) string {
+	switch {
+	case IsQuarkLoginRequiredError(err):
+		return ErrQuarkLoginRequired.Error()
+	case IsQuarkSharedCredentialUnavailableError(err):
+		return ErrQuarkSharedCredentialUnavailable.Error()
+	case IsQuarkPersonalCredentialDisabledError(err):
+		return ErrQuarkPersonalCredentialDisabled.Error()
+	default:
+		return err.Error()
+	}
+}
 
 func BuildQuarkAccountStatusExport(loginUser model.LoginUser) QuarkAccountStatus {
 	return buildQuarkAccountStatus(loginUser)
@@ -281,6 +348,22 @@ func ResolveQuarkCredentialUsePersonalExport(userID uint, target string) (bool, 
 
 func IsQuarkExclusiveModeExport(userID uint) bool {
 	return isQuarkExclusiveMode(userID)
+}
+
+// CanAccessQuarkCredentialTargetExport 判断用户能否读写指定目标的夸克凭证。
+// shared → 仅超管；personal → 必须处于独享模式且具备凭证管理权限。
+func CanAccessQuarkCredentialTargetExport(loginUser model.LoginUser, target string) bool {
+	if loginUser.ID == 0 {
+		return false
+	}
+	switch normalizeQuarkCredentialTarget(target) {
+	case QuarkCredentialTargetShared:
+		return loginUser.IsSuperAdmin()
+	case QuarkCredentialTargetPersonal:
+		return canManageQuarkCredentials(loginUser) && isQuarkExclusiveMode(loginUser.ID)
+	default:
+		return canManageQuarkCredentials(loginUser)
+	}
 }
 
 func GetQuarkCredentialConfigAsModel(userID uint, key string, target string) (model.Config, bool, error) {
@@ -408,7 +491,6 @@ func firstNonEmpty(values ...string) string {
 	}
 	return ""
 }
-
 
 func SetQuarkAccountModeOverrideForTest(fn func(userID uint) string) {
 	quarkAccountModeOverride = fn

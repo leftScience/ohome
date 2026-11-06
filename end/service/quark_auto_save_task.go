@@ -87,6 +87,7 @@ func executeQuarkTransfer(ctx context.Context, task quarkSaveTask) (quarkSaveRes
 	}
 
 	client := newQuarkClient(cookie)
+	client.cookieScopeExclusive = quarkCredentialUsePersonal(task.OwnerUserID)
 	if err := client.initAccount(ctx); err != nil {
 		return quarkSaveResult{Status: "fail", Message: err.Error()}, err
 	}
@@ -104,6 +105,7 @@ func precheckQuarkTransfer(task quarkSaveTask) error {
 	}
 
 	client := newQuarkClient(cookie)
+	client.cookieScopeExclusive = quarkCredentialUsePersonal(task.OwnerUserID)
 	if err := client.initAccount(ctx); err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
 			return errors.New("转存校验超时，请稍后重试")

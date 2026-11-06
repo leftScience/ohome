@@ -19,7 +19,7 @@ func NewQuarkAutoSaveTaskApi() QuarkAutoSaveTask {
 func (a *QuarkAutoSaveTask) GetList(c *gin.Context) {
 	loginUser, err := getLoginUser(c)
 	if err != nil {
-		utils.FailWithMessage(err.Error(), c)
+		failQuarkError(err, c)
 		return
 	}
 	var listDTO dto.QuarkAutoSaveTaskListDTO
@@ -28,7 +28,7 @@ func (a *QuarkAutoSaveTask) GetList(c *gin.Context) {
 	}
 	tasks, total, err := quarkAutoSaveTaskService.GetList(&listDTO, loginUser.ID)
 	if err != nil {
-		utils.FailWithMessage(err.Error(), c)
+		failQuarkError(err, c)
 		return
 	}
 	utils.OkWithData(gin.H{"records": tasks, "total": total}, c)
@@ -37,7 +37,7 @@ func (a *QuarkAutoSaveTask) GetList(c *gin.Context) {
 func (a *QuarkAutoSaveTask) GetByID(c *gin.Context) {
 	loginUser, err := getLoginUser(c)
 	if err != nil {
-		utils.FailWithMessage(err.Error(), c)
+		failQuarkError(err, c)
 		return
 	}
 	var idDTO dto.CommonIDDTO
@@ -46,7 +46,7 @@ func (a *QuarkAutoSaveTask) GetByID(c *gin.Context) {
 	}
 	task, err := quarkAutoSaveTaskService.GetByID(&idDTO, loginUser.ID)
 	if err != nil {
-		utils.FailWithMessage(err.Error(), c)
+		failQuarkError(err, c)
 		return
 	}
 	utils.OkWithData(task, c)
@@ -55,7 +55,7 @@ func (a *QuarkAutoSaveTask) GetByID(c *gin.Context) {
 func (a *QuarkAutoSaveTask) AddOrUpdate(c *gin.Context) {
 	loginUser, err := getLoginUser(c)
 	if err != nil {
-		utils.FailWithMessage(err.Error(), c)
+		failQuarkError(err, c)
 		return
 	}
 	var updateDTO dto.QuarkAutoSaveTaskUpdateDTO
@@ -63,7 +63,7 @@ func (a *QuarkAutoSaveTask) AddOrUpdate(c *gin.Context) {
 		return
 	}
 	if err := quarkAutoSaveTaskService.AddOrUpdate(&updateDTO, loginUser.ID); err != nil {
-		utils.FailWithMessage(err.Error(), c)
+		failQuarkError(err, c)
 		return
 	}
 	utils.Ok(c)
@@ -72,7 +72,7 @@ func (a *QuarkAutoSaveTask) AddOrUpdate(c *gin.Context) {
 func (a *QuarkAutoSaveTask) Delete(c *gin.Context) {
 	loginUser, err := getLoginUser(c)
 	if err != nil {
-		utils.FailWithMessage(err.Error(), c)
+		failQuarkError(err, c)
 		return
 	}
 	var idDTO dto.CommonIDDTO
@@ -80,7 +80,7 @@ func (a *QuarkAutoSaveTask) Delete(c *gin.Context) {
 		return
 	}
 	if err := quarkAutoSaveTaskService.DeleteByID(&idDTO, loginUser.ID); err != nil {
-		utils.FailWithMessage(err.Error(), c)
+		failQuarkError(err, c)
 		return
 	}
 	utils.OkWithMessage("删除成功", c)
@@ -89,7 +89,7 @@ func (a *QuarkAutoSaveTask) Delete(c *gin.Context) {
 func (a *QuarkAutoSaveTask) RunOnce(c *gin.Context) {
 	loginUser, err := getLoginUser(c)
 	if err != nil {
-		utils.FailWithMessage(err.Error(), c)
+		failQuarkError(err, c)
 		return
 	}
 	var idDTO dto.CommonIDDTO
@@ -98,12 +98,12 @@ func (a *QuarkAutoSaveTask) RunOnce(c *gin.Context) {
 	}
 	task, err := quarkAutoSaveTaskService.GetByID(&idDTO, loginUser.ID)
 	if err != nil {
-		utils.FailWithMessage(err.Error(), c)
+		failQuarkError(err, c)
 		return
 	}
 	transferTask, err := quarkAutoSaveTaskService.RunOnce(task, loginUser.ID)
 	if err != nil {
-		utils.FailWithMessage(err.Error(), c)
+		failQuarkError(err, c)
 		return
 	}
 	utils.OkWithData(gin.H{
@@ -115,7 +115,7 @@ func (a *QuarkAutoSaveTask) RunOnce(c *gin.Context) {
 func (a *QuarkAutoSaveTask) TransferOnce(c *gin.Context) {
 	loginUser, err := getLoginUser(c)
 	if err != nil {
-		utils.FailWithMessage(err.Error(), c)
+		failQuarkError(err, c)
 		return
 	}
 	var transferDTO dto.QuarkAutoSaveTransferDTO
@@ -124,7 +124,7 @@ func (a *QuarkAutoSaveTask) TransferOnce(c *gin.Context) {
 	}
 	transferTask, err := quarkAutoSaveTaskService.TransferOnce(&transferDTO, loginUser.ID)
 	if err != nil {
-		utils.FailWithMessage(err.Error(), c)
+		failQuarkError(err, c)
 		return
 	}
 	utils.OkWithData(gin.H{

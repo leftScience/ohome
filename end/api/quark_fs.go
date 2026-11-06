@@ -294,13 +294,8 @@ func (a *QuarkFs) MoveQuarkFile(c *gin.Context) {
 	utils.OkWithMessage("移动成功", c)
 }
 
-
 func failQuarkFsError(err error, c *gin.Context) {
-	if service.IsQuarkLoginRequiredError(err) {
-		utils.FailWithDetailed(gin.H{"errorCode": service.ErrCodeQuarkLoginRequired}, err.Error(), c)
-		return
-	}
-	utils.FailWithMessage(err.Error(), c)
+	failQuarkError(err, c)
 }
 
 func (a *QuarkFs) getLoginUserID(c *gin.Context) (uint, error) {

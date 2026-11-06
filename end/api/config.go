@@ -162,6 +162,10 @@ func (config *Config) AddOrUpdateConfig(c *gin.Context) {
 	// 请求里的 ID 可能来自 user_config，不能拿去查全局配置做权限判断。
 	if key != "" && isQuarkCredentialConfigKey(key) {
 		if err := saveQuarkCredentialConfig(loginUser, &iConfigUpdateDTO, key); err != nil {
+			if code := service.QuarkErrorCode(err); code != "" {
+				utils.FailWithReason(code, service.QuarkErrorMessage(err), c)
+				return
+			}
 			utils.PermissionFail(err.Error(), c)
 			return
 		}
@@ -224,6 +228,10 @@ func saveQuarkCredentialConfig(loginUser model.LoginUser, update *dto.ConfigUpda
 		if !usePersonal {
 			return errors.New("无权限访问")
 		}
+	}
+	// 显式 personal 在共享模式下会被解析器拒绝，这里给出可读文案
+	if _, err := service.ResolveQuarkCredentialUsePersonalExport(loginUser.ID, target); err != nil {
+		return err
 	}
 	return service.SaveQuarkCredentialConfig(loginUser.ID, update, target)
 }
@@ -313,13 +321,10 @@ func canWriteConfig(loginUser model.LoginUser, key string) bool {
 }
 
 // canAccessQuarkCredentialAPI 独享用户或超管可访问模式化凭证 API；
-// target=shared 时仅超管可维护全局共享凭证。
+// target=shared 时仅超管可维护全局共享凭证；
+// target=personal 必须在独享模式下才有意义（共享模式运行时只读全局凭证）。
 func canAccessQuarkCredentialAPI(loginUser model.LoginUser, target string) bool {
-	target = service.NormalizeQuarkCredentialTargetExport(target)
-	if target == service.QuarkCredentialTargetShared {
-		return loginUser.IsSuperAdmin()
-	}
-	return service.CanManageQuarkCredentialsExport(loginUser)
+	return service.CanAccessQuarkCredentialTargetExport(loginUser, target)
 }
 
 func containsUnreadableSensitiveConfigKeys(loginUser model.LoginUser, keys []string) bool {

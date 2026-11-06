@@ -35,13 +35,13 @@ type quarkSaveResult struct {
 }
 
 type quarkClient struct {
-	httpClient          *http.Client
-	cookie              string
-	mparam              map[string]string
-	persistCookie       bool
-	cookieOwnerUserID   uint
+	httpClient           *http.Client
+	cookie               string
+	mparam               map[string]string
+	persistCookie        bool
+	cookieOwnerUserID    uint
 	cookieScopeExclusive bool
-	driveBaseURL        string
+	driveBaseURL         string
 }
 
 const (
@@ -57,6 +57,15 @@ func newQuarkClient(cookie string) *quarkClient {
 		mparam:       matchMParamFromCookie(cookie),
 		driveBaseURL: quarkDefaultDriveBaseURL,
 	}
+}
+
+// authErrorSentinel 返回该客户端的凭证失效类别：
+// 独享（使用用户个人账号）→ 用户可自行重新登录；共享 → 只能由管理员修复。
+func (c *quarkClient) authErrorSentinel() error {
+	if c != nil && c.cookieScopeExclusive {
+		return ErrQuarkLoginRequired
+	}
+	return ErrQuarkSharedCredentialUnavailable
 }
 
 func matchMParamFromCookie(cookie string) map[string]string {
@@ -162,7 +171,8 @@ func (c *quarkClient) initAccount(ctx context.Context) error {
 		return fmt.Errorf("解析夸克账号信息失败：%w", err)
 	}
 	if r.Code != 0 {
-		return fmt.Errorf("夸克登录凭据无效：%s", r.Message)
+		// 带上凭证失效类别，前端据此决定展示「去登录」还是「联系管理员」。
+		return fmt.Errorf("%w（%s）", c.authErrorSentinel(), r.Message)
 	}
 	return nil
 }

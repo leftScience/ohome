@@ -49,3 +49,29 @@ func TestCanAccessQuarkCredentialAPITargets(t *testing.T) {
 		t.Fatal("super admin should access shared credential target")
 	}
 }
+
+// 共享模式下 personal 目标没有任何运行时读取方，必须在权限层就拒绝，
+// 否则会写入「配置页显示已配置、实际永远不生效」的死数据。
+func TestSharedModeRejectsPersonalCredentialTarget(t *testing.T) {
+	service.SetQuarkAccountModeOverrideForTest(func(uint) string { return service.QuarkAccountModeShared })
+	t.Cleanup(service.ClearQuarkAccountModeOverrideForTest)
+
+	user := model.LoginUser{ID: 9, Name: "u", RoleCode: model.RoleCodeUser}
+	admin := model.LoginUser{ID: 1, Name: "admin", RoleCode: model.RoleCodeSuperAdmin}
+
+	if canAccessQuarkCredentialAPI(user, service.QuarkCredentialTargetPersonal) {
+		t.Fatal("shared mode must not expose personal credential target")
+	}
+	if canAccessQuarkCredentialAPI(admin, service.QuarkCredentialTargetPersonal) {
+		t.Fatal("shared mode must not expose personal target even for super admin")
+	}
+	if !canAccessQuarkCredentialAPI(admin, service.QuarkCredentialTargetShared) {
+		t.Fatal("super admin should still manage shared credentials in shared mode")
+	}
+	if !canAccessQuarkCredentialAPI(admin, service.QuarkCredentialTargetAuto) {
+		t.Fatal("super admin should access auto target in shared mode")
+	}
+	if canAccessQuarkCredentialAPI(user, service.QuarkCredentialTargetAuto) {
+		t.Fatal("shared-mode ordinary user must not manage credentials")
+	}
+}

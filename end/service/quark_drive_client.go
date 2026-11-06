@@ -173,7 +173,7 @@ func newManagedQuarkClientForUser(userID uint) (*quarkClient, error) {
 	client := newQuarkClient(cookie)
 	client.persistCookie = true
 	client.cookieOwnerUserID = userID
-	client.cookieScopeExclusive = userID != 0 && isQuarkExclusiveMode(userID)
+	client.cookieScopeExclusive = quarkCredentialUsePersonal(userID)
 	client.driveBaseURL = quarkDefaultDriveBaseURL
 	return client, nil
 }
@@ -192,7 +192,9 @@ func loadPrimaryQuarkCookieRecord() (model.Config, int, string, error) {
 }
 
 func loadPrimaryQuarkCookieRecordForUser(userID uint) (model.Config, int, string, error) {
-	if userID != 0 && isQuarkExclusiveMode(userID) {
+	// 运行时读取位置与写入位置共用同一个判定（resolveQuarkCredentialUsePersonal 的 auto 语义），
+	// 避免出现「写到个人表、运行时读全局表」的静默失效。
+	if quarkCredentialUsePersonal(userID) {
 		item, err := userConfigDao.GetByUserAndKey(userID, quarkCookieConfigKey)
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -223,12 +225,12 @@ func loadPrimaryQuarkCookieRecordForUser(userID uint) (model.Config, int, string
 	cfg, err := configDao.GetByKey(quarkCookieConfigKey)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return model.Config{}, -1, "", errors.New("未配置夸克 Cookie（请在参数管理中新增 key=quark_cookies）")
+			return model.Config{}, -1, "", fmt.Errorf("%w：未配置全局夸克 Cookie（参数管理 key=quark_cookies）", ErrQuarkSharedCredentialUnavailable)
 		}
 		return model.Config{}, -1, "", err
 	}
 	if strings.TrimSpace(cfg.Value) == "" {
-		return cfg, -1, "", errors.New("夸克 Cookie 配置为空")
+		return cfg, -1, "", fmt.Errorf("%w：全局夸克 Cookie 配置为空", ErrQuarkSharedCredentialUnavailable)
 	}
 	lines := splitCookieConfigLines(cfg.Value)
 	for i, line := range lines {
@@ -236,7 +238,7 @@ func loadPrimaryQuarkCookieRecordForUser(userID uint) (model.Config, int, string
 			return cfg, i, cookie, nil
 		}
 	}
-	return cfg, -1, "", errors.New("夸克 Cookie 配置无有效内容")
+	return cfg, -1, "", fmt.Errorf("%w：全局夸克 Cookie 配置无有效内容", ErrQuarkSharedCredentialUnavailable)
 }
 
 func updatePrimaryQuarkCookie(cookieLine string) error {
