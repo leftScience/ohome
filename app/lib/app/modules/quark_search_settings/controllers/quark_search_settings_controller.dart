@@ -256,5 +256,6 @@ class QuarkSearchSettingsController extends GetxController {
     httpsProxyKey,
     channelsKey,
     enabledPluginsKey,
+    webEnginesKey,
   ];
 }

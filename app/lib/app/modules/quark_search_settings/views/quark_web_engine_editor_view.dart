@@ -17,15 +17,20 @@ class QuarkWebEngineEditorView extends StatefulWidget {
 }
 
 class _QuarkWebEngineEditorViewState extends State<QuarkWebEngineEditorView> {
+  static const String _defaultName = 'KK搜';
+  static const String _defaultUrl = 'https://kkso.net/s/{kw}.html';
+
   late final TextEditingController _nameController;
   late final TextEditingController _urlController;
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.initial?.name ?? '');
+    _nameController = TextEditingController(
+      text: widget.initial?.name ?? _defaultName,
+    );
     _urlController = TextEditingController(
-      text: widget.initial?.urlTemplate ?? '',
+      text: widget.initial?.urlTemplate ?? _defaultUrl,
     );
   }
 
@@ -76,7 +81,7 @@ class _QuarkWebEngineEditorViewState extends State<QuarkWebEngineEditorView> {
           SizedBox(height: 12.h),
           _buildFieldCard(
             title: '搜索链接',
-            hint: '例如：https://kkso.net/?q={kw}',
+            hint: '例如：https://kkso.net/s/{kw}.html',
             controller: _urlController,
             maxLines: 3,
           ),
@@ -88,14 +93,28 @@ class _QuarkWebEngineEditorViewState extends State<QuarkWebEngineEditorView> {
               borderRadius: BorderRadius.circular(18.r),
               border: Border.all(color: AppThemeColors.border),
             ),
-            child: Text(
-              '链接中的 {kw}（兼容 {keyword}）会被替换为搜索关键词。'
-              '配置后「资源搜索」页会多出对应的搜索源标签，点选后以内嵌网页方式打开。',
-              style: TextStyle(
-                fontSize: 12.sp,
-                color: AppThemeColors.textSecondary,
-                height: 1.6,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '链接中的 {kw}（兼容 {keyword}）会被替换为搜索关键词，'
+                  '例如 https://kkso.net/s/{kw}.html。',
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: AppThemeColors.textSecondary,
+                    height: 1.6,
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                Text(
+                  '配置后「资源搜索」页会多出对应的搜索源标签，点选后以内嵌网页方式打开搜索结果。',
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: AppThemeColors.textSecondary,
+                    height: 1.6,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
