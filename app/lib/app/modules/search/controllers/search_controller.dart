@@ -8,19 +8,19 @@ import '../../../data/models/pansou_resource_item.dart';
 import '../../../data/api/pansou.dart';
 import '../../../data/api/quark_transfer.dart';
 import '../../../data/storage/search_history_storage.dart';
-import '../../../utils/http_client.dart';
-import '../../../utils/quark_error_helper.dart';
-import '../../../widgets/selection_bottom_sheet.dart';
+import '../../../utils/quark_transfer_helper.dart';
 
 class SearchController extends GetxController {
   SearchController({
     PansouRepository? pansouRepository,
     QuarkTransferRepository? quarkTransferRepository,
+    QuarkTransferHelper? quarkTransferHelper,
     SearchHistoryStorage? searchHistoryStorage,
     ConfigApi? configApi,
   }) : _pansouRepository = pansouRepository ?? PansouRepository(),
-       _quarkTransferRepository =
-           quarkTransferRepository ?? QuarkTransferRepository(),
+       _quarkTransferHelper =
+           quarkTransferHelper ??
+           QuarkTransferHelper(repository: quarkTransferRepository),
        _searchHistoryStorage = searchHistoryStorage ?? SearchHistoryStorage(),
        _configApi = configApi ?? Get.find<ConfigApi>();
 
@@ -40,7 +40,7 @@ class SearchController extends GetxController {
   final RxString panWebSearchUrl = ''.obs;
 
   final PansouRepository _pansouRepository;
-  final QuarkTransferRepository _quarkTransferRepository;
+  final QuarkTransferHelper _quarkTransferHelper;
   final SearchHistoryStorage _searchHistoryStorage;
   final ConfigApi _configApi;
   int _searchToken = 0;
@@ -49,11 +49,6 @@ class SearchController extends GetxController {
   bool _panWebEnginesLoaded = false;
   static const int _maxHistoryCount = 12;
   final RxList<String> historyKeywords = <String>[].obs;
-
-  final RxMap<String, String> quarkSavePathMap = <String, String>{}.obs;
-  final RxBool quarkSavePathLoading = false.obs;
-
-  static const _quarkTargets = <String>['tv', 'playlet', 'music', 'read'];
 
   bool get isDefaultPanEngineSelected =>
       selectedPanEngineId.value.trim().isEmpty ||
@@ -218,71 +213,15 @@ class SearchController extends GetxController {
     }
   }
 
-  Future<void> ensureQuarkSavePathLoaded() async {
-    if (quarkSavePathLoading.value) return;
-    if (quarkSavePathMap.isNotEmpty) return;
-
-    quarkSavePathLoading.value = true;
-    try {
-      final results = await Future.wait(
-        _quarkTargets.map((t) async {
-          try {
-            final rootPath = await _quarkTransferRepository.getQuarkRootPath(t);
-            final savePath = _stripQuarkPrefixForStore(rootPath);
-            return MapEntry(t, savePath);
-          } catch (_) {
-            return MapEntry(t, '');
-          }
-        }),
-      );
-
-      quarkSavePathMap.assignAll(<String, String>{
-        for (final e in results)
-          if (e.value.trim().isNotEmpty) e.key: e.value.trim(),
-      });
-    } finally {
-      quarkSavePathLoading.value = false;
-    }
-  }
-
   Future<void> transferQuark(PansouResourceItem item) async {
     final url = item.url.trim();
     if (url.isEmpty || transferringUrls.contains(url)) return;
+    transferringUrls.add(url);
     try {
       await _settleFocusBeforeTransferSheet();
-      await ensureQuarkSavePathLoaded();
-
-      final selected = await _showQuarkTransferSheet();
-      if (selected == null) return;
-
-      transferringUrls.add(url);
-      await _quarkTransferRepository.transferOnce(
+      await _quarkTransferHelper.transferOnce(
         shareUrl: url,
-        savePath: selected.savePath,
-        application: selected.application,
         resourceName: _buildTransferResourceName(item),
-      );
-      Get.snackbar(
-        '提示',
-        '已加入转存任务',
-        snackPosition: SnackPosition.TOP,
-        duration: const Duration(seconds: 2),
-      );
-    } on ApiException catch (e) {
-      Get.snackbar(
-        '转存失败',
-        QuarkErrorHelper.toFriendlyMessage(
-          e.message.trim().isEmpty ? '请稍后重试' : e.message,
-        ),
-        snackPosition: SnackPosition.TOP,
-        duration: const Duration(seconds: 4),
-      );
-    } catch (_) {
-      Get.snackbar(
-        '转存失败',
-        '请稍后重试',
-        snackPosition: SnackPosition.TOP,
-        duration: const Duration(seconds: 4),
       );
     } finally {
       transferringUrls.remove(url);
@@ -295,66 +234,6 @@ class SearchController extends GetxController {
 
     currentFocus.unfocus();
     await WidgetsBinding.instance.endOfFrame;
-  }
-
-  Future<_QuarkTransferSelection?> _showQuarkTransferSheet() {
-    final context = Get.overlayContext ?? Get.context;
-    if (context == null) return Future.value(null);
-
-    final availableCount = _quarkTargets
-        .where((app) => (quarkSavePathMap[app] ?? '').trim().isNotEmpty)
-        .length;
-
-    return showSelectionBottomSheet<_QuarkTransferSelection>(
-      context: context,
-      meta: SelectionBottomSheetMeta(
-        icon: Icons.check_circle_rounded,
-        label: '已配置 $availableCount / ${_quarkTargets.length}',
-        accent: availableCount > 0
-            ? const Color(0xFF059669)
-            : const Color(0xFFD97706),
-      ),
-      emptyTitle: '暂无可用分类',
-      emptyDescription: '未找到可用的 WebDAV 配置，请先在后台为对应应用配置 rootPath。',
-      options: _quarkTargets
-          .map((application) {
-            final savePath = (quarkSavePathMap[application] ?? '').trim();
-            final enabled = savePath.isNotEmpty;
-            return SelectionBottomSheetOption<_QuarkTransferSelection>(
-              value: _QuarkTransferSelection(
-                application: application,
-                savePath: savePath,
-              ),
-              title: quarkApplicationLabel(application),
-              subtitle: enabled ? savePath : '请先配置 rootPath 后再使用',
-              icon: quarkApplicationIcon(application),
-              accent: quarkApplicationAccent(application),
-              statusText: enabled ? '可转存' : '未配置',
-              enabled: enabled,
-            );
-          })
-          .toList(growable: false),
-    );
-  }
-
-  static String _stripQuarkPrefixForStore(String path) {
-    var normalized = path.trim();
-    if (normalized.isEmpty) return '';
-    normalized = normalized.replaceAll('\\', '/');
-    normalized = normalized.replaceAll(RegExp(r'^/+'), '');
-    normalized = normalized.replaceAll(RegExp(r'/+$'), '');
-
-    final lower = normalized.toLowerCase();
-    final idx = lower.indexOf('quark/');
-    if (idx > 0) normalized = normalized.substring(idx);
-    normalized = normalized.replaceFirst(
-      RegExp(r'^quark/?', caseSensitive: false),
-      '',
-    );
-
-    normalized = normalized.replaceAll(RegExp(r'^/+'), '');
-    normalized = normalized.replaceAll(RegExp(r'/+$'), '');
-    return normalized;
   }
 
   String _buildTransferResourceName(PansouResourceItem item) {
@@ -424,14 +303,4 @@ class SearchController extends GetxController {
     searchController.dispose();
     super.onClose();
   }
-}
-
-class _QuarkTransferSelection {
-  const _QuarkTransferSelection({
-    required this.application,
-    required this.savePath,
-  });
-
-  final String application;
-  final String savePath;
 }
